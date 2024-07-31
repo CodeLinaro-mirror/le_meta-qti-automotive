@@ -1,0 +1,58 @@
+From bcb6e839da8a6ad06553617a6b1ab52740d8a50b Mon Sep 17 00:00:00 2001
+From: hanzh <quic_hanzh@quicinc.com>
+Date: Thu, 11 Jul 2024 11:35:13 +0800
+Subject: [PATCH] QCLINUX: vfio: Disable iommu_group_claim_dma_owner
+ temporarily
+
+This is a new issue identifies as part of kernel tag
+upgrade. Here, disabling iommu_group_claim_dma_owner()
+to unblock release. This function creates a blocking domain
+and attaches to the device and allocates a context
+bank for each device, but during probe we already allocate
+a context bank for the device. so vfio allocates a second
+context bank for every device and for kgsl smmu
+there is a limitation for the number of context
+banks and its causing a crash.
+
+Signed-off-by: hanzh <quic_hanzh@quicinc.com>
+Change-Id: Ib0ece51a28164247fa9f738651d25c36fd040d88
+---
+ drivers/vfio/container.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/vfio/container.c b/drivers/vfio/container.c
+index d53d08f16973..d8a6b6199883 100644
+--- a/drivers/vfio/container.c
++++ b/drivers/vfio/container.c
+@@ -432,13 +432,13 @@ int vfio_container_attach_group(struct vfio_container *container,
+ 		ret = -EPERM;
+ 		goto out_unlock_container;
+ 	}
+-
++/*
+ 	if (group->type == VFIO_IOMMU) {
+ 		ret = iommu_group_claim_dma_owner(group->iommu_group, group);
+ 		if (ret)
+ 			goto out_unlock_container;
+ 	}
+-
++*/
+ 	driver = container->iommu_driver;
+ 	if (driver) {
+ 		ret = driver->ops->attach_group(container->iommu_data,
+@@ -479,10 +479,10 @@ void vfio_group_detach_container(struct vfio_group *group)
+ 	if (driver)
+ 		driver->ops->detach_group(container->iommu_data,
+ 					  group->iommu_group);
+-
++	/*
+ 	if (group->type == VFIO_IOMMU)
+ 		iommu_group_release_dma_owner(group->iommu_group);
+-
++	*/
+ 	group->container = NULL;
+ 	group->container_users = 0;
+ 	list_del(&group->container_next);
+-- 
+2.17.1
+

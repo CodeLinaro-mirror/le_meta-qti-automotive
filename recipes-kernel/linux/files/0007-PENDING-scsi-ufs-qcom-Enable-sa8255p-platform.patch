@@ -1,0 +1,338 @@
+From efc5e8819e8fef55a7bbe90132bdcd6dda5d5934 Mon Sep 17 00:00:00 2001
+From: Nikunj Kela <quic_nkela@quicinc.com>
+Date: Wed, 10 Jul 2024 20:51:48 +0530
+Subject: [PATCH 06/14] PENDING: scsi: ufs: qcom: Enable sa8255p platform
+
+Qualcomm platform sa8255p has remote firmware to configure platform
+resource configurations like clocks, voltages and PHY.
+
+Modeled power domain is used to abstract resources in firmware and
+SCMI power protocol is used to request resource operations.
+
+Runtime PM framework APIs such as pm_runtime_get/put_sync are used
+to invoke appropriate power_on and power_off calls from kernel.
+
+Prepare support for the sa8255p variant by adding the required
+ufs_hba_qcom_fmr_vops to a new ufs_hba_variant_ops struct then
+passing it through the compatible match data.
+
+Change-Id: I275faa94b60bff71d87a8768d61d180e32d201fe
+Signed-off-by: Nikunj Kela <quic_nkela@quicinc.com>
+Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 209 ++++++++++++++++++++++++++++--------
+ 1 file changed, 165 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index a5e34ae39587..c5c1477e0db2 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -15,6 +15,7 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/reset-controller.h>
+ #include <linux/devfreq.h>
++#include <linux/pm_domain.h>
+ 
+ #include <soc/qcom/ice.h>
+ 
+@@ -584,6 +585,30 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ 	return err;
+ }
+ 
++static int ufs_qcom_fmr_hce_enable_notify(struct ufs_hba *hba,
++				      enum ufs_notify_change_status status)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	int err = 0;
++
++	switch (status) {
++	case PRE_CHANGE:
++		ufs_qcom_select_unipro_mode(host);
++		break;
++	case POST_CHANGE:
++		/* check if UFS PHY moved from DISABLED to HIBERN8 */
++		err = ufs_qcom_check_hibern8(hba);
++		ufs_qcom_enable_hw_clk_gating(hba);
++		ufs_qcom_ice_enable(host);
++		break;
++	default:
++		dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
++		err = -EINVAL;
++		break;
++	}
++	return err;
++}
++
+ /**
+  * ufs_qcom_cfg_timers - Configure ufs qcom cfg timers
+  *
+@@ -848,6 +873,31 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return ufs_qcom_ice_resume(host);
+ }
+ 
++static int ufs_qcom_fmr_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
++	enum ufs_notify_change_status status)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	if (status == PRE_CHANGE)
++		return 0;
++
++	pm_runtime_put_sync(hba->dev);
++
++	return ufs_qcom_ice_suspend(host);
++}
++
++static int ufs_qcom_fmr_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	int err = 0;
++
++	err = pm_runtime_resume_and_get(hba->dev);
++	if (err < 0)
++		return err;
++
++	return ufs_qcom_ice_resume(host);
++}
++
+ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+ {
+ 	if (host->dev_ref_clk_ctrl_mmio &&
+@@ -1231,24 +1281,14 @@ static int ufs_qcom_icc_init(struct ufs_qcom_host *host)
+ 	return 0;
+ }
+ 
+-/**
+- * ufs_qcom_init - bind phy with controller
+- * @hba: host controller instance
+- *
+- * Binds PHY with controller and powers up PHY enabling clocks
+- * and regulators.
+- *
+- * Return: -EPROBE_DEFER if binding fails, returns negative error
+- * on phy power up failure and returns zero on success.
+- */
+-static int ufs_qcom_init(struct ufs_hba *hba)
++static int ufs_qcom_common_init(struct ufs_hba *hba)
+ {
+-	int err;
+ 	struct device *dev = hba->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct ufs_qcom_host *host;
+-	struct resource *res;
+ 	struct ufs_clk_info *clki;
++	struct resource *res;
++	int err;
+ 
+ 	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+ 	if (!host) {
+@@ -1265,29 +1305,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	if (IS_ERR(host->core_reset)) {
+ 		err = dev_err_probe(dev, PTR_ERR(host->core_reset),
+ 				    "Failed to get reset control\n");
+-		goto out_variant_clear;
+-	}
+-
+-	/* Fire up the reset controller. Failure here is non-fatal. */
+-	host->rcdev.of_node = dev->of_node;
+-	host->rcdev.ops = &ufs_qcom_reset_ops;
+-	host->rcdev.owner = dev->driver->owner;
+-	host->rcdev.nr_resets = 1;
+-	err = devm_reset_controller_register(dev, &host->rcdev);
+-	if (err)
+-		dev_warn(dev, "Failed to register reset controller\n");
+-
+-	if (!has_acpi_companion(dev)) {
+-		host->generic_phy = devm_phy_get(dev, "ufsphy");
+-		if (IS_ERR(host->generic_phy)) {
+-			err = dev_err_probe(dev, PTR_ERR(host->generic_phy), "Failed to get PHY\n");
+-			goto out_variant_clear;
+-		}
++		return err;
+ 	}
+ 
+ 	err = ufs_qcom_icc_init(host);
+ 	if (err)
+-		goto out_variant_clear;
++		return err;
+ 
+ 	host->device_reset = devm_gpiod_get_optional(dev, "reset",
+ 						     GPIOD_OUT_HIGH);
+@@ -1295,7 +1318,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 		err = PTR_ERR(host->device_reset);
+ 		if (err != -EPROBE_DEFER)
+ 			dev_err(dev, "failed to acquire reset gpio: %d\n", err);
+-		goto out_variant_clear;
++		return err;
+ 	}
+ 
+ 	ufs_qcom_get_controller_revision(hba, &host->hw_ver.major,
+@@ -1326,18 +1349,9 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 			clki->keep_link_active = true;
+ 	}
+ 
+-	err = ufs_qcom_init_lane_clks(host);
+-	if (err)
+-		goto out_variant_clear;
+-
+-	ufs_qcom_set_caps(hba);
+-	ufs_qcom_advertise_quirks(hba);
+-
+ 	err = ufs_qcom_ice_init(host);
+ 	if (err)
+-		goto out_variant_clear;
+-
+-	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
++		return err;
+ 
+ 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+ 		ufs_qcom_hosts[hba->dev->id] = host;
+@@ -1355,6 +1369,56 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	 */
+ 	host->hs_gear = UFS_HS_G2;
+ 
++	return 0;
++}
++
++/**
++ * ufs_qcom_init - bind phy with controller
++ * @hba: host controller instance
++ *
++ * Binds PHY with controller and powers up PHY enabling clocks
++ * and regulators.
++ *
++ * Return: -EPROBE_DEFER if binding fails, returns negative error
++ * on phy power up failure and returns zero on success.
++ */
++static int ufs_qcom_init(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	struct ufs_qcom_host *host;
++	int err;
++
++	err = ufs_qcom_common_init(hba);
++	if (err)
++		goto out_variant_clear;
++
++	host = ufshcd_get_variant(hba);
++	/* Fire up the reset controller. Failure here is non-fatal. */
++	host->rcdev.of_node = dev->of_node;
++	host->rcdev.ops = &ufs_qcom_reset_ops;
++	host->rcdev.owner = dev->driver->owner;
++	host->rcdev.nr_resets = 1;
++	err = devm_reset_controller_register(dev, &host->rcdev);
++	if (err)
++		dev_warn(dev, "Failed to register reset controller\n");
++
++	if (!has_acpi_companion(dev)) {
++		host->generic_phy = devm_phy_get(dev, "ufsphy");
++		if (IS_ERR(host->generic_phy)) {
++			err = dev_err_probe(dev, PTR_ERR(host->generic_phy), "Failed to get PHY\n");
++			goto out_variant_clear;
++		}
++	}
++
++	err = ufs_qcom_init_lane_clks(host);
++	if (err)
++		goto out_variant_clear;
++
++	ufs_qcom_set_caps(hba);
++	ufs_qcom_advertise_quirks(hba);
++
++	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
++
+ 	return 0;
+ 
+ out_variant_clear:
+@@ -1372,6 +1436,31 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+ 	phy_exit(host->generic_phy);
+ }
+ 
++static int ufs_qcom_fmr_init(struct ufs_hba *hba)
++{
++	int err;
++
++	err = ufs_qcom_common_init(hba);
++	if (err)
++		goto out_variant_clear;
++
++	hba->caps |= UFSHCD_CAP_WB_EN;
++	ufs_qcom_advertise_quirks(hba);
++	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
++
++	return 0;
++
++out_variant_clear:
++	ufshcd_set_variant(hba, NULL);
++
++	return err;
++}
++
++static void ufs_qcom_fmr_exit(struct ufs_hba *hba)
++{
++	pm_runtime_put_sync(hba->dev);
++}
++
+ /**
+  * ufs_qcom_set_clk_40ns_cycles - Configure 40ns clk cycles
+  *
+@@ -2069,6 +2158,32 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.config_esi		= ufs_qcom_config_esi,
+ };
+ 
++/* Firmware Managed Resources(fmr) VOPS */
++static const struct ufs_hba_variant_ops ufs_hba_qcom_fmr_vops = {
++	.name                   = "qcom-fmr",
++	.init                   = ufs_qcom_fmr_init,
++	.exit                   = ufs_qcom_fmr_exit,
++	.get_ufs_hci_version	= ufs_qcom_get_ufs_hci_version,
++	.hce_enable_notify      = ufs_qcom_fmr_hce_enable_notify,
++	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
++	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
++	.suspend		= ufs_qcom_fmr_suspend,
++	.resume			= ufs_qcom_fmr_resume,
++	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
++	.device_reset		= ufs_qcom_device_reset,
++	.config_scaling_param   = ufs_qcom_config_scaling_param,
++	.program_key		= ufs_qcom_ice_program_key,
++	.derive_sw_secret	= ufs_qcom_ice_derive_sw_secret,
++	.generate_key		= ufs_qcom_ice_generate_key,
++	.prepare_key		= ufs_qcom_ice_prepare_key,
++	.import_key		= ufs_qcom_ice_import_key,
++	.mcq_config_resource	= ufs_qcom_mcq_config_resource,
++	.get_hba_mac		= ufs_qcom_get_hba_mac,
++	.op_runtime_config	= ufs_qcom_op_runtime_config,
++	.get_outstanding_cqs	= ufs_qcom_get_outstanding_cqs,
++	.config_esi		= ufs_qcom_config_esi,
++};
++
+ /**
+  * ufs_qcom_probe - probe routine of the driver
+  * @pdev: pointer to Platform device handle
+@@ -2079,9 +2194,14 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+ {
+ 	int err;
+ 	struct device *dev = &pdev->dev;
++	const struct ufs_hba_variant_ops *vops = &ufs_hba_qcom_vops;
++	const struct ufs_hba_variant_ops *drv_data = device_get_match_data(dev);
++
++	if (drv_data)
++		vops = drv_data;
+ 
+ 	/* Perform generic probe */
+-	err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
++	err = ufshcd_pltfrm_init(pdev, vops);
+ 	if (err)
+ 		return dev_err_probe(dev, err, "ufshcd_pltfrm_init() failed\n");
+ 
+@@ -2106,6 +2226,7 @@ static int ufs_qcom_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
+ 	{ .compatible = "qcom,ufshc"},
++	{ .compatible = "qcom,sa8255p-ufshc", .data = &ufs_hba_qcom_fmr_vops},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
+-- 
+2.34.1
+

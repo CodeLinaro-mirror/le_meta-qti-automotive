@@ -1,0 +1,14 @@
+[Unit]
+Description=persist-prop service
+After=leprop.service
+Requires=leprop.service
+
+[Service]
+User=leprop
+Group=leprop
+NoNewPrivileges=true
+ExecStart=/sbin/persist-prop.sh
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

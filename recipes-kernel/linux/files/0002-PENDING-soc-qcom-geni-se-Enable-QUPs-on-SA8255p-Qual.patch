@@ -1,0 +1,155 @@
+From 7bd0756d31422f2bd23cb57eb68e9c1e56d01e5b Mon Sep 17 00:00:00 2001
+From: Praveen Talari <quic_ptalari@quicinc.com>
+Date: Wed, 17 Jul 2024 19:28:50 +0530
+Subject: [PATCH 01/14] PENDING: soc: qcom: geni-se: Enable QUPs on SA8255p
+ Qualcomm platforms.
+
+Add compatible "qcom,sa8255p-geni-se-qup" and platform data
+structure for the clk list.
+
+As part of support for SA8255p, add API
+- geni_se_transition_d3d0() to switch power states.
+
+Change-Id: Id94eb9639a76c4dad4e78ac0ba7943a88441ddba
+Signed-off-by: Praveen Talari <quic_ptalari@quicinc.com>
+Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+---
+ drivers/soc/qcom/qcom-geni-se.c  | 39 ++++++++++++++++++++++++++++++++
+ include/linux/soc/qcom/geni-se.h |  9 ++++++++
+ 2 files changed, 48 insertions(+)
+
+diff --git a/drivers/soc/qcom/qcom-geni-se.c b/drivers/soc/qcom/qcom-geni-se.c
+index 005637f70bf8..76f130bc7894 100644
+--- a/drivers/soc/qcom/qcom-geni-se.c
++++ b/drivers/soc/qcom/qcom-geni-se.c
+@@ -15,6 +15,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/pinctrl/consumer.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/soc/qcom/geni-se.h>
+ 
+ /**
+@@ -893,6 +894,34 @@ int geni_icc_disable(struct geni_se *se)
+ }
+ EXPORT_SYMBOL(geni_icc_disable);
+ 
++/*
++ * geni_se_transition_d3d0() - transition from d0 -> d3 or d3 ->d0
++ * @se: pointer to se structure.
++ * @state: decides whether it is D0 -> D3 or D3 ->D0.
++ *	true	: d3 --> d0 (on)
++ *	false	: d0 --> d3 (off)
++ * Return: 0 on success otherwise error.
++ */
++int geni_se_transition_d3d0(struct geni_se *se, bool state)
++{
++	struct device *pwr_dev = se->pd_list->pd_devs[DOMAIN_IDX_POWER];
++	int ret;
++
++	if (!pwr_dev)
++		return -ENODEV;
++
++	if (state)
++		ret = pm_runtime_resume_and_get(pwr_dev);
++	else
++		ret = pm_runtime_put_sync(pwr_dev);
++
++	if (ret)
++		dev_err(se->dev, "failed to switch device state(state=%d) ret=%d\n", state, ret);
++
++	return ret;
++}
++EXPORT_SYMBOL(geni_se_transition_d3d0);
++
+ static int geni_se_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -916,6 +945,9 @@ static int geni_se_probe(struct platform_device *pdev)
+ 		if (!desc)
+ 			return -EINVAL;
+ 
++		if (!desc->num_clks)
++			goto out;
++
+ 		wrapper->num_clks = min_t(unsigned int, desc->num_clks, MAX_CLKS);
+ 
+ 		for (i = 0; i < wrapper->num_clks; ++i)
+@@ -940,6 +972,7 @@ static int geni_se_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
++out:
+ 	dev_set_drvdata(dev, wrapper);
+ 	dev_dbg(dev, "GENI SE Driver probed\n");
+ 	return devm_of_platform_populate(dev);
+@@ -955,6 +988,11 @@ static const struct geni_se_desc qup_desc = {
+ 	.num_clks = ARRAY_SIZE(qup_clks),
+ };
+ 
++static const struct geni_se_desc remotely_qup_desc = {
++	.clks = NULL,
++	.num_clks = 0,
++};
++
+ static const char * const i2c_master_hub_clks[] = {
+ 	"s-ahb",
+ };
+@@ -967,6 +1005,7 @@ static const struct geni_se_desc i2c_master_hub_desc = {
+ static const struct of_device_id geni_se_dt_match[] = {
+ 	{ .compatible = "qcom,geni-se-qup", .data = &qup_desc },
+ 	{ .compatible = "qcom,geni-se-i2c-master-hub", .data = &i2c_master_hub_desc },
++	{ .compatible = "qcom,sa8255p-geni-se-qup", .data = &remotely_qup_desc },
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, geni_se_dt_match);
+diff --git a/include/linux/soc/qcom/geni-se.h b/include/linux/soc/qcom/geni-se.h
+index dc4694ee0630..0b5595579443 100644
+--- a/include/linux/soc/qcom/geni-se.h
++++ b/include/linux/soc/qcom/geni-se.h
+@@ -8,6 +8,8 @@
+ #define _LINUX_QCOM_GENI_SE
+ 
+ #include <linux/interconnect.h>
++#include <linux/pm_domain.h>
++#include <linux/pm_opp.h>
+ 
+ /**
+  * enum geni_se_xfer_mode: Transfer modes supported by Serial Engines
+@@ -62,6 +64,7 @@ struct geni_icc_path {
+  * @num_clk_levels:	Number of valid clock levels in clk_perf_tbl
+  * @clk_perf_tbl:	Table of clock frequency input to serial engine clock
+  * @icc_paths:		Array of ICC paths for SE
++ * @pd_list:		List of domain virtual devs
+  */
+ struct geni_se {
+ 	void __iomem *base;
+@@ -71,6 +74,7 @@ struct geni_se {
+ 	unsigned int num_clk_levels;
+ 	unsigned long *clk_perf_tbl;
+ 	struct geni_icc_path icc_paths[3];
++	struct dev_pm_domain_list *pd_list;
+ };
+ 
+ /* Common SE registers */
+@@ -302,6 +306,9 @@ struct geni_se {
+ 
+ #define GENI_DEFAULT_BW			Bps_to_icc(1000)
+ 
++#define DOMAIN_IDX_POWER	0
++#define DOMAIN_IDX_PERF		1
++
+ #if IS_ENABLED(CONFIG_QCOM_GENI_SE)
+ 
+ u32 geni_se_get_qup_hw_version(struct geni_se *se);
+@@ -524,5 +531,7 @@ int geni_icc_enable(struct geni_se *se);
+ int geni_icc_disable(struct geni_se *se);
+ 
+ void geni_se_clks_off(struct geni_se *se);
++
++int geni_se_transition_d3d0(struct geni_se *se, bool high);
+ #endif
+ #endif
+-- 
+2.34.1
+
