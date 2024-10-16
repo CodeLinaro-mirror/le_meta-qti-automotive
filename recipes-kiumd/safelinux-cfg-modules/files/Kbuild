@@ -1,0 +1,20 @@
+LINUXINCLUDE += -I$(SAFELINUX_MODULES_ROOT)/include/ \
+                -I$(KERNEL_SRC)/drivers/iommu/ \
+
+EXTRA_CFLAGS += -Wno-error -w
+
+obj-m += apps_pinctrl.o
+apps_pinctrl-objs := drivers/apps_pinctrl.o
+
+obj-m += iommu_iova_map.o
+iommu_iova_map-objs := drivers/iommu_iova_map.o
+
+LINUXINCLUDE += -include $(KERNEL_SRC)/drivers/iommu/dma-iommu.h
+
+obj-m += vfio_iommu_qcom.o
+vfio_iommu_qcom-objs := drivers/vfio_iommu_qcom.o
+
+#LINUXINCLUDE += -include $(SAFELINUX_MODULES_ROOT)/include/uapi/misc/kiumd.h
+
+obj-m += kiumd.o
+kiumd-objs := drivers/kiumd.o

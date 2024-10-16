@@ -1,0 +1,29 @@
+From 1edf2bbf81f53fecb4049461f884cee22b6c6c6e Mon Sep 17 00:00:00 2001
+From: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+Date: Tue, 6 Aug 2024 21:43:38 -0700
+Subject: [PATCH] vfio-device-probe: service: remove delay after start of
+ service
+
+Remove the delay after start of vfio-device-probe service
+
+Change-Id: Id6d69e3a0319b0b4789e90ad818379361e864317
+Signed-off-by: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+---
+ vfio-device-probe/vfio-device-probe.service | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/vfio-device-probe/vfio-device-probe.service b/vfio-device-probe/vfio-device-probe.service
+index 9f8fb4b..4135134 100644
+--- a/vfio-device-probe/vfio-device-probe.service
++++ b/vfio-device-probe/vfio-device-probe.service
+@@ -16,7 +16,6 @@ Group=root
+ TimeoutStartSec=0
+ Restart=on-failure
+ ExecStart=/usr/bin/vfio-device-bind.sh
+-ExecStartPost=/usr/bin/sleep 2
+ 
+ [Install]
+ WantedBy=multi-user.target
+-- 
+2.17.1
+
