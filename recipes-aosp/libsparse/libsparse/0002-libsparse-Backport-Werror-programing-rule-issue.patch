@@ -1,0 +1,204 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 7a246c22b53d3b9e7cbf5d59a84b0bb166fd74e6 Mon Sep 17 00:00:00 2001
+From: Lei wang <quic_leiwan@quicinc.com>
+Date: Tue, 30 Jul 2024 12:34:09 +0800
+Subject: [PATCH] libsparse: Backport Werror/programing rule issue
+
+Upstream-Status:Inappropriate [Backport for linux]
+
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ append2simg.cpp  |  2 +-
+ backed_block.cpp |  6 ++++--
+ output_file.cpp  | 54 ++++++++++++++++++++++++++++++++++++++++++------
+ sparse.cpp       |  1 +
+ sparse_read.cpp  |  8 ++++---
+ 5 files changed, 59 insertions(+), 12 deletions(-)
+
+diff --git a/append2simg.cpp b/append2simg.cpp
+index d3a43a8855..ec5dd60181 100644
+--- a/append2simg.cpp
++++ b/append2simg.cpp
+@@ -40,7 +40,7 @@
+ #define off64_t off_t
+ #endif
+ 
+-void usage() {
++void usage(void) {
+   fprintf(stderr, "Usage: append2simg <output> <input>\n");
+ }
+ 
+diff --git a/backed_block.cpp b/backed_block.cpp
+index a0d1cde9ca..0ae4b4342b 100644
+--- a/backed_block.cpp
++++ b/backed_block.cpp
+@@ -206,15 +206,16 @@ static int merge_bb(struct backed_block_list* bbl, struct backed_block* a, struc
+       break;
+     case BACKED_BLOCK_FILE:
+       /* Already make sure b->type is BACKED_BLOCK_FILE */
+-      if (strcmp(a->file.filename, b->file.filename) || a->file.offset + a->len != b->file.offset) {
++      if (strcmp(a->file.filename, b->file.filename) || a->file.offset + a->len != (uint64_t)b->file.offset) {
+         return -EINVAL;
+       }
+       break;
+     case BACKED_BLOCK_FD:
+-      if (a->fd.fd != b->fd.fd || a->fd.offset + a->len != b->fd.offset) {
++      if (a->fd.fd != b->fd.fd || a->fd.offset + a->len != (uint64_t)b->fd.offset) {
+         return -EINVAL;
+       }
+       break;
++    default: break;
+   }
+ 
+   /* Blocks are compatible and adjacent, with a before b.  Merge b into a,
+@@ -381,6 +382,7 @@ int backed_block_split(struct backed_block_list* bbl, struct backed_block* bb,
+       break;
+     case BACKED_BLOCK_FILL:
+       break;
++    default: break;
+   }
+ 
+   bb->next = new_bb;
+diff --git a/output_file.cpp b/output_file.cpp
+index cb5d730527..a327a70997 100644
+--- a/output_file.cpp
++++ b/output_file.cpp
+@@ -35,9 +35,10 @@
+ #include "sparse_crc32.h"
+ #include "sparse_format.h"
+ 
+-#include <android-base/mapped_file.h>
++//#include <android-base/mapped_file.h>
+ 
+-#ifndef _WIN32
++#ifndef USE_MINGW
++#include <sys/mman.h>
+ #define O_BINARY 0
+ #else
+ #define ftruncate64 ftruncate
+@@ -323,7 +324,7 @@ static int write_sparse_skip_chunk(struct output_file* out, uint64_t skip_len) {
+   int ret;
+ 
+   if (skip_len % out->block_size) {
+-    error("don't care size %" PRIi64 " is not a multiple of the block size %u", skip_len,
++    error("don't care size %" PRIu64 " is not a multiple of the block size %u", skip_len,
+           out->block_size);
+     return -1;
+   }
+@@ -670,10 +671,51 @@ int write_fill_chunk(struct output_file* out, uint64_t len, uint32_t fill_val) {
+ }
+ 
+ int write_fd_chunk(struct output_file* out, uint64_t len, int fd, int64_t offset) {
+-  auto m = android::base::MappedFile::FromFd(fd, offset, len, PROT_READ);
+-  if (!m) return -errno;
++  int ret;
++  int64_t aligned_offset;
++  int aligned_diff;
++  int buffer_size;
++  char *ptr;
++
++  aligned_offset = offset & ~(4096 - 1);
++  aligned_diff = offset - aligned_offset;
++  buffer_size = len + aligned_diff;
++
++#ifndef USE_MINGW
++  char *data = (char *)mmap64(NULL, buffer_size, PROT_READ, MAP_SHARED, fd,
++      aligned_offset);
++  if (data == MAP_FAILED) {
++    return -errno;
++  }
++  ptr = data + aligned_diff;
++#else
++  off64_t pos;
++  char *data = malloc(len);
++  if (!data) {
++    return -errno;
++  }
++  pos = lseek64(fd, offset, SEEK_SET);
++  if (pos < 0) {
++    free(data);
++    return -errno;
++  }
++  ret = read_all(fd, data, len);
++  if (ret < 0) {
++    free(data);
++    return ret;
++  }
++  ptr = data;
++#endif
++
++  ret = out->sparse_ops->write_data_chunk(out, len, ptr);
+ 
+-  return out->sparse_ops->write_data_chunk(out, m->size(), m->data());
++#ifndef USE_MINGW
++  munmap(data, buffer_size);
++#else
++  free(data);
++#endif
++
++  return ret;
+ }
+ 
+ /* Write a contiguous region of data blocks from a file */
+diff --git a/sparse.cpp b/sparse.cpp
+index ca7e5fe626..42801e1ebb 100644
+--- a/sparse.cpp
++++ b/sparse.cpp
+@@ -106,6 +106,7 @@ static int sparse_file_write_block(struct output_file* out, struct backed_block*
+     case BACKED_BLOCK_FILL:
+       ret = write_fill_chunk(out, backed_block_len(bb), backed_block_fill_val(bb));
+       break;
++    default: break;
+   }
+ 
+   return ret;
+diff --git a/sparse_read.cpp b/sparse_read.cpp
+index 44f75576d0..e885a197f7 100644
+--- a/sparse_read.cpp
++++ b/sparse_read.cpp
+@@ -30,7 +30,7 @@
+ 
+ #include <sparse/sparse.h>
+ 
+-#include "android-base/stringprintf.h"
++//#include "android-base/stringprintf.h"
+ #include "defs.h"
+ #include "output_file.h"
+ #include "sparse_crc32.h"
+@@ -53,7 +53,7 @@ static std::string ErrorString(int err) {
+   if (err == -EOVERFLOW) return "EOF while reading file";
+   if (err == -EINVAL) return "Invalid sparse file format";
+   if (err == -ENOMEM) return "Failed allocation while reading file";
+-  return android::base::StringPrintf("Unknown error %d", err);
++  return std::string("Unknown error") + std::to_string(err);
+ }
+ 
+ class SparseFileSource {
+@@ -195,10 +195,11 @@ class SparseFileBufSource : public SparseFileSource {
+   }
+ };
+ 
+-static void verbose_error(bool verbose, int err, const char* fmt, ...) {
++static void verbose_error(bool verbose, int err, const char* fmt __unused, ...) {
+   if (!verbose) return;
+ 
+   std::string msg = ErrorString(err);
++#if 0
+   if (fmt) {
+     msg += " at ";
+     va_list argp;
+@@ -206,6 +207,7 @@ static void verbose_error(bool verbose, int err, const char* fmt, ...) {
+     android::base::StringAppendV(&msg, fmt, argp);
+     va_end(argp);
+   }
++#endif
+   sparse_print_verbose("%s\n", msg.c_str());
+ }
+ 
+-- 
+2.25.1
+
