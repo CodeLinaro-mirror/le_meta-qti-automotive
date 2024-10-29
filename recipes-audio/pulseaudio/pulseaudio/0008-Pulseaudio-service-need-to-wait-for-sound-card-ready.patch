@@ -1,0 +1,31 @@
+From 79c6b92ef929bf90a045302dc2b443ba7d1097a3 Mon Sep 17 00:00:00 2001
+From: Lei wang <leiwan@codeaurora.org>
+Date: Wed, 21 Jun 2017 16:40:51 +0800
+Subject: [PATCH] Pulseaudio need to wait for sound card ready
+
+Signed-off-by: Lei wang <leiwan@codeaurora.org>
+---
+ src/daemon/systemd/user/pulseaudio.service.in | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/daemon/systemd/user/pulseaudio.service.in b/src/daemon/systemd/user/pulseaudio.service.in
+index df42fc3..7c8cb80 100644
+--- a/src/daemon/systemd/user/pulseaudio.service.in
++++ b/src/daemon/systemd/user/pulseaudio.service.in
+@@ -13,8 +13,12 @@ Description=Sound Service
+ #
+ # After=pulseaudio.socket is not needed, as it is already implicit in the
+ # socket-service relationship, see systemd.socket(5).
++
++# Note that pulseaudio need to wait for sound card ready
++Requires=sound.target
++After=sound.target
++
+ Requires=pulseaudio.socket
+-ConditionUser=!root
+
+ [Service]
+ # Note that notify will only work if --daemonize=no
+-- 
+1.9.1
+

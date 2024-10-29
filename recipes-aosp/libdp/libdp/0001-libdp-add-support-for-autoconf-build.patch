@@ -1,0 +1,168 @@
+From fabd166e6c85ecb6f7292e45e96f65b893d96d14 Mon Sep 17 00:00:00 2001
+From: Xubao Jiang <xubaoj@codeaurora.org>
+Date: Mon, 17 Aug 2020 17:05:10 +0800
+Subject: [PATCH 1/2] libdp: add support for autoconf build
+
+Add Makefile.am and configure.ac for base and fs_mgr to build in Linux
+
+Change-Id: I4ac8d7d06587ce5c7c0139771f2ae8f788c8c19c
+Signed-off-by: Xubao Jiang <xubaoj@codeaurora.org>
+---
+ Makefile.am              |  1 +
+ base/Makefile.am         | 25 +++++++++++++++++++++++++
+ configure.ac             | 30 ++++++++++++++++++++++++++++++
+ fs_mgr/Makefile.am       | 17 +++++++++++++++++
+ fs_mgr/libdm/Makefile.am | 17 +++++++++++++++++
+ fs_mgr/liblp/Makefile.am | 15 +++++++++++++++
+ 6 files changed, 105 insertions(+)
+ create mode 100644 Makefile.am
+ create mode 100644 base/Makefile.am
+ create mode 100644 configure.ac
+ create mode 100644 fs_mgr/Makefile.am
+ create mode 100644 fs_mgr/libdm/Makefile.am
+ create mode 100644 fs_mgr/liblp/Makefile.am
+
+diff --git a/Makefile.am b/Makefile.am
+new file mode 100644
+index 0000000..c1d80a1
+--- /dev/null
++++ b/Makefile.am
+@@ -0,0 +1 @@
++SUBDIRS := base fs_mgr
+diff --git a/base/Makefile.am b/base/Makefile.am
+new file mode 100644
+index 0000000..2af1b2d
+--- /dev/null
++++ b/base/Makefile.am
+@@ -0,0 +1,25 @@
++lib_LTLIBRARIES := libbase_q.la
++
++libbase_q_la_SOURCES  := file.cpp \
++                         logging.cpp \
++                         properties.cpp \
++                         stringprintf.cpp \
++                         strings.cpp \
++                         threads.cpp
++
++libbase_q_la_CPPFLAGS := -I$(srcdir)/include \
++                         -std=c++17
++libbase_q_la_LDFLAGS := -version-info $(LT_VERSION_INFO)
++
++base_q_includedir=$(includedir)/android-base
++base_q_include_HEADERS := $(srcdir)/include/android-base/file.h \
++                          $(srcdir)/include/android-base/logging.h \
++                          $(srcdir)/include/android-base/macros.h \
++                          $(srcdir)/include/android-base/memory.h \
++                          $(srcdir)/include/android-base/off64_t.h \
++                          $(srcdir)/include/android-base/properties.h \
++                          $(srcdir)/include/android-base/strings.h \
++                          $(srcdir)/include/android-base/stringprintf.h \
++                          $(srcdir)/include/android-base/threads.h \
++                          $(srcdir)/include/android-base/unique_fd.h
++
+diff --git a/configure.ac b/configure.ac
+new file mode 100644
+index 0000000..3f4bbe1
+--- /dev/null
++++ b/configure.ac
+@@ -0,0 +1,30 @@
++AC_PREREQ(2.61)
++AC_INIT([libdp],1.0.0)
++AM_INIT_AUTOMAKE([-Wall gnu foreign])
++AC_CONFIG_SRCDIR([Makefile.am])
++AC_CONFIG_HEADERS([config.h])
++AC_CONFIG_MACRO_DIR([m4])
++
++AC_SUBST([LT_VERSION_INFO], [10:0:0])
++
++AM_PROG_AS
++AC_PROG_CC
++AM_PROG_CC_C_O
++AC_PROG_LIBTOOL
++AC_PROG_AWK
++AC_PROG_CPP
++AC_PROG_CXX
++AC_PROG_INSTALL
++AC_PROG_LN_S
++AC_PROG_MAKE_SET
++PKG_PROG_PKG_CONFIG
++
++AC_CONFIG_FILES([ \
++    Makefile \
++    base/Makefile \
++    fs_mgr/Makefile \
++    fs_mgr/liblp/Makefile \
++    fs_mgr/libdm/Makefile
++])
++AC_OUTPUT
++
+diff --git a/fs_mgr/Makefile.am b/fs_mgr/Makefile.am
+new file mode 100644
+index 0000000..b981ee0
+--- /dev/null
++++ b/fs_mgr/Makefile.am
+@@ -0,0 +1,17 @@
++SUBDIRS := liblp libdm
++
++lib_LTLIBRARIES := libfsmgr_dmlinear.la
++
++libfsmgr_dmlinear_la_SOURCES := fs_mgr_dm_linear.cpp
++
++libfsmgr_dmlinear_la_CPPFLAGS := -I$(srcdir)/include \
++                           -I$(srcdir)/libdm/include \
++                           -I$(srcdir)/liblp/include \
++                           -I$(top_srcdir)/base/include \
++                           -std=c++17
++libfsmgr_dmlinear_la_LDFLAGS  := -version-info $(LT_VERSION_INFO) -lcrypto
++libfsmgr_dmlinear_la_LIBADD   := ./libdm/libdm.la
++
++fsmgr_dmlinear_includedir=$(includedir)
++fsmgr_dmlinear_include_HEADERS := $(srcdir)/include/fs_mgr_dm_linear.h
++
+diff --git a/fs_mgr/libdm/Makefile.am b/fs_mgr/libdm/Makefile.am
+new file mode 100644
+index 0000000..7494c65
+--- /dev/null
++++ b/fs_mgr/libdm/Makefile.am
+@@ -0,0 +1,17 @@
++lib_LTLIBRARIES := libdm.la
++
++libdm_la_SOURCES := dm_table.cpp \
++                    dm_target.cpp \
++                    dm.cpp \
++                    loop_control.cpp
++
++libdm_la_CPPFLAGS := -I$(top_srcdir)/base/include \
++                     -I$(srcdir)/include \
++                     -std=c++17
++libdm_la_LDFLAGS := -version-info $(LT_VERSION_INFO)
++
++dm_includedir=$(includedir)/libdm
++dm_include_HEADERS := $(srcdir)/include/libdm/dm.h \
++                      $(srcdir)/include/libdm/dm_table.h \
++                      $(srcdir)/include/libdm/dm_target.h \
++                      $(srcdir)/include/libdm/loop_control.h
+diff --git a/fs_mgr/liblp/Makefile.am b/fs_mgr/liblp/Makefile.am
+new file mode 100644
+index 0000000..3e02a63
+--- /dev/null
++++ b/fs_mgr/liblp/Makefile.am
+@@ -0,0 +1,15 @@
++lib_LTLIBRARIES := liblp.la
++
++liblp_la_SOURCES := partition_opener.cpp \
++                    reader.cpp \
++                    utility.cpp
++
++liblp_la_CPPFLAGS := -I$(srcdir)/include -I$(top_srcdir)/base/include
++liblp_la_LDFLAGS  := -version-info $(LT_VERSION_INFO) -lcrypto
++liblp_la_LIBADD   := $(top_builddir)/base/libbase_q.la
++
++lp_includedir=$(includedir)/liblp
++lp_include_HEADERS := $(srcdir)/include/liblp/liblp.h \
++                      $(srcdir)/include/liblp/metadata_format.h \
++                      $(srcdir)/include/liblp/partition_opener.h
++
+-- 
+2.7.4
+

@@ -1,0 +1,14 @@
+[Unit]
+Description=Weston reference Wayland compositor
+Conflicts=getty@tty7.service
+After=dbus.service rc.pvr.service
+
+[Service]
+ExecStart=/usr/bin/weston-launch -u root -t /dev/tty7 -- --idle-time=4294967 --log=/tmp/weston.log
+ExecStop=/usr/bin/killall -s KILL weston
+Type=simple
+PIDFile=/run/early/weston.pid
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

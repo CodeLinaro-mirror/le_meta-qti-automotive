@@ -1,0 +1,144 @@
+From ec6348e4a8e49387838315f696d116e22b0d4835 Mon Sep 17 00:00:00 2001
+From: Futao He <quic_fhe@quicinc.com>
+Date: Thu, 11 Aug 2022 17:16:35 +0530
+Subject: [PATCH 2/4] libdp: Android11 ota lib porting liblp
+
+Modifications:
+1. add code files and dir in Makefile
+2. add lp_test building with gtest code
+3. upgrade std lib to c++17
+4. add dependent libs
+        libbase_r.la sparse ext4_utils
+        gtest gtest_main gmock
+5. implement fs_mgr_get_super_partition_name() in lp_adat.cpp
+6. move ext4_utils/ext4_utils.h backward to avoid refine min()
+7. rm ANDROID prebuild judgement ValidateAndSerializeMetadata()
+        fix test case failed: ResizePartition
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: I6e25e10379ff7d39aedab2c57b6ad477896adbfa
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+---
+ fs_mgr/liblp/Makefile.am | 36 ++++++++++++++++++++++++++++++++----
+ fs_mgr/liblp/lp_adat.cpp | 21 +++++++++++++++++++++
+ fs_mgr/liblp/utility.cpp |  3 ++-
+ fs_mgr/liblp/writer.cpp  |  2 +-
+ 4 files changed, 56 insertions(+), 6 deletions(-)
+ create mode 100644 fs_mgr/liblp/lp_adat.cpp
+
+diff --git a/fs_mgr/liblp/Makefile.am b/fs_mgr/liblp/Makefile.am
+index 3e02a63..35a0e2f 100644
+--- a/fs_mgr/liblp/Makefile.am
++++ b/fs_mgr/liblp/Makefile.am
+@@ -2,14 +2,42 @@ lib_LTLIBRARIES := liblp.la
+ 
+ liblp_la_SOURCES := partition_opener.cpp \
+                     reader.cpp \
+-                    utility.cpp
++                    utility.cpp \
++                    writer.cpp \
++                    builder.cpp \
++                    images.cpp \
++                    property_fetcher.cpp
+ 
+-liblp_la_CPPFLAGS := -I$(srcdir)/include -I$(top_srcdir)/base/include
++liblp_la_CPPFLAGS := -I$(srcdir)/include \
++                     -I$(top_srcdir)/base/include \
++                     -std=c++17
+ liblp_la_LDFLAGS  := -version-info $(LT_VERSION_INFO) -lcrypto
+-liblp_la_LIBADD   := $(top_builddir)/base/libbase_q.la
++liblp_la_LIBADD   := $(top_builddir)/base/libbase_r.la -lsparse -lext4_utils
++
++lp_includedir = $(includedir)/liblp
++#lp_includedir += $(top_srcdir)/libsparse/include
+ 
+-lp_includedir=$(includedir)/liblp
+ lp_include_HEADERS := $(srcdir)/include/liblp/liblp.h \
+                       $(srcdir)/include/liblp/metadata_format.h \
+                       $(srcdir)/include/liblp/partition_opener.h
+ 
++bin_PROGRAMS := lp_test
++lp_test_SOURCES := builder_test.cpp \
++                   io_test.cpp \
++                   test_partition_opener.cpp \
++                   utility_test.cpp
++
++lp_test_CPPFLAGS := -I$(srcdir)/include \
++                    -I$(top_srcdir)/base/include \
++                    -I$(top_srcdir)/fs_mgr/include \
++                    -I$(top_srcdir)/fs_mgr/include_fstab \
++                    -I$(top_srcdir)/fs_mgr/libstorage_literals \
++                    -I$(top_srcdir)/libsparse/include \
++                    -std=c++17
++
++lp_test_LDFLAGS  := -version-info $(LT_VERSION_INFO) -lcrypto
++lp_test_LDADD   := $(top_builddir)/base/libbase_r.la
++lp_test_LDADD += liblp.la
++lp_test_LDADD += -lgtest -lgtest_main -lgmock
++
++lp_test_includedir=$(includedir)/liblp
+diff --git a/fs_mgr/liblp/lp_adat.cpp b/fs_mgr/liblp/lp_adat.cpp
+new file mode 100644
+index 0000000..c6af476
+--- /dev/null
++++ b/fs_mgr/liblp/lp_adat.cpp
+@@ -0,0 +1,21 @@
++std::string fs_mgr_get_super_partition_name(int slot) {
++    // Devices upgrading to dynamic partitions are allowed to specify a super
++    // partition name. This includes cuttlefish, which is a non-A/B device.
++    std::string super_partition;
++    if (fs_mgr_get_boot_config_from_kernel_cmdline("super_partition", &super_partition)) {
++        if (fs_mgr_get_slot_suffix().empty()) {
++            return super_partition;
++        }
++        std::string suffix;
++        if (slot == 0) {
++            suffix = "_a";
++        } else if (slot == 1) {
++            suffix = "_b";
++        } else if (slot == -1) {
++            suffix = fs_mgr_get_slot_suffix();
++        }
++        return super_partition + suffix;
++    }
++    return LP_METADATA_DEFAULT_PARTITION_NAME;
++}
++
+diff --git a/fs_mgr/liblp/utility.cpp b/fs_mgr/liblp/utility.cpp
+index d8e171b..704169f 100644
+--- a/fs_mgr/liblp/utility.cpp
++++ b/fs_mgr/liblp/utility.cpp
+@@ -31,7 +31,6 @@
+ 
+ #include <android-base/file.h>
+ #include <android-base/stringprintf.h>
+-#include <ext4_utils/ext4_utils.h>
+ #include <openssl/sha.h>
+ 
+ #ifdef __ANDROID__
+@@ -39,6 +38,8 @@
+ #endif
+ 
+ #include "utility.h"
++//keep ext4_utils/ext4_utils.h after utility.h to avoid min() max() redefined
++#include <ext4_utils/ext4_utils.h>
+ 
+ namespace android {
+ namespace fs_mgr {
+diff --git a/fs_mgr/liblp/writer.cpp b/fs_mgr/liblp/writer.cpp
+index 8bf1ee9..3fe91c8 100644
+--- a/fs_mgr/liblp/writer.cpp
++++ b/fs_mgr/liblp/writer.cpp
+@@ -132,7 +132,7 @@ static bool ValidateAndSerializeMetadata([[maybe_unused]] const IPartitionOpener
+ 
+         // When flashing on the device, check partition sizes. Don't do this on
+         // the host since there is no way to verify.
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || defined(__linux__)
+         BlockDeviceInfo info;
+         if (!opener.GetInfo(partition_name, &info)) {
+             PERROR << partition_name << ": ioctl";
+-- 
+2.7.4
+

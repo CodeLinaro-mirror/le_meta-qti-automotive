@@ -1,0 +1,56 @@
+From 24f4a79846bbe055795a0f5e3844a3200cf8ed57 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@codeaurora.org>
+Date: Mon, 28 Dec 2020 12:26:45 +0800
+Subject: [PATCH] Change header file path to adapt to weston-8.0.0
+
+Signed-off-by: Xiaoyu Huang <xiahua@codeaurora.org>
+---
+ ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt                  | 2 +-
+ ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c              | 4 ++--
+ ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt b/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
+index 3e604a5..4f285c2 100644
+--- a/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
++++ b/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
+@@ -25,7 +25,7 @@ find_package(PkgConfig REQUIRED)
+ pkg_check_modules(WAYLAND_SERVER wayland-server REQUIRED)
+ pkg_check_modules(WESTON weston>=6.0.0 REQUIRED)
+ pkg_check_modules(PIXMAN pixman-1 REQUIRED)
+-pkg_check_modules(LIBWESTON_DESKTOP libweston-desktop-6 REQUIRED)
++pkg_check_modules(LIBWESTON_DESKTOP libweston-desktop-8 REQUIRED)
+ 
+ find_package(Threads REQUIRED)
+ 
+diff --git a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+index 8f0c199..d0c45c1 100644
+--- a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
++++ b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+@@ -26,8 +26,8 @@
+ #include <limits.h>
+ 
+ #include <weston.h>
+-#include <libweston-6/libweston-desktop.h>
+-#include "config-parser.h"
++#include <libweston-8/libweston-desktop/libweston-desktop.h>
++#include <libweston-8/libweston/config-parser.h>
+ #include <weston/ivi-layout-export.h>
+ 
+ #ifndef INVALID_ID
+diff --git a/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c b/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
+index a0bfc48..bac05ae 100644
+--- a/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
++++ b/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
+@@ -31,7 +31,7 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ 
+-#include "plugin-registry.h"
++#include "libweston/plugin-registry.h"
+ #include "ilm_types.h"
+ 
+ #include "ivi-input-server-protocol.h"
+-- 
+2.7.4
+

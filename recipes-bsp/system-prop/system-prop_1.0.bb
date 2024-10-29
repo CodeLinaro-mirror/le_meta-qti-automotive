@@ -12,6 +12,7 @@ SRC_URI = "\
     file://persist-prop.service \
     file://system.prop \
 "
+
 SYSTEMD_SERVICE:${PN} = "persist-prop.service"
 
 inherit systemd useradd

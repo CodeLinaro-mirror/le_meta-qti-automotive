@@ -1,0 +1,35 @@
+From bd170fe33b84bb5bba01bba359ee66b61835a780 Mon Sep 17 00:00:00 2001
+From: Futao He <quic_fhe@quicinc.com>
+Date: Thu, 11 Aug 2022 21:37:29 +0530
+Subject: [PATCH] libdp: libdm add uuid link for partions
+
+Android11 add unique path for partitions.
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: Ibdb1ff1428e4e44d33353d15ea980b7dc7faba98
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+---
+ fs_mgr/libdm/dm.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/fs_mgr/libdm/dm.cpp b/fs_mgr/libdm/dm.cpp
+index 0b00ccc..9ad9be5 100644
+--- a/fs_mgr/libdm/dm.cpp
++++ b/fs_mgr/libdm/dm.cpp
+@@ -181,6 +181,12 @@ bool DeviceMapper::CreateDevice(const std::string& name, const DmTable& table, s
+         }
+     }
+ 
++    remove(unique_path.c_str());
++    if(symlink(path->c_str(), unique_path.c_str())) {
++        LOG(ERROR) << "Created symlink:" << unique_path.c_str() << " on device: " << path->c_str() << " failed";
++        return false;
++    }
++
+     if (!WaitForFile(unique_path, timeout_ms)) {
+         LOG(ERROR) << "Failed waiting for device path: " << unique_path;
+         DeleteDevice(name);
+-- 
+2.7.4
+

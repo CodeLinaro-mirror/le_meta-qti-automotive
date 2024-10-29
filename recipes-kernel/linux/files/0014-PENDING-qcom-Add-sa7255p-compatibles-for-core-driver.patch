@@ -1,0 +1,174 @@
+From 6c1c451cc6bae2b6f45ddc72d5757d6858811dd1 Mon Sep 17 00:00:00 2001
+From: Shazad Hussain <quic_shazhuss@quicinc.com>
+Date: Mon, 16 Sep 2024 19:28:49 +0530
+Subject: [PATCH] PENDING: qcom: Add sa7255p compatibles for core drivers
+
+Add sa7255p specific compatible for uart, i2c, spi, ufs and usb to
+accomodate scmi changes.
+
+Change-Id: Ia695287fba8201a09aa560be59a2dc389bf9e29a
+Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+---
+ drivers/i2c/busses/i2c-qcom-geni.c            |  4 +++-
+ drivers/phy/qualcomm/phy-qcom-qmp-usb.c       |  3 +++
+ drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c |  5 +++++
+ drivers/soc/qcom/qcom-geni-se.c               |  1 +
+ drivers/spi/spi-geni-qcom.c                   |  4 +++-
+ drivers/tty/serial/qcom_geni_serial.c         | 12 +++++++++++-
+ drivers/ufs/host/ufs-qcom.c                   |  1 +
+ drivers/usb/dwc3/dwc3-qcom.c                  |  4 ++++
+ 8 files changed, 31 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-qcom-geni.c b/drivers/i2c/busses/i2c-qcom-geni.c
+index 160a46f92eea..cfaf947de184 100644
+--- a/drivers/i2c/busses/i2c-qcom-geni.c
++++ b/drivers/i2c/busses/i2c-qcom-geni.c
+@@ -886,7 +886,8 @@ static int geni_i2c_probe(struct platform_device *pdev)
+ 
+ 	gi2c->dev_data = desc;
+ 
+-	if (!of_device_is_compatible(dev->of_node, "qcom,sa8255p-geni-i2c")) {
++	if (!(of_device_is_compatible(dev->of_node, "qcom,sa8255p-geni-i2c") ||
++			of_device_is_compatible(dev->of_node, "qcom,sa7255p-geni-i2c"))) {
+ 		if (desc->has_core_clk) {
+ 			gi2c->core_clk = devm_clk_get(dev, "core");
+ 			if (IS_ERR(gi2c->core_clk))
+@@ -1146,6 +1147,7 @@ static const struct geni_i2c_desc i2c_master_hub = {
+ static const struct of_device_id geni_i2c_dt_match[] = {
+ 	{ .compatible = "qcom,geni-i2c", .data = &geni_i2c },
+ 	{ .compatible = "qcom,geni-i2c-master-hub", .data = &i2c_master_hub },
++	{ .compatible = "qcom,sa7255p-geni-i2c", .data = &remotely_geni_i2c },
+ 	{ .compatible = "qcom,sa8255p-geni-i2c", .data = &remotely_geni_i2c },
+ 	{}
+ };
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
+index 27aca652e5d5..a3020bb8e16a 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
+@@ -2509,6 +2509,9 @@ static const struct of_device_id qmp_usb_of_match_table[] = {
+ 	}, {
+ 		.compatible = "qcom,qcs8300-qmp-usb3-uni-phy",
+ 		.data = &sa8775p_usb3_uniphy_cfg,
++	}, {
++		.compatible = "qcom,sa7255p-qmp-usb3-uni-phy",
++		.data = &sa8255p_usb3_uniphy_cfg,
+ 	}, {
+ 		.compatible = "qcom,sa8775p-qmp-usb3-uni-phy",
+ 		.data = &sa8775p_usb3_uniphy_cfg,
+diff --git a/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c b/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
+index 0937bd789f02..44269c576ec3 100644
+--- a/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
++++ b/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
+@@ -573,6 +573,11 @@ static const struct phy_ops qcom_snps_hsphy_gen_ops = {
+ };
+ 
+ static const struct of_device_id qcom_snps_hsphy_of_match_table[] = {
++	{
++		.compatible	= "qcom,sa7255p-usb-hs-phy",
++		.data		= &sa8255p_snps_hs_phy,
++
++	},
+ 	{
+ 		.compatible	= "qcom,sa8255p-usb-hs-phy",
+ 		.data		= &sa8255p_snps_hs_phy,
+diff --git a/drivers/soc/qcom/qcom-geni-se.c b/drivers/soc/qcom/qcom-geni-se.c
+index 76f130bc7894..77fa66f59de6 100644
+--- a/drivers/soc/qcom/qcom-geni-se.c
++++ b/drivers/soc/qcom/qcom-geni-se.c
+@@ -1005,6 +1005,7 @@ static const struct geni_se_desc i2c_master_hub_desc = {
+ static const struct of_device_id geni_se_dt_match[] = {
+ 	{ .compatible = "qcom,geni-se-qup", .data = &qup_desc },
+ 	{ .compatible = "qcom,geni-se-i2c-master-hub", .data = &i2c_master_hub_desc },
++	{ .compatible = "qcom,sa7255p-geni-se-qup", .data = &remotely_qup_desc },
+ 	{ .compatible = "qcom,sa8255p-geni-se-qup", .data = &remotely_qup_desc },
+ 	{}
+ };
+diff --git a/drivers/spi/spi-geni-qcom.c b/drivers/spi/spi-geni-qcom.c
+index e9f4d639d70f..2cdb13181376 100644
+--- a/drivers/spi/spi-geni-qcom.c
++++ b/drivers/spi/spi-geni-qcom.c
+@@ -1229,7 +1229,8 @@ static int spi_geni_probe(struct platform_device *pdev)
+ 	if (!mas->dev_data)
+ 		return -ENXIO;
+ 
+-	if (of_device_is_compatible(dev->of_node, "qcom,sa8255p-geni-spi")) {
++	if (of_device_is_compatible(dev->of_node, "qcom,sa8255p-geni-spi") ||
++			of_device_is_compatible(dev->of_node, "qcom,sa7255p-geni-spi")) {
+ 		ret = dev_pm_domain_attach_list(&pdev->dev, &mas->dev_data->pd_data,
+ 						&mas->se.pd_list);
+ 		if (ret < 0)
+@@ -1438,6 +1439,7 @@ static const struct geni_spi_desc remotely_geni_spi = {
+ 
+ static const struct of_device_id spi_geni_dt_match[] = {
+ 	{ .compatible = "qcom,geni-spi", .data = &geni_spi },
++	{ .compatible = "qcom,sa7255p-geni-spi", .data = &remotely_geni_spi },
+ 	{ .compatible = "qcom,sa8255p-geni-spi", .data = &remotely_geni_spi },
+ 	{}
+ };
+diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
+index a41228ed8f61..20709b1769d7 100644
+--- a/drivers/tty/serial/qcom_geni_serial.c
++++ b/drivers/tty/serial/qcom_geni_serial.c
+@@ -1753,7 +1753,9 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+ 	port->se.wrapper = dev_get_drvdata(pdev->dev.parent);
+ 
+ 	if (of_device_is_compatible(pdev->dev.of_node, "qcom,sa8255p-geni-debug-uart") ||
+-	    of_device_is_compatible(pdev->dev.of_node, "qcom,sa8255p-geni-uart")) {
++	    of_device_is_compatible(pdev->dev.of_node, "qcom,sa8255p-geni-uart") ||
++		of_device_is_compatible(pdev->dev.of_node, "qcom,sa7255p-geni-debug-uart") ||
++		of_device_is_compatible(pdev->dev.of_node, "qcom,sa7255p-geni-uart")) {
+ 		ret = dev_pm_domain_attach_list(&pdev->dev,
+ 						&port->dev_data->pd_data, &port->se.pd_list);
+ 		if (ret < 0)
+@@ -1998,6 +2000,10 @@ static const struct of_device_id qcom_geni_serial_match_table[] = {
+ 		.compatible = "qcom,geni-debug-uart",
+ 		.data = &qcom_geni_console_data,
+ 	},
++	{
++		.compatible = "qcom,sa7255p-geni-debug-uart",
++		.data = &remotely_qcom_geni_console_data,
++	},
+ 	{
+ 		.compatible = "qcom,sa8255p-geni-debug-uart",
+ 		.data = &remotely_qcom_geni_console_data,
+@@ -2006,6 +2012,10 @@ static const struct of_device_id qcom_geni_serial_match_table[] = {
+ 		.compatible = "qcom,geni-uart",
+ 		.data = &qcom_geni_uart_data,
+ 	},
++	{
++		.compatible = "qcom,sa7255p-geni-uart",
++		.data = &remotely_qcom_geni_uart_data,
++	},
+ 	{
+ 		.compatible = "qcom,sa8255p-geni-uart",
+ 		.data = &remotely_qcom_geni_uart_data,
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index c5c1477e0db2..e8acef7ce0a4 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -2226,6 +2226,7 @@ static int ufs_qcom_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
+ 	{ .compatible = "qcom,ufshc"},
++	{ .compatible = "qcom,sa7255p-ufshc", .data = &ufs_hba_qcom_fmr_vops},
+ 	{ .compatible = "qcom,sa8255p-ufshc", .data = &ufs_hba_qcom_fmr_vops},
+ 	{},
+ };
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index 2c0b6e3d60f6..430e07c53ab3 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -1405,6 +1405,10 @@ static const struct dev_pm_ops dwc3_qcom_dev_pm_ops = {
+ };
+ 
+ static const struct of_device_id dwc3_qcom_of_match[] = {
++	{
++		.compatible	= "qcom,sa7255p-dwc3",
++		.data		= &sa8255p_dwc3_qcom_priv_data,
++	},
+ 	{
+ 		.compatible	= "qcom,sa8255p-dwc3",
+ 		.data		= &sa8255p_dwc3_qcom_priv_data,
+-- 
+2.17.1
+

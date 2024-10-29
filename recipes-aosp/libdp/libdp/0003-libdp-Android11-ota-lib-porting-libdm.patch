@@ -1,0 +1,225 @@
+From a89fbdd297456939f9e3448c78ee2f497a4de851 Mon Sep 17 00:00:00 2001
+From: Lei wang <quic_leiwan@quicinc.com>
+Date: Fri, 28 Oct 2022 11:34:59 +0800
+Subject: [PATCH] libdp: Android11 ota lib porting libdm
+
+Modifications:
+1. add code files and dir in Makefile
+2. add dm_test building with gtest code
+3. upgrade std lib to c++17
+4. add dependent libs
+        uuid gtest gtest_main
+5. diable uuid link check, enable in later uuid link patch
+6. convert Android pathes to linux pathes
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: I2d6480a92f8acae6e7b5e69be96fa4519576913a
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ fs_mgr/libdm/Makefile.am        | 18 +++++++++++++++++-
+ fs_mgr/libdm/dm.cpp             | 18 ++++++++++++++++--
+ fs_mgr/libdm/dm_test.cpp        |  7 +++----
+ fs_mgr/libdm/include/libdm/dm.h |  8 ++++++++
+ fs_mgr/libdm/loop_control.cpp   |  5 ++++-
+ fs_mgr/libdm/utility.h          |  1 +
+ 6 files changed, 49 insertions(+), 8 deletions(-)
+
+diff --git a/fs_mgr/libdm/Makefile.am b/fs_mgr/libdm/Makefile.am
+index 7494c65de9..24d8b5d24a 100644
+--- a/fs_mgr/libdm/Makefile.am
++++ b/fs_mgr/libdm/Makefile.am
+@@ -3,15 +3,31 @@ lib_LTLIBRARIES := libdm.la
+ libdm_la_SOURCES := dm_table.cpp \
+                     dm_target.cpp \
+                     dm.cpp \
+-                    loop_control.cpp
++                    loop_control.cpp \
++                    utility.cpp
+ 
+ libdm_la_CPPFLAGS := -I$(top_srcdir)/base/include \
+                      -I$(srcdir)/include \
+                      -std=c++17
+ libdm_la_LDFLAGS := -version-info $(LT_VERSION_INFO)
++libdm_la_LIBADD   := -luuid
+ 
+ dm_includedir=$(includedir)/libdm
+ dm_include_HEADERS := $(srcdir)/include/libdm/dm.h \
+                       $(srcdir)/include/libdm/dm_table.h \
+                       $(srcdir)/include/libdm/dm_target.h \
+                       $(srcdir)/include/libdm/loop_control.h
++
++bin_PROGRAMS := dm_test
++
++dm_test_SOURCES := dm_test.cpp \
++                   loop_control_test.cpp \
++                   test_util.cpp
++
++dm_test_CPPFLAGS := -I$(top_srcdir)/base/include \
++                     -I$(srcdir)/include \
++                     -std=c++17
++dm_test_LDFLAGS := -version-info $(LT_VERSION_INFO)
++dm_test_LDADD := $(top_builddir)/base/libbase_r.la
++dm_test_LDADD += libdm.la
++dm_test_LDADD += -lgtest -lgtest_main
+diff --git a/fs_mgr/libdm/dm.cpp b/fs_mgr/libdm/dm.cpp
+index 791268849e..0b00ccc229 100644
+--- a/fs_mgr/libdm/dm.cpp
++++ b/fs_mgr/libdm/dm.cpp
+@@ -34,6 +34,8 @@
+ #include <uuid/uuid.h>
+ 
+ #include "utility.h"
++//add cstring for memchr() and memset()
++#include <cstring>
+ 
+ namespace android {
+ namespace dm {
+@@ -41,7 +43,11 @@ namespace dm {
+ using namespace std::literals;
+ 
+ DeviceMapper::DeviceMapper() : fd_(-1) {
++#if defined(__linux__) && !defined(__ANDROID__)
++    fd_ = TEMP_FAILURE_RETRY(open("/dev/mapper/control", O_RDWR | O_CLOEXEC));
++#else
+     fd_ = TEMP_FAILURE_RETRY(open("/dev/device-mapper", O_RDWR | O_CLOEXEC));
++#endif
+     if (fd_ < 0) {
+         PLOG(ERROR) << "Failed to open device-mapper";
+     }
+@@ -195,7 +201,11 @@ bool DeviceMapper::GetDeviceUniquePath(const std::string& name, std::string* pat
+         LOG(ERROR) << "Device does not have a unique path: " << name;
+         return false;
+     }
++#if defined(__linux__) && !defined(__ANDROID__)
++    *path = "/dev/disk/by-uuid/"s + io.uuid;
++#else
+     *path = "/dev/block/mapper/by-uuid/"s + io.uuid;
++#endif
+     return true;
+ }
+ 
+@@ -423,7 +433,11 @@ bool DeviceMapper::GetDmDevicePathByName(const std::string& name, std::string* p
+     }
+ 
+     uint32_t dev_num = minor(io.dev);
++#if defined(__linux__) && !defined(__ANDROID__)
++    *path = "/dev/dm-" + std::to_string(dev_num);
++#else
+     *path = "/dev/block/dm-" + std::to_string(dev_num);
++#endif
+     return true;
+ }
+ 
+@@ -522,7 +536,7 @@ std::string DeviceMapper::GetTargetType(const struct dm_target_spec& spec) {
+ }
+ 
+ static bool ExtractBlockDeviceName(const std::string& path, std::string* name) {
+-    static constexpr std::string_view kDevBlockPrefix("/dev/block/");
++    static constexpr std::string_view kDevBlockPrefix(DM_START_STR);
+     if (android::base::StartsWith(path, kDevBlockPrefix)) {
+         *name = path.substr(kDevBlockPrefix.length());
+         return true;
+@@ -587,7 +601,7 @@ std::optional<std::string> DeviceMapper::GetParentBlockDeviceByPath(const std::s
+         LOG(ERROR) << "No slaves in " << slaves_dir;
+         return std::nullopt;
+     }
+-    return "/dev/block/" + sub_device_name;
++    return DM_START_STR + sub_device_name;
+ }
+ 
+ bool DeviceMapper::TargetInfo::IsOverflowSnapshot() const {
+diff --git a/fs_mgr/libdm/dm_test.cpp b/fs_mgr/libdm/dm_test.cpp
+index 41d3145bb8..79ebe3da8b 100644
+--- a/fs_mgr/libdm/dm_test.cpp
++++ b/fs_mgr/libdm/dm_test.cpp
+@@ -53,7 +53,6 @@ TEST(libdm, DmLinear) {
+     ASSERT_GE(tmp1, 0);
+     unique_fd tmp2(CreateTempFile("file_2", 4096));
+     ASSERT_GE(tmp2, 0);
+-
+     // Create two different files. These will back two separate loop devices.
+     const char message1[] = "Hello! This is sector 1.";
+     const char message2[] = "Goodbye. This is sector 2.";
+@@ -563,7 +562,7 @@ TEST(libdm, IsDmBlockDevice) {
+     ASSERT_GE(tmp, 0);
+     LoopDevice loop(tmp, 10s);
+     ASSERT_TRUE(loop.valid());
+-    ASSERT_TRUE(android::base::StartsWith(loop.device(), "/dev/block"));
++    ASSERT_TRUE(android::base::StartsWith(loop.device(), DM_START_STR));
+ 
+     DmTable table;
+     ASSERT_TRUE(table.Emplace<DmTargetLinear>(0, 1, loop.device(), 0));
+@@ -582,7 +581,7 @@ TEST(libdm, GetDmDeviceNameByPath) {
+     ASSERT_GE(tmp, 0);
+     LoopDevice loop(tmp, 10s);
+     ASSERT_TRUE(loop.valid());
+-    ASSERT_TRUE(android::base::StartsWith(loop.device(), "/dev/block"));
++    ASSERT_TRUE(android::base::StartsWith(loop.device(), DM_START_STR));
+ 
+     DmTable table;
+     ASSERT_TRUE(table.Emplace<DmTargetLinear>(0, 1, loop.device(), 0));
+@@ -603,7 +602,7 @@ TEST(libdm, GetParentBlockDeviceByPath) {
+     ASSERT_GE(tmp, 0);
+     LoopDevice loop(tmp, 10s);
+     ASSERT_TRUE(loop.valid());
+-    ASSERT_TRUE(android::base::StartsWith(loop.device(), "/dev/block"));
++    ASSERT_TRUE(android::base::StartsWith(loop.device(), DM_START_STR));
+ 
+     DmTable table;
+     ASSERT_TRUE(table.Emplace<DmTargetLinear>(0, 1, loop.device(), 0));
+diff --git a/fs_mgr/libdm/include/libdm/dm.h b/fs_mgr/libdm/include/libdm/dm.h
+index abe9c4cda4..417d5d675f 100644
+--- a/fs_mgr/libdm/include/libdm/dm.h
++++ b/fs_mgr/libdm/include/libdm/dm.h
+@@ -42,6 +42,14 @@
+ #define DM_ALIGN_MASK (7)
+ #define DM_ALIGN(x) (((x) + DM_ALIGN_MASK) & ~DM_ALIGN_MASK)
+ 
++#if defined(__linux__) && !defined(__ANDROID__)
++#define DM_START_STR "/dev/"
++#else
++#define DM_START_STR "/dev/block/"
++#endif
++
++
++
+ namespace android {
+ namespace dm {
+ 
+diff --git a/fs_mgr/libdm/loop_control.cpp b/fs_mgr/libdm/loop_control.cpp
+index 2e40a18e20..589ff7fe68 100644
+--- a/fs_mgr/libdm/loop_control.cpp
++++ b/fs_mgr/libdm/loop_control.cpp
+@@ -104,11 +104,14 @@ bool LoopControl::FindFreeLoopDevice(std::string* loopdev) const {
+         PLOG(ERROR) << "Failed to get free loop device";
+         return false;
+     }
+-
++#if defined(__linux__) && !defined(__ANDROID__)
++    *loopdev = ::android::base::StringPrintf("/dev/loop%d", rc);
++#else
+     // Ueventd on android creates all loop devices as /dev/block/loopX
+     // The total number of available devices is determined by 'loop.max_part'
+     // kernel command line argument.
+     *loopdev = ::android::base::StringPrintf("/dev/block/loop%d", rc);
++#endif
+     return true;
+ }
+ 
+diff --git a/fs_mgr/libdm/utility.h b/fs_mgr/libdm/utility.h
+index 58fa96bcc6..8d4401e75b 100644
+--- a/fs_mgr/libdm/utility.h
++++ b/fs_mgr/libdm/utility.h
+@@ -16,6 +16,7 @@
+ 
+ #include <chrono>
+ #include <functional>
++#include <string>
+ 
+ namespace android {
+ namespace dm {
+-- 
+2.37.3
+

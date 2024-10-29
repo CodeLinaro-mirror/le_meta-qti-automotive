@@ -5,12 +5,10 @@ HOMEPAGE = "http://developer.android.com/"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://NOTICE;md5=c19179f3430fd533888100ab6616e114"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core"
-
-S = "${WORKDIR}/system/core/libmincrypt"
+SRC_URI = "${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1"
 SRCREV = "${AUTOREV}"
 
+S = "${WORKDIR}/system/core/libmincrypt"
 
 inherit autotools pkgconfig
 

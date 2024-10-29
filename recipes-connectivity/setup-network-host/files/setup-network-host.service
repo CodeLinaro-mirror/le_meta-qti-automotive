@@ -1,0 +1,18 @@
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+# This service file is used to setup network ip on host
+[Unit]
+Description=Setup Host Network 
+After=network-pre.target systemd-networkd.service systemd-networkd-wait-online.service
+Before=network.target multi-user.target shutdown.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+NoNewPrivileges=true
+ExecStart=/usr/bin/setup-network-host.sh
+
+[Install]
+WantedBy=multi-user.target
+

@@ -10,10 +10,9 @@ DEPENDS += "ext4-utils glib-2.0 libbase libcutils libmincrypt libutils virtual/k
 
 PR = "r19"
 
-
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core"
+SRC_URI = "${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1"
 SRCREV = "${AUTOREV}"
+
 S = "${WORKDIR}/system/core"
 
 inherit autotools pkgconfig systemd useradd
@@ -56,6 +55,7 @@ do_install:append() {
     install -m 0755 ${S}/usb/debuger/usb_debug -D ${D}${base_sbindir}/
 
     install -b -m 0644 /dev/null -D ${D}${sysconfdir}/build.prop
+    chown leprop:leprop ${D}${sysconfdir}/build.prop
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -m 0755 ${S}/usb/start_usb -D ${D}${sysconfdir}/initscripts/usb

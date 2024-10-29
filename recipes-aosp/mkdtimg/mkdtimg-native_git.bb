@@ -10,10 +10,9 @@ PROVIDES = "mkdtimg-native"
 
 PR = "r1"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI = "file://system/libufdt/"
+SRC_URI = "${PATH_TO_REPO}/system/libufdt/.git;protocol=${PROTO};destsuffix=system/libufdt;usehead=1"
+SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/system/libufdt"
-
 
 inherit autotools pkgconfig native

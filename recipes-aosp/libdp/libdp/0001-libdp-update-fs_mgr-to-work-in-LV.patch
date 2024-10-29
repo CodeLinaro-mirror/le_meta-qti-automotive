@@ -1,0 +1,31 @@
+From b71ce946c2ad4b4dc6c78d3b7786554c181f6e05 Mon Sep 17 00:00:00 2001
+From: Lei wang <quic_leiwan@quicinc.com>
+Date: Thu, 20 Oct 2022 13:21:12 +0800
+Subject: [PATCH] libdp: update fs_mgr to work in LV
+
+update device path for partiton opener
+
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ fs_mgr/liblp/partition_opener.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/fs_mgr/liblp/partition_opener.cpp b/fs_mgr/liblp/partition_opener.cpp
+index 1d4db85..b401521 100644
+--- a/fs_mgr/liblp/partition_opener.cpp
++++ b/fs_mgr/liblp/partition_opener.cpp
+@@ -42,7 +42,11 @@ std::string GetPartitionAbsolutePath(const std::string& path) {
+         return path;
+     }
+ 
++#if defined(__linux__) && !defined(__ANDROID__)
++    auto by_name = "/dev/disk/by-partlabel/" + path;
++#else
+     auto by_name = "/dev/block/by-name/" + path;
++#endif
+     if (access(by_name.c_str(), F_OK) != 0) {
+         // If the by-name symlink doesn't exist, as a special case we allow
+         // certain devices to be used as partition names. This can happen if a
+-- 
+2.7.4
+

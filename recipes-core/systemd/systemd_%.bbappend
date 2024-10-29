@@ -14,6 +14,8 @@ SRC_URI:append:sa81x5 = " file://0001-systemd-add-slotselect-support-in-fstab.pa
 
 SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "5.15", "file://platform_load.conf", "", d)}"
 
+SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0033-systemd-Make-root-s-home-directory-configurable-2.patch', '', d)} "
+
 # Remove backlight - Loads/Saves Screen Backlight Brightness, not required.
 RUMI_PACKAGECONFIG = "\
     ${@bb.utils.filter('DISTRO_FEATURES', 'acl audit efi ldconfig pam selinux smack usrmerge polkit seccomp', d)} \

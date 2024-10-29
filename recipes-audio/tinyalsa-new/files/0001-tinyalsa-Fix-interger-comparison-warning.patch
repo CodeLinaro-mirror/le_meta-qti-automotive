@@ -1,0 +1,42 @@
+From 4a0925c6ff2beb826101d91b8a7370e729833bb0 Mon Sep 17 00:00:00 2001
+From: Guodong Hu <quic_guodhu@quicinc.com>
+Date: Mon, 15 Apr 2024 09:09:53 -0700
+Subject: [PATCH] tinyalsa: Fix interger comparison warning
+
+Fix comparison of integer expressions of different signedness
+
+Upstream-Status: Pending
+
+Signed-off-by: Huicheng Liu <quic_huicliu@quicinc.com>
+---
+ utils/tinywavinfo.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/utils/tinywavinfo.c b/utils/tinywavinfo.c
+index 301f8dc..19ce58f 100644
+--- a/utils/tinywavinfo.c
++++ b/utils/tinywavinfo.c
+@@ -26,6 +26,11 @@
+ ** DAMAGE.
+ */
+ 
++// Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
++//
++// Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -149,7 +154,7 @@ void analyse_sample(FILE *file, unsigned int channels, unsigned int bits,
+     void *buffer;
+     int size;
+     int num_read;
+-    int i;
++    unsigned int i;
+     unsigned int ch;
+     int frame_size = 1024;
+     unsigned int bytes_per_sample = 0;
+-- 
+2.34.1
+

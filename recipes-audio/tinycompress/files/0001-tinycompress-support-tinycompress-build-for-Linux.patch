@@ -1,0 +1,115 @@
+From 2d757893d7d136fc5f3420ab75a8c5a320dfd1de Mon Sep 17 00:00:00 2001
+From: Guodong Hu <quic_guodhu@quicinc.com>
+Date: Mon, 8 Aug 2022 15:53:14 +0800
+Subject: [PATCH] tinycompress: support tinycompress build for Linux
+
+Upstream-Status: Pending
+
+Signed-off-by: Guodong Hu <quic_guodhu@quicinc.com>
+---
+ Makefile.am        | 35 +++++++++++++++++++++++++++++++++++
+ configure.ac       | 32 ++++++++++++++++++++++++++++++++
+ tinycompress.pc.in | 10 ++++++++++
+ 3 files changed, 77 insertions(+)
+ create mode 100644 Makefile.am
+ create mode 100644 configure.ac
+ create mode 100644 tinycompress.pc.in
+
+diff --git a/Makefile.am b/Makefile.am
+new file mode 100644
+index 0000000..b02e1e1
+--- /dev/null
++++ b/Makefile.am
+@@ -0,0 +1,35 @@
++pkgconfigdir = $(libdir)/pkgconfig
++pkgconfig_DATA = tinycompress.pc
++EXTRA_DIST = $(pkgconfig_DATA)
++
++AM_CFLAGS = -Wundef \
++            -Wstrict-prototypes \
++            -Wno-trigraphs \
++            -g -O0 \
++            -fno-inline \
++            -fno-short-enums \
++            -fpic
++
++DEFAULT_INCLUDES = -I${top_srcdir}/include
++
++c_sources = compress.c \
++            utils.c \
++            compress_hw.c \
++            compress_plugin.c \
++            snd_utils.c
++
++h_sources = include/tinycompress/compress_plugin.h \
++            include/tinycompress/tinycompress.h \
++            include/tinycompress/tinymp3.h \
++            include/tinycompress/version.h
++
++library_includedir = $(includedir)/tinycompress
++library_include_HEADERS = $(h_sources)
++
++lib_LTLIBRARIES = libtinycompress.la
++libtinycompress_la_SOURCES = $(c_sources)
++libtinycompress_la_CFLAGS := $(AM_CFLAGS)
++libtinycompress_la_CFLAGS += $(GLIB_CFLAGS) -Dstrlcpy=g_strlcpy -Dstrlcat=g_strlcat
++libtinycompress_la_CFLAGS += -D__unused=__attribute__\(\(__unused__\)\)
++libtinycompress_la_CFLAGS += -DNDEBUG
++libtinycompress_la_LDFLAGS = -shared -avoid-version
+diff --git a/configure.ac b/configure.ac
+new file mode 100644
+index 0000000..9f7badb
+--- /dev/null
++++ b/configure.ac
+@@ -0,0 +1,32 @@
++AC_PREREQ(2.69)
++AC_INIT([tinycomress],1.0.0)
++AM_INIT_AUTOMAKE([foreign subdir-objects])
++
++AC_PROG_CC
++AM_PROG_CC_C_O
++AC_PROG_CXX
++AC_PROG_LIBTOOL
++AC_PROG_AWK
++AC_PROG_CPP
++AC_PROG_INSTALL
++AC_PROG_LN_S
++AC_PROG_MAKE_SET
++PKG_PROG_PKG_CONFIG
++
++AC_ARG_WITH([glib],
++      AC_HELP_STRING([--with-glib],
++         [enable glib, Build against glib. Use this when building for HLOS systems which use glib]))
++
++if (test "x${with_glib}" = "xyes"); then
++        PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
++                                AC_MSG_ERROR(GThread >= 2.16 is required))
++        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes,
++                                AC_MSG_ERROR(GLib >= 2.16 is required))
++        GLIB_CFLAGS="$GLIB_CFLAGS $GTHREAD_CFLAGS"
++        GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
++
++        AC_SUBST(GLIB_CFLAGS)
++        AC_SUBST(GLIB_LIBS)
++fi
++AC_CONFIG_FILES([ Makefile tinycompress.pc ])
++AC_OUTPUT
+diff --git a/tinycompress.pc.in b/tinycompress.pc.in
+new file mode 100644
+index 0000000..1c27a05
+--- /dev/null
++++ b/tinycompress.pc.in
+@@ -0,0 +1,10 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: tinycompress
++Description: tinycompress library
++Version: @VERSION@
++Libs: -L${libdir} -ltinycompress
++Cflags: -I${includedir}/tinycompress
+-- 
+2.7.4
+

@@ -1,0 +1,31 @@
+From d76375350a6a370a727605f42d0407735454e35a Mon Sep 17 00:00:00 2001
+From: Hexuan Zhu <quic_hexuzhu@quicinc.com>
+Date: Thu, 21 Apr 2022 22:43:15 +0800
+Subject: [PATCH] disable realtime schedule in pulseaudio
+
+Upstream-Status: Inappropriate 
+[realtime-scheduling only need to disable in audioreach]
+
+we need to disable realtime-scheduling otherwise will cause
+watchdog timeout
+Signed-off-by: Hexuan Zhu <quic_hexuzhu@quicinc.com>
+---
+ src/daemon/daemon.conf.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/daemon/daemon.conf.in b/src/daemon/daemon.conf.in
+index a955523..94f3605 100644
+--- a/src/daemon/daemon.conf.in
++++ b/src/daemon/daemon.conf.in
+@@ -36,7 +36,7 @@ ifelse(@HAVE_DBUS@, 1, [dnl
+ ; high-priority = yes
+ ; nice-level = -11
+
+-; realtime-scheduling = yes
++realtime-scheduling = no
+ ; realtime-priority = 5
+
+ ; exit-idle-time = 20
+--
+2.7.4
+

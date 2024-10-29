@@ -10,12 +10,10 @@ DEPENDS += "libcutils libpcre libsparse"
 
 PR = "r1"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/extras/ext4_utils"
-
-S = "${WORKDIR}/system/extras/ext4_utils"
+SRC_URI = "${PATH_TO_REPO}/system/extras/.git;protocol=${PROTO};destsuffix=system/extras;usehead=1"
 SRCREV = "${AUTOREV}"
 
+S = "${WORKDIR}/system/extras/ext4_utils"
 
 inherit autotools pkgconfig
 

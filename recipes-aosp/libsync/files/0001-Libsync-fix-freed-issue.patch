@@ -1,0 +1,25 @@
+From 950234a2d311005baa3fee0987bcf1714a3767f3 Mon Sep 17 00:00:00 2001
+From: Baihui Zeng <quic_baihzeng@quicinc.com>
+Date: Tue, 11 Apr 2023 09:44:44 +0000
+Subject: [PATCH] Libsync : fix freed issue
+
+Signed-off-by: Baihui Zeng <quic_baihzeng@quicinc.com>
+---
+ sync.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sync.c b/sync.c
+index 0950082545..6b187faed4 100644
+--- a/sync.c
++++ b/sync.c
+@@ -277,7 +277,6 @@ static struct sync_file_info* legacy_fence_info_to_sync_file_info(
+     info = calloc(1, sizeof(struct sync_file_info) +
+                      num_fences * sizeof(struct sync_fence_info));
+     if (!info) {
+-        free(legacy_info);
+         return NULL;
+     }
+     info->sync_fence_info = (__u64)(uintptr_t)(info + 1);
+-- 
+2.35.2
+

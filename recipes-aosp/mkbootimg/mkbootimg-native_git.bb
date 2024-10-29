@@ -6,10 +6,9 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=89aea4e17d99a7ca
 
 PROVIDES = "mkbootimg-native"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core/mkbootimg"
-
+SRC_URI = "${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1"
 SRCREV = "${AUTOREV}"
+
 S = "${WORKDIR}/system/core/mkbootimg"
 
 inherit native

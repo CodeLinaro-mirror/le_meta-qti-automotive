@@ -1,0 +1,48 @@
+From c636b2f08cd63467fc3fbf5b299968b7639c3005 Mon Sep 17 00:00:00 2001
+From: Huicheng Liu <huicliu@quicinc.com>
+Date: Tue, 30 Apr 2024 17:41:12 -0400
+Subject: [PATCH] Call pcm_start for capture case in NON MMAP mode
+
+Upstrem-Status: Pending
+Signed-off-by: Huicheng Liu <huicliu@quicinc.com>
+---
+ src/pcm.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/src/pcm.c b/src/pcm.c
+index 1b2103a..5133881 100644
+--- a/src/pcm.c
++++ b/src/pcm.c
+@@ -26,6 +26,11 @@
+ ** DAMAGE.
+ */
+ 
++// Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
++//
++// Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <fcntl.h>
+@@ -1641,6 +1646,17 @@ static int pcm_rw_transfer(struct pcm *pcm, void *data, unsigned int frames)
+     transfer.frames = frames;
+     transfer.result = 0;
+ 
++    /*
++     * If frames < start_threshold, wait indefinitely.
++     * Another thread may start capture
++     */
++    if (!is_playback && pcm_state(pcm) == PCM_STATE_PREPARED &&
++            frames >= pcm->config.start_threshold) {
++        if (pcm_start(pcm) < 0) {
++            return -1;
++        }
++    }
++
+     res = pcm->ops->ioctl(pcm->data, is_playback
+                           ? SNDRV_PCM_IOCTL_WRITEI_FRAMES
+                           : SNDRV_PCM_IOCTL_READI_FRAMES, &transfer);
+-- 
+2.25.1
+

@@ -1,0 +1,120 @@
+From a89274d239e572d37a110eab0792abafd7e62cc1 Mon Sep 17 00:00:00 2001
+From: Deru Wang <quic_deruwang@quicinc.com>
+Date: Tue, 6 Feb 2024 13:52:25 +0800
+Subject: [PATCH] alsa_lib: support mmap mode for ioplug
+
+Upstream-Status: Pending
+
+Signed-off-by: Deru Wang <quic_deruwang@quicinc.com>
+---
+ src/pcm/pcm_ioplug.c | 48 +++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 41 insertions(+), 7 deletions(-)
+
+diff --git a/src/pcm/pcm_ioplug.c b/src/pcm/pcm_ioplug.c
+index 9818439..33054c7 100644
+--- a/src/pcm/pcm_ioplug.c
++++ b/src/pcm/pcm_ioplug.c
+@@ -1,4 +1,4 @@
+-/**
++﻿/**
+  * \file pcm/pcm_ioplug.c
+  * \ingroup Plugin_SDK
+  * \brief I/O Plugin SDK
+@@ -104,7 +104,20 @@ static int snd_pcm_ioplug_info(snd_pcm_t *pcm, snd_pcm_info_t *info)
+ 
+ static int snd_pcm_ioplug_channel_info(snd_pcm_t *pcm, snd_pcm_channel_info_t *info)
+ {
+-	return snd_pcm_channel_info_shm(pcm, info, -1);
++	ioplug_priv_t *io = pcm->private_data;
++	int err = 0;
++
++	err = snd_pcm_channel_info_shm(pcm, info, -1);
++	if (err < 0)
++		return err;
++	if (pcm->mmap_rw) {
++		info->type = SND_PCM_AREA_MMAP;
++		info->u.mmap.offset = 0;
++		if (io->data->callback->channel_info)
++			err = io->data->callback->channel_info(io->data, &info->u.mmap.fd);
++	}
++
++	return err;
+ }
+ 
+ static int snd_pcm_ioplug_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
+@@ -467,6 +480,16 @@ static int snd_pcm_ioplug_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
+ 	ioplug_priv_t *io = pcm->private_data;
+ 	int err;
+ 
++	if (pcm->access == SND_PCM_ACCESS_MMAP_INTERLEAVED ||
++		pcm->access == SND_PCM_ACCESS_MMAP_NONINTERLEAVED ||
++		pcm->access == SND_PCM_ACCESS_MMAP_COMPLEX) {
++		pcm->mmap_rw = 1;
++		io->data->mmap_rw = 1;
++	} else {
++		pcm->mmap_rw = 0;
++		io->data->mmap_rw = 0;
++	}
++
+ 	if (!io->data->callback->sw_params)
+ 		return 0;
+ 
+@@ -711,7 +734,7 @@ static int snd_pcm_ioplug_mmap_begin_capture(snd_pcm_t *pcm,
+ 
+ 	if (io->data->callback->transfer &&
+ 	    pcm->access != SND_PCM_ACCESS_RW_INTERLEAVED &&
+-	    pcm->access != SND_PCM_ACCESS_RW_NONINTERLEAVED) {
++	    pcm->access != SND_PCM_ACCESS_RW_NONINTERLEAVED && !pcm->mmap_rw) {
+ 		snd_pcm_sframes_t result;
+ 		result = io->data->callback->transfer(io->data, *areas, *offset, *frames);
+ 		if (result < 0)
+@@ -735,7 +758,7 @@ static snd_pcm_sframes_t snd_pcm_ioplug_mmap_commit(snd_pcm_t *pcm,
+ {
+ 	if (pcm->stream == SND_PCM_STREAM_PLAYBACK &&
+ 	    pcm->access != SND_PCM_ACCESS_RW_INTERLEAVED &&
+-	    pcm->access != SND_PCM_ACCESS_RW_NONINTERLEAVED) {
++	    pcm->access != SND_PCM_ACCESS_RW_NONINTERLEAVED && !pcm->mmap_rw) {
+ 		const snd_pcm_channel_area_t *areas;
+ 		snd_pcm_uframes_t ofs, frames = size;
+ 
+@@ -744,7 +767,6 @@ static snd_pcm_sframes_t snd_pcm_ioplug_mmap_commit(snd_pcm_t *pcm,
+ 			return -EIO;
+ 		return ioplug_priv_transfer_areas(pcm, areas, offset, frames);
+ 	}
+-
+ 	snd_pcm_mmap_appl_forward(pcm, size);
+ 	return size;
+ }
+@@ -825,7 +847,13 @@ static int snd_pcm_ioplug_poll_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsi
+ 
+ static int snd_pcm_ioplug_mmap(snd_pcm_t *pcm ATTRIBUTE_UNUSED)
+ {
+-	return 0;
++	ioplug_priv_t *io = pcm->private_data;
++	int err = 0;
++
++	if (io->data->callback->mmap)
++		err = io->data->callback->mmap(io->data);
++
++	return err;
+ }
+ 
+ static int snd_pcm_ioplug_async(snd_pcm_t *pcm ATTRIBUTE_UNUSED,
+@@ -837,7 +865,13 @@ static int snd_pcm_ioplug_async(snd_pcm_t *pcm ATTRIBUTE_UNUSED,
+ 
+ static int snd_pcm_ioplug_munmap(snd_pcm_t *pcm ATTRIBUTE_UNUSED)
+ {
+-	return 0;
++	ioplug_priv_t *io = pcm->private_data;
++	int err = 0;
++
++	if (io->data->callback->munmap)
++		err = io->data->callback->munmap(io->data);
++
++	return err;
+ }
+ 
+ static snd_pcm_chmap_query_t **snd_pcm_ioplug_query_chmaps(snd_pcm_t *pcm)
+-- 
+2.17.1
+

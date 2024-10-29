@@ -1,0 +1,30 @@
+From e40b619b6f69552235f4ab2d85b3c781db58f698 Mon Sep 17 00:00:00 2001
+From: ABHIJNA B N <quic_abhibn@quicinc.com>
+Date: Wed, 4 Sep 2024 14:20:37 +0530
+Subject: [PATCH] devicetree: Adding early ramdisk bootargs for yocto
+
+Adding "rdinit=/sbin/early-ramdisk-init early-ramdisk.mode=0" in dts
+for finding early ramdisk in yocto.
+
+Change-Id: I3e7fc9bd94ad899378c1cd695ba61fc6ee67c835
+Signed-off-by: ABHIJNA B N <quic_abhibn@quicinc.com>
+---
+ sa8775p-qvp/sa8775p-qvp.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/devicetree/sa8775p-qvp/sa8775p-qvp.dts b/devicetree/sa8775p-qvp/sa8775p-qvp.dts
+index 596e137..75da50f 100755
+--- a/sa8775p-qvp/sa8775p-qvp.dts
++++ b/sa8775p-qvp/sa8775p-qvp.dts
+@@ -455,7 +455,7 @@
+ 	};
+
+ 	chosen {
+-		bootargs = "rw root=/dev/vda earlyprintk=serial,ttyAMA0 console=ttyAMA0 firmware_class.path=/firmware";
++		bootargs = "rw root=/dev/vda earlyprintk=serial,ttyAMA0 console=ttyAMA0 firmware_class.path=/firmware rdinit=/sbin/early-ramdisk-init early-ramdisk.mode=0";
+ 		stdout-path = "/pl011@40000000";
+ 		linux,initrd-start = <0xbd151000>;
+ 		linux,initrd-end =  <0xbef00000>;
+--
+2.25.1
+
