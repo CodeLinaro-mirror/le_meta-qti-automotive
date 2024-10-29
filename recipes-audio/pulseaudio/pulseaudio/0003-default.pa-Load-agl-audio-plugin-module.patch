@@ -1,0 +1,31 @@
+From 5fb8bcdf5be58ec99b37f1e64312c0426a1a5c28 Mon Sep 17 00:00:00 2001
+From: Hugh Guan <hhguan@codeaurora.org>
+Date: Fri, 21 Oct 2016 14:03:48 +0800
+Subject: [PATCH 3/4] default.pa: Load agl-audio-plugin module
+
+Automatically load agl-audio-plugin module for audio policy manager.
+
+Signed-off-by: Hugh Guan <hhguan@codeaurora.org>
+---
+ src/daemon/default.pa.in | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index afbd8b3..383e603 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
+@@ -85,6 +85,11 @@ load-module module-acdb
+ load-module module-codec-control
+ .endif
+ 
++### Automatically load agl-audio-plugin module
++.ifexists agl-audio-plugin@PA_SOEXT@
++load-module agl-audio-plugin
++.endif
++
+ ### Automatically connect sink and source if JACK server is present
+ .ifexists module-jackdbus-detect@PA_SOEXT@
+ .nofail
+-- 
+1.9.1
+

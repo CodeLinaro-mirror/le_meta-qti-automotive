@@ -1,0 +1,1237 @@
+From 7b6b231304e9faed20bcbd2b9b0f3165fe2f4afb Mon Sep 17 00:00:00 2001
+From: Guodong Hu <guodhu@codeaurora.org>
+Date: Thu, 15 Apr 2021 16:28:09 +0800
+Subject: [PATCH] Support PulseAudio Client API for Module Codec Control
+
+Rebase this patch to utilize meson build.
+
+Signed-off-by: Cong Tang <congt@codeaurora.org>
+Signed-off-by: Guodong Hu <guodhu@codeaurora.org>
+---
+ src/map-file                  |  14 +
+ src/pulse/ext-codec-control.c | 845 ++++++++++++++++++++++++++++++++++++++++++
+ src/pulse/ext-codec-control.h | 320 ++++++++++++++++
+ src/pulse/meson.build         |   3 +
+ 4 files changed, 1182 insertions(+)
+ create mode 100644 src/pulse/ext-codec-control.c
+ create mode 100644 src/pulse/ext-codec-control.h
+
+diff --git a/src/map-file b/src/map-file
+index b4fd736..bcbd4f7 100644
+--- a/src/map-file
++++ b/src/map-file
+@@ -173,6 +173,20 @@ pa_ext_device_restore_save_formats;
+ pa_ext_device_restore_set_subscribe_cb;
+ pa_ext_device_restore_subscribe;
+ pa_ext_device_restore_test;
++pa_ext_codec_control_test;
++pa_ext_codec_control_set_pp_volume;
++pa_ext_codec_control_set_pp_mute;
++pa_ext_codec_control_set_pp_fade;
++pa_ext_codec_control_set_pp_balance;
++pa_ext_codec_control_set_pp_bmt;
++pa_ext_codec_control_set_pp_eq;
++pa_ext_codec_control_get_pp_volume;
++pa_ext_codec_control_get_pp_fade;
++pa_ext_codec_control_get_pp_balance;
++pa_ext_codec_control_get_pp_bmt;
++pa_ext_codec_control_get_pp_eq;
++pa_ext_codec_control_get_pp_eq_subbands;
++pa_ext_codec_control_tunnel_cmd;
+ pa_ext_stream_restore_delete;
+ pa_ext_stream_restore_read;
+ pa_ext_stream_restore_set_subscribe_cb;
+diff --git a/src/pulse/ext-codec-control.c b/src/pulse/ext-codec-control.c
+new file mode 100644
+index 0000000..db7b07c
+--- /dev/null
++++ b/src/pulse/ext-codec-control.c
+@@ -0,0 +1,845 @@
++/***
++Ext-codec-control.c -- PulseAudio Client API for Module-Codec-Control
++to support volume/mute/fade/balance/bmt/eq setting.
++
++Copyright (c) 2016, The Linux Foundation. All rights reserved.
++
++This file is part of PulseAudio.
++Copyright 2008 Lennart Poettering
++PulseAudio is free software; you can redistribute it and/or modify
++it under the terms of the GNU Lesser General Public License as published
++by the Free Software Foundation; either version 2.1 of the License,
++or (at your option) any later version.
++PulseAudio is distributed in the hope that it will be useful, but
++WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++General Public License for more details.
++You should have received a copy of the GNU Lesser General Public License
++along with PulseAudio; if not, write to the Free Software
++Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++USA.
++***/
++
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
++#include <pulse/context.h>
++#include <pulse/gccmacro.h>
++#include <pulse/xmalloc.h>
++#include <pulse/fork-detect.h>
++#include <pulse/operation.h>
++#include <pulse/format.h>
++
++#include <pulsecore/macro.h>
++#include <pulsecore/pstream-util.h>
++
++#include "internal.h"
++#include "ext-codec-control.h"
++
++#define MODULE_CODEC_CONTROL "module-codec-control"
++
++/* Protocol extension commands */
++enum {
++    SUBCOMMAND_TEST,
++    SUBCOMMAND_SET_PP_VOLUME,
++    SUBCOMMAND_SET_PP_MUTE,
++    SUBCOMMAND_SET_PP_FADE,
++    SUBCOMMAND_SET_PP_BALANCE,
++    SUBCOMMAND_SET_PP_BMT,
++    SUBCOMMAND_SET_PP_EQ,
++    SUBCOMMAND_GET_PP_VOLUME,
++    SUBCOMMAND_GET_PP_FADE,
++    SUBCOMMAND_GET_PP_BALANCE,
++    SUBCOMMAND_GET_PP_BMT,
++    SUBCOMMAND_GET_PP_EQ,
++    SUBCOMMAND_GET_PP_EQ_SUBBANDS,
++    SUBCOMMAND_TUNNEL_CMD,
++};
++
++static void ext_codec_control_test_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++    uint32_t version = PA_INVALID_INDEX;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++
++    } else if (pa_tagstruct_getu32(t, &version) < 0 ||
++               !pa_tagstruct_eof(t)) {
++
++        pa_context_fail(o->context, PA_ERR_PROTOCOL);
++        goto finish;
++    }
++
++    if (o->callback) {
++        pa_ext_codec_control_test_cb_t cb = (pa_ext_codec_control_test_cb_t) o->callback;
++        cb(o->context, version, o->userdata);
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_test(
++        pa_context *c,
++        pa_ext_codec_control_test_cb_t cb,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_TEST);
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_test_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_volume(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_volume_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_VOLUME);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu32(t, info->gain);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_mute(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_mute_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_MUTE);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu8(t, info->mute);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_fade(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_fade_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_FADE);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu32(t, (uint32_t)info->fade);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_balance(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_balance_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_BALANCE);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu32(t, (uint32_t)info->balance);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_bmt(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_bmt_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_BMT);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu8(t, info->filter_type);
++    pa_tagstruct_putu8(t, info->enable_flag);
++    pa_tagstruct_putu32(t, (uint32_t)info->value);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++pa_operation *pa_ext_codec_control_set_pp_eq(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_eq_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    uint32_t i;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(info);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_SET_PP_EQ);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu8(t, info->enable_flag);
++    pa_tagstruct_putu32(t, (uint32_t)info->preset_id);
++    pa_tagstruct_putu32(t, info->num_bands);
++
++    for (i = 0; i < info->num_bands; i++) {
++        pa_tagstruct_putu32(t, info->bands[i].band_idx);
++        pa_tagstruct_putu32(t, info->bands[i].center_freq);
++        pa_tagstruct_putu32(t, (uint32_t)info->bands[i].band_level);
++    }
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, pa_context_simple_ack_callback, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_volume_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_pp_get_uinfo_t i;
++        pa_zero(i);
++
++        if (pa_tagstruct_getu32(t, &i.query_status_mask) < 0 ||
++            pa_tagstruct_getu32(t, &i.value) < 0 ||
++            pa_tagstruct_getu32(t, &i.min) < 0 ||
++            pa_tagstruct_getu32(t, &i.max) < 0 ||
++            !pa_tagstruct_eof(t)) {
++                pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                goto finish;
++        }
++
++        if (o->callback) {
++            pa_ext_codec_control_get_pp_volume_cb_t cb = (pa_ext_codec_control_get_pp_volume_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_volume(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_volume_cb_t cb,
++        codec_control_get_pp_volume_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_VOLUME);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_volume_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_fade_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_pp_get_info_t i;
++        pa_zero(i);
++
++        if (pa_tagstruct_getu32(t, &i.query_status_mask) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.value)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.min)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.max)) < 0 ||
++            !pa_tagstruct_eof(t)) {
++                pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                goto finish;
++        }
++
++        if (o->callback) {
++            pa_ext_codec_control_get_pp_fade_cb_t cb = (pa_ext_codec_control_get_pp_fade_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_fade(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_fade_cb_t cb,
++        codec_control_get_pp_fade_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_FADE);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_fade_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_balance_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_pp_get_info_t i;
++        pa_zero(i);
++
++        if (pa_tagstruct_getu32(t, &i.query_status_mask) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.value)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.min)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.max)) < 0 ||
++            !pa_tagstruct_eof(t)) {
++                pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                goto finish;
++        }
++
++        if (o->callback) {
++            pa_ext_codec_control_get_pp_balance_cb_t cb = (pa_ext_codec_control_get_pp_balance_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_balance(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_balance_cb_t cb,
++        codec_control_get_pp_balance_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_BALANCE);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_balance_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_bmt_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_pp_get_info_t i;
++        pa_zero(i);
++
++        if (pa_tagstruct_getu32(t, &i.query_status_mask) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.value)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.min)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.max)) < 0 ||
++            !pa_tagstruct_eof(t)) {
++                pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                goto finish;
++        }
++
++        if (o->callback) {
++            pa_ext_codec_control_get_pp_bmt_cb_t cb = (pa_ext_codec_control_get_pp_bmt_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_bmt(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_bmt_cb_t cb,
++        codec_control_get_pp_bmt_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_BMT);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu8(t, info->filter_type);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_bmt_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_eq_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_get_pp_eq_t i;
++        pa_zero(i);
++
++        if (pa_tagstruct_getu32(t, &i.ret_preset_id.query_status_mask) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.ret_preset_id.value)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.ret_preset_id.min)) < 0 ||
++            pa_tagstruct_getu32(t, (uint32_t *)(&i.ret_preset_id.max)) < 0 ||
++            pa_tagstruct_getu32(t, &i.ret_num_bands) <0 ||
++            !pa_tagstruct_eof(t)) {
++                pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                goto finish;
++        }
++
++        if (o->callback) {
++            pa_ext_codec_control_get_pp_eq_cb_t cb = (pa_ext_codec_control_get_pp_eq_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_eq(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_eq_cb_t cb,
++        codec_control_get_pp_eq_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_EQ);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_eq_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++static void ext_codec_control_get_pp_eq_subbands_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++    int eol = 1;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++        eol = -1;
++     } else {
++        codec_control_pp_eq_subband_binfo_t  i;
++        pa_zero(i);
++
++        while(!pa_tagstruct_eof(t)) {
++            if (pa_tagstruct_getu32(t, &i.ret_center_freq.query_status_mask) < 0 ||
++                pa_tagstruct_getu32(t, &i.ret_center_freq.value) < 0 ||
++                pa_tagstruct_getu32(t, &i.ret_center_freq.min) < 0 ||
++                pa_tagstruct_getu32(t, &i.ret_center_freq.max) < 0 ||
++                pa_tagstruct_getu32(t, (uint32_t *)&i.ret_band_level.query_status_mask) < 0 ||
++                pa_tagstruct_getu32(t, (uint32_t *)&i.ret_band_level.value) < 0 ||
++                pa_tagstruct_getu32(t, (uint32_t *)&i.ret_band_level.min) < 0 ||
++                pa_tagstruct_getu32(t, (uint32_t *)&i.ret_band_level.max) < 0) {
++                    pa_context_fail(o->context, PA_ERR_PROTOCOL);
++                    goto finish;
++            }
++            if (o->callback) {
++                pa_ext_codec_control_get_pp_eq_subbands_cb_t cb = (pa_ext_codec_control_get_pp_eq_subbands_cb_t) o->callback;
++                cb(o->context, &i, o->userdata, 0);
++            }
++        }
++    }
++
++   if (o->callback) {
++        pa_ext_codec_control_get_pp_eq_subbands_cb_t cb = (pa_ext_codec_control_get_pp_eq_subbands_cb_t) o->callback;
++        cb(o->context, NULL, o->userdata, eol);
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_get_pp_eq_subbands(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_eq_subbands_cb_t cb,
++        codec_control_get_pp_eq_subbands_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_GET_PP_EQ_SUBBANDS);
++
++    //body
++    pa_tagstruct_puts(t, info->media_role);
++    pa_tagstruct_putu8(t, info->playback);
++    pa_tagstruct_putu32(t, info->num_bands);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_get_pp_eq_subbands_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
++
++static void ext_codec_control_tunnel_cmd_cb(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
++    pa_operation *o = userdata;
++
++    pa_assert(pd);
++    pa_assert(o);
++    pa_assert(PA_REFCNT_VALUE(o) >= 1);
++
++    if (!o->context)
++        goto finish;
++
++    if (command != PA_COMMAND_REPLY) {
++        if (pa_context_handle_error(o->context, command, t, false) < 0)
++            goto finish;
++    } else {
++        codec_control_tunnel_cmd_t i;
++        uint32_t j;
++        pa_zero(i);
++
++        pa_tagstruct_getu32(t, &i.output_size);
++
++        i.output_data = pa_xnew0(uint8_t, i.output_size);
++        for (j=0; j< i.output_size; j++)
++          pa_tagstruct_getu8(t, &i.output_data[j]);
++
++        if (o->callback) {
++            pa_ext_codec_control_tunnel_cmd_cb_t cb = (pa_ext_codec_control_tunnel_cmd_cb_t) o->callback;
++            cb(o->context, &i, o->userdata);
++        }
++    }
++
++finish:
++    pa_operation_done(o);
++    pa_operation_unref(o);
++}
++
++pa_operation *pa_ext_codec_control_tunnel_cmd(
++        pa_context *c,
++        pa_ext_codec_control_tunnel_cmd_cb_t cb,
++        codec_control_tunnel_cmd_t *info,
++        void *userdata) {
++
++    uint32_t tag;
++    uint32_t i;
++    pa_operation *o;
++    pa_tagstruct *t;
++
++    pa_assert(c);
++    pa_assert(PA_REFCNT_VALUE(c) >= 1);
++
++    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
++    PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 14, PA_ERR_NOTSUPPORTED);
++
++    o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
++    t = pa_tagstruct_command(c, PA_COMMAND_EXTENSION, &tag);
++    pa_tagstruct_putu32(t, PA_INVALID_INDEX);
++    pa_tagstruct_puts(t, MODULE_CODEC_CONTROL);
++    pa_tagstruct_putu32(t, SUBCOMMAND_TUNNEL_CMD);
++
++    pa_tagstruct_putu32(t, info->input_size);
++    for (i = 0;i<info->input_size; i++)
++        pa_tagstruct_putu8(t, info->input_data[i]);
++
++    pa_tagstruct_putu32(t, info->expected_size);
++
++    pa_pstream_send_tagstruct(c->pstream, t);
++    pa_pdispatch_register_reply(c->pdispatch, tag, DEFAULT_TIMEOUT, ext_codec_control_tunnel_cmd_cb, pa_operation_ref(o), (pa_free_cb_t) pa_operation_unref);
++
++    return o;
++}
++
+diff --git a/src/pulse/ext-codec-control.h b/src/pulse/ext-codec-control.h
+new file mode 100644
+index 0000000..a109bbb
+--- /dev/null
++++ b/src/pulse/ext-codec-control.h
+@@ -0,0 +1,320 @@
++#ifndef foopulseextcodeccontrolhfoo
++#define foopulseextcodeccontrolhfoo
++
++/***
++Ext-codec-control.h -- PulseAudio Client API of Ext-codec-control headerfiles
++Including message structures and API declarifications.
++
++Copyright (c) 2016, The Linux Foundation. All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are
++met:
++    * Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++    * Redistributions in binary form must reproduce the above
++      copyright notice, this list of conditions and the following
++      disclaimer in the documentation and/or other materials provided
++      with the distribution.
++    * Neither the name of The Linux Foundation nor the names of its
++      contributors may be used to endorse or promote products derived
++      from this software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
++WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
++ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
++BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
++BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
++OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++***/
++
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <sys/time.h>
++#include <stdarg.h>
++
++#include <pulse/context.h>
++#include <pulse/format.h>
++#include <pulse/version.h>
++
++/** \file
++ *
++ * Routines for controlling module-codec-control
++ */
++
++PA_C_DECL_BEGIN
++
++typedef struct codec_control_set_pp_volume {
++    const char *media_role;
++    uint8_t playback;
++    uint32_t gain;
++}codec_control_set_pp_volume_t;
++
++typedef struct codec_control_set_pp_mute {
++    const char *media_role;
++    uint8_t playback;
++    uint8_t mute;
++}codec_control_set_pp_mute_t;
++
++typedef struct codec_control_set_pp_fade {
++    const char *media_role;
++    uint8_t playback;
++    int32_t fade;
++}codec_control_set_pp_fade_t;
++
++typedef struct codec_control_set_pp_balance {
++    const char *media_role;
++    uint8_t playback;
++    int32_t balance;
++}codec_control_set_pp_balance_t;
++
++typedef enum
++{
++    PP_FILTER_TYPE_INVALID = 0,
++    PP_FILTER_TYPE_BASS,
++    PP_FILTER_TYPE_MID,
++    PP_FILTER_TYPE_TREBLE,
++    PP_FILTER_TYPE_MAX
++} codec_control_pp_filter_type_t;
++
++typedef struct codec_control_set_pp_bmt {
++    const char *media_role;
++    uint8_t playback;
++
++    codec_control_pp_filter_type_t filter_type; /**< Requested filter type */
++    uint8_t enable_flag; /**< Enable flag. 0 - Disable, 1 - Enable */
++    int32_t value; /**< Requested value to be set */
++}codec_control_set_pp_bmt_t;
++
++typedef struct codec_control_pp_eq_subband
++{
++    uint32_t band_idx; /**< Band index. Supported value: 0 to (num_bands - 1) */
++    uint32_t center_freq; /**< Filter band center frequency in millihertz */
++    int32_t band_level; /**< Filter band gain in millibels */
++} codec_control_pp_eq_subband_t;
++
++typedef struct codec_control_set_pp_eq {
++    const char *media_role;
++    uint8_t playback;
++
++    uint8_t enable_flag; /**< Enable flag. 0 - Disable, 1 - Enable */
++    int32_t preset_id;
++    uint32_t num_bands;
++    codec_control_pp_eq_subband_t *bands;
++}codec_control_set_pp_eq_t;
++
++typedef struct codec_control_pp_get_uinfo
++{
++    uint32_t query_status_mask; /**< status of returned actual value */
++    uint32_t value; /**< actual value */
++    uint32_t min; /**< minimum for value */
++    uint32_t max; /**< maximum for value */
++} codec_control_pp_get_uinfo_t;
++
++typedef struct codec_control_pp_get_info
++{
++    uint32_t query_status_mask; /**< status of returned actual value */
++    int32_t value; /**< actual value */
++    int32_t min; /**< minimum for value */
++    int32_t max; /**< maximum for value */
++} codec_control_pp_get_info_t;
++
++typedef struct codec_control_get_pp_volume {
++    const char *media_role;
++    uint8_t playback;
++    codec_control_pp_get_uinfo_t gain;
++}codec_control_get_pp_volume_t;
++
++typedef struct codec_control_get_pp_fade {
++    const char *media_role;
++    uint8_t playback;
++    codec_control_pp_get_info_t fade;
++}codec_control_get_pp_fade_t;
++
++typedef struct codec_control_get_pp_balance {
++    const char *media_role;
++    uint8_t playback;
++    codec_control_pp_get_info_t balance;
++}codec_control_get_pp_balance_t;
++
++typedef struct codec_control_get_pp_bmt {
++    const char *media_role;
++    uint8_t playback;
++    codec_control_pp_filter_type_t filter_type; /**< Requested filter type */
++    codec_control_pp_get_info_t bmt;
++}codec_control_get_pp_bmt_t;
++
++typedef struct codec_control_get_pp_eq{
++    const char *media_role;
++    uint8_t playback;
++    codec_control_pp_get_info_t ret_preset_id; /**< Returned preset id
++                                        -1      - custom equalizer speficied through 'bands' struct
++                                        0 to N - pre-defined preset EQ index: ROCK/JAZZ/POP, etc */
++    uint32_t ret_num_bands;/**< Returned number of EQ subbands supported
++                                          when a custom preset_id is selected */
++}codec_control_get_pp_eq_t;
++
++/**
++ * Eq_subband struct used in the following payload
++ */
++typedef struct  codec_control_pp_eq_subband_binfo
++{
++    codec_control_pp_get_uinfo_t ret_center_freq; /**< Returned band center frequency range
++                                                                                            and value in millihertz */
++    codec_control_pp_get_info_t ret_band_level; /**< Returned band gain range and value in millibels */
++} codec_control_pp_eq_subband_binfo_t;
++
++
++typedef struct codec_control_get_pp_eq_subbands{
++    const char *media_role;
++    uint8_t playback;
++    uint32_t num_bands;/**< number of EQ subbands supported for custom eq
++                                          returned from get_pp_eq query */
++    codec_control_pp_eq_subband_binfo_t *bands;
++}codec_control_get_pp_eq_subbands_t;
++
++typedef struct codec_control_tunnel_cmd{
++    uint8_t *input_data;
++    uint32_t input_size;
++    uint32_t expected_size;
++    uint8_t *output_data;
++    uint32_t output_size;
++}codec_control_tunnel_cmd_t;
++
++/** Callback prototype for pa_ext_codec_control_test(). \since 1.0 */
++typedef void (*pa_ext_codec_control_test_cb_t)(
++        pa_context *c,
++        uint32_t version,
++        void *userdata);
++
++/** Callback prototype for pa_ext_device_restore_read_formats(). \since 1.0 */
++typedef void (*pa_ext_codec_control_get_pp_volume_cb_t)(
++        pa_context *c,
++        const  codec_control_pp_get_uinfo_t *info,
++        void *userdata);
++
++typedef void (*pa_ext_codec_control_get_pp_fade_cb_t)(
++        pa_context *c,
++        const  codec_control_pp_get_info_t *info,
++        void *userdata);
++
++typedef void (*pa_ext_codec_control_get_pp_balance_cb_t)(
++        pa_context *c,
++        const  codec_control_pp_get_info_t *info,
++        void *userdata);
++
++typedef void (*pa_ext_codec_control_get_pp_bmt_cb_t)(
++        pa_context *c,
++        const  codec_control_pp_get_info_t *info,
++        void *userdata);
++
++typedef void (*pa_ext_codec_control_get_pp_eq_cb_t)(
++        pa_context *c,
++        const  codec_control_get_pp_eq_t *info,
++        void *userdata);
++
++typedef void (*pa_ext_codec_control_get_pp_eq_subbands_cb_t)(
++        pa_context *c,
++        const  codec_control_pp_eq_subband_binfo_t *info,
++        void *userdata,
++        int32_t eol);
++
++typedef void (*pa_ext_codec_control_tunnel_cmd_cb_t)(
++        pa_context *c,
++        const  codec_control_tunnel_cmd_t *info,
++        void *userdata);
++
++
++/** Test if this extension module is available in the server. \since 1.0 */
++pa_operation *pa_ext_codec_control_test(
++        pa_context *c,
++        pa_ext_codec_control_test_cb_t cb,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_volume(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_volume_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_mute(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_mute_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_fade(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_fade_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_balance(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_balance_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_bmt(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_bmt_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_set_pp_eq(
++        pa_context *c,
++        pa_context_success_cb_t cb,
++        codec_control_set_pp_eq_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_volume(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_volume_cb_t cb,
++        codec_control_get_pp_volume_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_fade(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_fade_cb_t cb,
++        codec_control_get_pp_fade_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_balance(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_balance_cb_t cb,
++        codec_control_get_pp_balance_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_bmt(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_bmt_cb_t cb,
++        codec_control_get_pp_bmt_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_eq(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_eq_cb_t cb,
++        codec_control_get_pp_eq_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_get_pp_eq_subbands(
++        pa_context *c,
++        pa_ext_codec_control_get_pp_eq_subbands_cb_t cb,
++        codec_control_get_pp_eq_subbands_t *info,
++        void *userdata);
++
++pa_operation *pa_ext_codec_control_tunnel_cmd(
++        pa_context *c,
++        pa_ext_codec_control_tunnel_cmd_cb_t cb,
++        codec_control_tunnel_cmd_t *info,
++        void *userdata);
++
++PA_C_DECL_END
++
++#endif
+diff --git a/src/pulse/meson.build b/src/pulse/meson.build
+index aaebff5..ddd464d 100644
+--- a/src/pulse/meson.build
++++ b/src/pulse/meson.build
+@@ -70,6 +70,9 @@ if glib_dep.found()
+   libpulse_headers += 'glib-mainloop.h'
+ endif
+ 
++libpulse_sources += 'ext-codec-control.c'
++libpulse_headers += 'ext-codec-control.h'
++
+ versioning_link_args = '-Wl,-version-script=' + join_paths(meson.source_root(), 'src', 'map-file')
+ 
+ libpulse = shared_library('pulse',
+-- 
+2.7.4
+

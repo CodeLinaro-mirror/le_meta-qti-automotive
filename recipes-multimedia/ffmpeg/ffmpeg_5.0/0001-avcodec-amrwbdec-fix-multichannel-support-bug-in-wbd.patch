@@ -1,0 +1,32 @@
+From fa51d084184698603c32bc7564e42cb199d767cc Mon Sep 17 00:00:00 2001
+From: Bo Fang <quic_bofang@quicinc.com>
+Date: Mon, 10 Oct 2022 21:02:27 +0800
+Subject: avcodec/amrwbdec: fix multichannel support bug in wbdec
+
+This fix forgotten in f282c34c009e3653ec160c3880e64fc1a9300d0e:
+"avcodec/amr*dec: add multichannel support".
+For amrwbdec.c, .sample_fmts in ff_amrwb_decoder should be
+AV_SAMPLE_FMT_FLTP when adding multichannel support, just like
+amrnbdec.c.
+
+Upstream-Status: Pending
+Signed-off-by: Bo Fang <quic_bofang@quicinc.com>
+---
+ libavcodec/amrwbdec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libavcodec/amrwbdec.c b/libavcodec/amrwbdec.c
+index a6c1d89..0e1cc6f 100644
+--- a/libavcodec/amrwbdec.c
++++ b/libavcodec/amrwbdec.c
+@@ -1284,6 +1284,6 @@ const AVCodec ff_amrwb_decoder = {
+     .init           = amrwb_decode_init,
+     .decode         = amrwb_decode_frame,
+     .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
+-    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
++    .sample_fmts    = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLTP,
+                                                      AV_SAMPLE_FMT_NONE },
+ };
+-- 
+2.7.4
+

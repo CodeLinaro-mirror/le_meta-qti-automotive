@@ -1,0 +1,55 @@
+#Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# AppArmor profile for the wpa_supplicant service
+#
+
+#include <tunables/global>
+/usr/sbin/wpa_supplicant {
+	#include <abstractions/base>
+	#include <abstractions/dbus-strict>
+	/usr/sbin/wpa_supplicant mr,
+	/run/dbus/system_bus_socket rw,
+	network netlink,
+	network packet dgram,
+	network packet raw,
+	network inet dgram,
+	network inet raw,
+	/tmp/wpa_ctrl_* rw,
+	capability net_admin,
+	capability net_raw,
+	capability dac_override,
+	capability fsetid,
+	capability chown,
+	/proc/sys/net/ipv4/conf/bcm0/* rw,
+	/proc/sys/net/ipv4/conf/bcm1/* rw,
+	/proc/sys/net/ipv4/conf/wlan0/* rw,
+	/proc/sys/net/ipv4/conf/wlan1/* rw,
+	/proc/sys/net/ipv6/conf/wlan0/* rw,
+	/proc/sys/net/ipv6/conf/wlan1/* rw,
+	/proc/sys/net/ipv6/conf/bcm0/* rw,
+	/proc/sys/net/ipv6/conf/bcm1/* rw,
+	/run/wpa_supplicant/ rw,
+	/run/wpa_supplicant/** rw,
+	/dev/rfkill r,
+	/etc/ssl/openssl.cnf r,
+	/etc/nsswitch.conf r,
+	/etc/group r,
+#	capability dac_read_search,
+#	capability sys_module,
+	dbus send
+       bus=system
+       path=/org/freedesktop/DBus
+	   interface=org.freedesktop.DBus,
+	dbus bind
+       bus=system
+       name=fi.w1.wpa_supplicant1,
+
+	dbus (send, receive)
+       bus=system
+       path=/fi/w1/wpa_supplicant1,
+
+	dbus (send, receive)
+       bus=system
+       path=/fi/w1/wpa_supplicant1/**,
+}

@@ -1,0 +1,28 @@
+From 3b48befc224b9607e762ca962d423a93687b79fb Mon Sep 17 00:00:00 2001
+From: Jing Wang <quic_jingwa@quicinc.com>
+Date: Wed, 22 Jun 2022 19:03:40 +0530
+Subject: [PATCH] Avoid pulseaudio daemon shutdown after lpm
+
+Avoid pulseaudio daemon shutdown after lpm
+
+Signed-off-by: Jing Wang <quic_jingwa@quicinc.com>
+---
+ src/daemon/daemon.conf.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/daemon/daemon.conf.in b/src/daemon/daemon.conf.in
+index 94f3605..39ef8f0 100644
+--- a/src/daemon/daemon.conf.in
++++ b/src/daemon/daemon.conf.in
+@@ -39,7 +39,7 @@ ifelse(@HAVE_DBUS@, 1, [dnl
+ realtime-scheduling = no
+ ; realtime-priority = 5
+
+-; exit-idle-time = 20
++exit-idle-time = -1
+ ; scache-idle-time = 20
+
+ ; dl-search-path = (depends on architecture)
+--
+2.7.4
+

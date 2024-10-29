@@ -10,12 +10,10 @@ DEPENDS += "libcutils"
 
 PR = "r1"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core"
-
-S = "${WORKDIR}/system/core/base"
+SRC_URI = "${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1"
 SRCREV = "${AUTOREV}"
 
+S = "${WORKDIR}/system/core/base"
 
 inherit autotools pkgconfig
 

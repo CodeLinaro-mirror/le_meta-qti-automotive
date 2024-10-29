@@ -1,0 +1,61 @@
+From cf5bf74ab09e099cc977a5d7352d7ab2115cb0b5 Mon Sep 17 00:00:00 2001
+From: Futao He <quic_fhe@quicinc.com>
+Date: Thu, 11 Aug 2022 18:15:30 +0530
+Subject: [PATCH 4/4] libdp: Android11 ota lib porting fs_mgr
+
+Modifications:
+1. add more depency code and include dir
+2. implement fs_mgr_get_slot_suffix()
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: Ibbcad5b1e22ee5be1c976b89b0fb6da7e67c2d06
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+---
+ fs_mgr/Makefile.am          |  1 +
+ fs_mgr/fs_mgr_dm_linear.cpp | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/fs_mgr/Makefile.am b/fs_mgr/Makefile.am
+index b981ee0..74babc1 100644
+--- a/fs_mgr/Makefile.am
++++ b/fs_mgr/Makefile.am
+@@ -8,6 +8,7 @@ libfsmgr_dmlinear_la_CPPFLAGS := -I$(srcdir)/include \
+                            -I$(srcdir)/libdm/include \
+                            -I$(srcdir)/liblp/include \
+                            -I$(top_srcdir)/base/include \
++                           -I$(srcdir)/include_fstab \
+                            -std=c++17
+ libfsmgr_dmlinear_la_LDFLAGS  := -version-info $(LT_VERSION_INFO) -lcrypto
+ libfsmgr_dmlinear_la_LIBADD   := ./libdm/libdm.la
+diff --git a/fs_mgr/fs_mgr_dm_linear.cpp b/fs_mgr/fs_mgr_dm_linear.cpp
+index 9046132..1ad218d 100644
+--- a/fs_mgr/fs_mgr_dm_linear.cpp
++++ b/fs_mgr/fs_mgr_dm_linear.cpp
+@@ -52,6 +52,23 @@ using DmTarget = android::dm::DmTarget;
+ using DmTargetZero = android::dm::DmTargetZero;
+ using DmTargetLinear = android::dm::DmTargetLinear;
+ 
++static std::string fs_mgr_get_slot_suffix() {
++    std::string ab_suffix = "";
++    std::string cmdline;
++
++    android::base::ReadFileToString("/proc/cmdline", &cmdline);
++    for (const auto& entry : android::base::Split(android::base::Trim(cmdline), " ")) {
++        std::vector<std::string> pieces = android::base::Split(entry, "=");
++        if (pieces.size() == 2) {
++            if (pieces[0] == "androidboot.slot_suffix")
++                ab_suffix = pieces[1];
++        }
++    }
++
++    LINFO << "Get slot suffix from cmdline : " << ab_suffix;
++    return ab_suffix;
++}
++
+ static bool GetPhysicalPartitionDevicePath(const CreateLogicalPartitionParams& params,
+                                            const LpMetadataBlockDevice& block_device,
+                                            const std::string& super_device, std::string* result) {
+-- 
+2.7.4
+

@@ -1,0 +1,146 @@
+From 2eb48e608a4c7ec9cc2e74ebef4705845decb8ec Mon Sep 17 00:00:00 2001
+From: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+Date: Wed, 31 Jan 2024 15:44:38 -0800
+Subject: [PATCH 6/8] PENDING: firmware: qcom-scm: Introduce new locking
+ mechanism for SCM driver
+
+With the existing global mutex lock, there is a possibility that it
+could resulty into a deadlock when SMCInvoke and smc call go to
+firmware in the same order and both wait on same WAITQ in firmware.
+
+Change-Id: Id4bf99867682f630573e74e5b2556e32583dbc71
+Signed-off-by: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+Signed-off-by: Jian Shu <quic_jianshu@quicinc.com>
+---
+ drivers/firmware/qcom_scm-legacy.c | 5 ++---
+ drivers/firmware/qcom_scm-smc.c    | 9 ++-------
+ drivers/firmware/qcom_scm.c        | 6 ++++++
+ drivers/firmware/qcom_scm.h        | 3 +++
+ 4 files changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm-legacy.c b/drivers/firmware/qcom_scm-legacy.c
+index 029e6d117cb8..1cea9547ca12 100644
+--- a/drivers/firmware/qcom_scm-legacy.c
++++ b/drivers/firmware/qcom_scm-legacy.c
+@@ -15,7 +15,6 @@
+ 
+ #include "qcom_scm.h"
+ 
+-static DEFINE_MUTEX(qcom_scm_lock);
+ 
+ 
+ /**
+@@ -173,11 +172,11 @@ int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+ 	smc.args[1] = (unsigned long)&context_id;
+ 	smc.args[2] = cmd_phys;
+ 
+-	mutex_lock(&qcom_scm_lock);
++	down(&qcom_scm_sem_lock);
+ 	__scm_legacy_do(&smc, &smc_res);
+ 	if (smc_res.a0)
+ 		ret = qcom_scm_remap_error(smc_res.a0);
+-	mutex_unlock(&qcom_scm_lock);
++	up(&qcom_scm_sem_lock);
+ 	if (ret)
+ 		goto out;
+ 
+diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
+index ad1bc41176c8..14625fd6f084 100644
+--- a/drivers/firmware/qcom_scm-smc.c
++++ b/drivers/firmware/qcom_scm-smc.c
+@@ -24,7 +24,6 @@ struct arm_smccc_args {
+ 	unsigned long args[8];
+ };
+ 
+-static DEFINE_MUTEX(qcom_scm_lock);
+ 
+ #define QCOM_SCM_EBUSY_WAIT_MS 30
+ #define QCOM_SCM_EBUSY_MAX_RETRY 20
+@@ -125,15 +124,11 @@ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_
+ 			}
+ 
+ 			if (res->a0 == QCOM_SCM_WAITQ_SLEEP) {
+-				if (skip_mutex)
+-					mutex_unlock(&qcom_scm_lock);
+ 
+ 				ret = qcom_scm_wait_for_wq_completion(dev_get_drvdata(dev), wq_ctx);
+ 				if (ret)
+ 					return ret;
+ 
+-				if (skip_mutex)
+-					mutex_lock(&qcom_scm_lock);
+ 
+ 				fill_wq_resume_args(&fill, smc_call_ctx);
+ 				smc = &fill;
+@@ -160,11 +155,11 @@ static int __scm_smc_do(struct device *dev, struct arm_smccc_args *smc,
+ 	}
+ 
+ 	do {
+-		mutex_lock(&qcom_scm_lock);
++		down(&qcom_scm_sem_lock);
+ 
+ 		ret = __scm_smc_do_quirk_handle_waitq(dev, smc, res, skip_mutex);
+ 
+-		mutex_unlock(&qcom_scm_lock);
++		up(&qcom_scm_sem_lock);
+ 
+ 		if (ret)
+ 			return ret;
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 4a55f80db49d..01370964b9d0 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -43,9 +43,12 @@ struct qcom_scm {
+ 	struct mutex scm_bw_lock;
+ 	int scm_vote_count;
+ 
++	u64 call_ctx_cnt;
+ 	u64 dload_mode_addr;
+ };
+ 
++DEFINE_SEMAPHORE(qcom_scm_sem_lock, 1);
++
+ /* Each bit configures cold/warm boot address for one of the 4 CPUs */
+ static const u8 qcom_scm_cpu_cold_bits[QCOM_SCM_BOOT_MAX_CPUS] = {
+ 	0, BIT(0), BIT(3), BIT(5)
+@@ -1849,6 +1852,8 @@ static void __check_fw_for_skip_mutex_support(void)
+ 
+ 	num_simultaneous_requests = res.result[0] & 0xFF;
+ 
++	__scm->call_ctx_cnt = res.result[0] & 0xFF;
++
+ 	__scm->fw_supports_skip_mutex = (num_simultaneous_requests >= MIN_SIMULTANEOUS_REQS);
+ }
+ 
+@@ -2026,6 +2031,7 @@ static int qcom_scm_probe(struct platform_device *pdev)
+ 
+ 	__get_convention();
+ 	__check_fw_for_skip_mutex_support();
++	sema_init(&qcom_scm_sem_lock, (int)__scm->call_ctx_cnt);
+ 
+ 	/*
+ 	 * If requested enable "download mode", from this point on warmboot
+diff --git a/drivers/firmware/qcom_scm.h b/drivers/firmware/qcom_scm.h
+index e18c0446dcac..b9fa7e846bd3 100644
+--- a/drivers/firmware/qcom_scm.h
++++ b/drivers/firmware/qcom_scm.h
+@@ -5,6 +5,8 @@
+ #ifndef __QCOM_SCM_INT_H
+ #define __QCOM_SCM_INT_H
+ 
++#include <linux/semaphore.h>
++
+ enum qcom_scm_convention {
+ 	SMC_CONVENTION_UNKNOWN,
+ 	SMC_CONVENTION_LEGACY,
+@@ -13,6 +15,7 @@ enum qcom_scm_convention {
+ };
+ 
+ extern enum qcom_scm_convention qcom_scm_convention;
++extern struct semaphore qcom_scm_sem_lock;
+ 
+ #define MAX_QCOM_SCM_ARGS 10
+ #define MAX_QCOM_SCM_RETS 3
+-- 
+2.34.1
+

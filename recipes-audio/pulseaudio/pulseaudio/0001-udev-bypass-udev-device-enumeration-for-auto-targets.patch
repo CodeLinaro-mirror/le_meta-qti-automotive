@@ -1,0 +1,31 @@
+From c208d267601e11a3c2d27a081a3a667e8177d8dd Mon Sep 17 00:00:00 2001
+From: Deru Wang <deruwang@codeaurora.org>
+Date: Thu, 20 May 2021 19:35:53 +0800
+Subject: [PATCH] udev: bypass udev device enumeration for auto targets
+
+ALSA devices enumeration is completed by audio policy
+manager, thus bypass udev enumeration to avoid conflict.
+
+Signed-off-by: Deru Wang <deruwang@codeaurora.org>
+---
+ src/modules/alsa/90-pulseaudio.rules | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/modules/alsa/90-pulseaudio.rules b/src/modules/alsa/90-pulseaudio.rules
+index d857639..9426cd7 100644
+--- a/src/modules/alsa/90-pulseaudio.rules
++++ b/src/modules/alsa/90-pulseaudio.rules
+@@ -22,6 +22,10 @@ SUBSYSTEMS=="usb", GOTO="pulseaudio_check_usb"
+ SUBSYSTEMS=="firewire", GOTO="pulseaudio_firewire_quirk"
+ 
+ SUBSYSTEMS=="platform", DRIVERS=="thinkpad_acpi", ENV{PULSE_IGNORE}="1"
++DRIVERS=="sa6155-asoc-snd", ENV{PULSE_IGNORE}="1"
++DRIVERS=="sa8155-asoc-snd", ENV{PULSE_IGNORE}="1"
++DRIVERS=="sa8295-asoc-snd", ENV{PULSE_IGNORE}="1"
++DRIVERS=="spf-asoc-snd", ENV{PULSE_IGNORE}="1"
+ 
+ # Force enable speaker and internal mic for some laptops
+ # This should only be necessary for kernels 3.3, 3.4 and 3.5 (as they are lacking the phantom jack kctls).
+-- 
+2.7.4
+

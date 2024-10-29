@@ -9,11 +9,12 @@ DEPENDS += "glib-2.0"
 
 PR = "r1"
 
+SRC_URI = "\
+    ${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1 \
+    file://50-log.rules \
+"
 SRCREV = "${AUTOREV}"
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core \
-                file://50-log.rules \
-            "
+
 S = "${WORKDIR}/system/core/liblog"
 
 inherit autotools-brokensep pkgconfig

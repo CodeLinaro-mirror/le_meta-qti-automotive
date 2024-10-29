@@ -1,0 +1,3 @@
+ACTION!="add", GOTO="iio_end"
+SUBSYSTEM=="iio", MODE="0666", RUN+="/etc/udev/scripts/iio.sh %k"
+LABEL="iio_end"

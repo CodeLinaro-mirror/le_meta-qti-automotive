@@ -1,0 +1,31 @@
+From 34926fdd5f652fef74e4f06bf12b7cfe3f552229 Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <quic_naiwyu@quicinc.com>
+Date: Tue, 24 Sep 2024 20:41:52 +0800
+Subject: [PATCH] pulseaudio service set user as root
+
+Pulseaudio service is an user service, systemd would set /root as default vaule
+of HOME for it, that would cause pulseaudio service fail to create config file
+beacuse readonly rootfs. Set user as root to get proper home directory for use.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Naiwen Yu <quic_naiwyu@quicinc.com>
+---
+ src/daemon/systemd/user/pulseaudio.service.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/daemon/systemd/user/pulseaudio.service.in b/src/daemon/systemd/user/pulseaudio.service.in
+index 1f9007f..61b3879 100644
+--- a/src/daemon/systemd/user/pulseaudio.service.in
++++ b/src/daemon/systemd/user/pulseaudio.service.in
+@@ -21,6 +21,7 @@ After=sound.target
+ Requires=pulseaudio.socket
+ 
+ [Service]
++User=root
+ ExecStart=@PA_BINARY@ --daemonize=no --log-target=journal
+ LockPersonality=yes
+ MemoryDenyWriteExecute=yes
+-- 
+2.25.1
+

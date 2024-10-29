@@ -1,0 +1,36 @@
+From 7b4a712b3ad90fb39c075b63207c14e64db65506 Mon Sep 17 00:00:00 2001
+From: Hugh Guan <hhguan@codeaurora.org>
+Date: Mon, 12 Sep 2016 17:27:07 +0800
+Subject: [PATCH 2/2] default.pa: Load acdb and codec-control modules
+
+Automatically load acdb and codec-control modules for audio
+calibration database loader and 3rd-party codec control support
+of automotive platform.
+
+Signed-off-by: Hugh Guan <hhguan@codeaurora.org>
+---
+ src/daemon/default.pa.in | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index d157da7..afbd8b3 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
+@@ -77,6 +77,14 @@ load-module module-udev-detect tsched=0
+ load-module module-detect
+ .endif
+ 
++### Automatically load acdb and codec-control modules by QC
++.ifexists module-acdb@PA_SOEXT@
++load-module module-acdb
++.endif
++.ifexists module-codec-control@PA_SOEXT@
++load-module module-codec-control
++.endif
++
+ ### Automatically connect sink and source if JACK server is present
+ .ifexists module-jackdbus-detect@PA_SOEXT@
+ .nofail
+-- 
+1.9.1
+

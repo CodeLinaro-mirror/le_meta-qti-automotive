@@ -1,0 +1,63 @@
+From 7230e76b2deb9d93b2cdcbe3b5e5bf19791ee2e2 Mon Sep 17 00:00:00 2001
+From: pengy <quic_pengy@quicinc.com>
+Date: Thu, 23 May 2024 11:22:39 +0800
+Subject: [PATCH] systemd: Make root's home directory configurabl
+
+change default root home from /root/ to /home/root/.
+
+Upstream-Status: Inappropriate
+Change-Id: I5c73872078704a48a29e9bfa49c69cc9cd559ef2
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ src/basic/user-util.c | 4 ++--
+ src/nspawn/nspawn.c   | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/basic/user-util.c b/src/basic/user-util.c
+index 9e6926b707..588ce02c8f 100644
+--- a/src/basic/user-util.c
++++ b/src/basic/user-util.c
+@@ -201,7 +201,7 @@ static int synthesize_user_creds(
+                         *gid = 0;
+ 
+                 if (home)
+-                        *home = "/root";
++                        *home = "/home/root";
+ 
+                 if (shell)
+                         *shell = default_root_shell(NULL);
+@@ -601,7 +601,7 @@ int get_home_dir(char **ret) {
+         /* Hardcode home directory for root and nobody to avoid NSS */
+         u = getuid();
+         if (u == 0) {
+-                e = "/root";
++                e = "/home/root";
+                 goto found;
+         }
+ 
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index e46cc1ce01..00cfe1a18c 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -3383,7 +3383,7 @@ static int inner_child(
+                 n_env++;
+ 
+         if (home || !uid_is_valid(arg_uid) || arg_uid == 0)
+-                if (asprintf(envp + n_env++, "HOME=%s", home ?: "/root") < 0)
++                if (asprintf(envp + n_env++, "HOME=%s", home ?: "/home/root") < 0)
+                         return log_oom();
+ 
+         if (arg_user || !uid_is_valid(arg_uid) || arg_uid == 0)
+@@ -3495,7 +3495,7 @@ static int inner_child(
+         } else {
+                 if (!arg_chdir)
+                         /* If we cannot change the directory, we'll end up in /, that is expected. */
+-                        (void) chdir(home ?: "/root");
++                        (void) chdir(home ?: "/home/root");
+ 
+                 execle(DEFAULT_USER_SHELL, "-" DEFAULT_USER_SHELL_NAME, NULL, env_use);
+                 if (!streq(DEFAULT_USER_SHELL, "/bin/bash"))
+-- 
+2.25.1
+
+

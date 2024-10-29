@@ -1,0 +1,116 @@
+From 6631b086ed59e973853a0584b4fc0781975b16a7 Mon Sep 17 00:00:00 2001
+From: Futao He <quic_fhe@quicinc.com>
+Date: Thu, 11 Aug 2022 20:46:06 +0530
+Subject: [PATCH] libdp: Android11 ota lib porting libbase_r
+
+Modifications:
+1. add more depency code and include dir
+2. adapt log functions to linux
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: I5ac0b2a033d7051c603cded293f96b3a4a593910
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+---
+ base/Makefile.am        | 21 ++++++++++++++-------
+ base/liblog_symbols.cpp |  5 +++++
+ base/logging.cpp        |  9 +++++++--
+ 3 files changed, 26 insertions(+), 9 deletions(-)
+
+diff --git a/base/Makefile.am b/base/Makefile.am
+index 2af1b2d..b573276 100644
+--- a/base/Makefile.am
++++ b/base/Makefile.am
+@@ -1,18 +1,25 @@
+-lib_LTLIBRARIES := libbase_q.la
++lib_LTLIBRARIES := libbase_r.la
+ 
+-libbase_q_la_SOURCES  := file.cpp \
++libbase_r_la_SOURCES  := chrono_utils.cpp \
++                         file.cpp \
+                          logging.cpp \
++                         mapped_file.cpp \
++                         parsebool.cpp \
++                         parsenetaddress.cpp \
+                          properties.cpp \
+                          stringprintf.cpp \
+                          strings.cpp \
+-                         threads.cpp
++                         threads.cpp \
++                         test_utils.cpp \
++                         liblog_symbols.cpp
+ 
+-libbase_q_la_CPPFLAGS := -I$(srcdir)/include \
++libbase_r_la_CPPFLAGS := -I$(srcdir)/include \
++                         -I$(top_srcdir)/include \
+                          -std=c++17
+-libbase_q_la_LDFLAGS := -version-info $(LT_VERSION_INFO)
++libbase_r_la_LDFLAGS := -version-info $(LT_VERSION_INFO)
+ 
+-base_q_includedir=$(includedir)/android-base
+-base_q_include_HEADERS := $(srcdir)/include/android-base/file.h \
++base_r_includedir=$(includedir)/android-base
++base_r_include_HEADERS := $(srcdir)/include/android-base/file.h \
+                           $(srcdir)/include/android-base/logging.h \
+                           $(srcdir)/include/android-base/macros.h \
+                           $(srcdir)/include/android-base/memory.h \
+diff --git a/base/liblog_symbols.cpp b/base/liblog_symbols.cpp
+index 1f4b69b..9d561bb 100644
+--- a/base/liblog_symbols.cpp
++++ b/base/liblog_symbols.cpp
+@@ -66,6 +66,10 @@ const std::optional<LibLogFunctions>& GetLibLogFunctions() {
+ #else
+ 
+ const std::optional<LibLogFunctions>& GetLibLogFunctions() {
++  //return static variable for reference return
++#if defined(__linux__) && !defined(__ANDROID__)
++  static std::optional<LibLogFunctions> liblog_functions = std::nullopt;
++#else
+   static std::optional<LibLogFunctions> liblog_functions = []() -> std::optional<LibLogFunctions> {
+     return LibLogFunctions{
+         .__android_log_set_logger = __android_log_set_logger,
+@@ -80,6 +84,7 @@ const std::optional<LibLogFunctions>& GetLibLogFunctions() {
+         .__android_log_set_default_tag = __android_log_set_default_tag,
+     };
+   }();
++#endif
+   return liblog_functions;
+ }
+ 
+diff --git a/base/logging.cpp b/base/logging.cpp
+index 5bd21da..12961f5 100644
+--- a/base/logging.cpp
++++ b/base/logging.cpp
+@@ -63,6 +63,10 @@
+ #include "liblog_symbols.h"
+ #include "logging_splitters.h"
+ 
++#if defined(__linux__)
++#define __android_log_is_loggable(a,b,c) false
++#endif
++
+ namespace android {
+ namespace base {
+ 
+@@ -327,7 +331,8 @@ static void LogdLogChunk(LogId id, LogSeverity severity, const char* tag, const
+     __android_log_buf_print(lg_id, priority, tag, "%s", message);
+   }
+ }
+-
++//Only android need this code, as Android10
++#ifdef __ANDROID__
+ LogdLogger::LogdLogger(LogId default_log_id) : default_log_id_(default_log_id) {}
+ 
+ void LogdLogger::operator()(LogId id, LogSeverity severity, const char* tag, const char* file,
+@@ -338,7 +343,7 @@ void LogdLogger::operator()(LogId id, LogSeverity severity, const char* tag, con
+ 
+   SplitByLogdChunks(id, severity, tag, file, line, message, LogdLogChunk);
+ }
+-
++#endif
+ void InitLogging(char* argv[], LogFunction&& logger, AbortFunction&& aborter) {
+   SetLogger(std::forward<LogFunction>(logger));
+   SetAborter(std::forward<AbortFunction>(aborter));
+-- 
+2.7.4
+

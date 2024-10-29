@@ -1,6 +1,6 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
-
+SOC_FAMILY = "sa8797"
 SOC_FAMILY ?= "sa-common"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
@@ -30,7 +30,6 @@ PREFERRED_PROVIDER_virtual/egl          = "adreno"
 PREFERRED_PROVIDER_virtual/libgles1     = "adreno"
 PREFERRED_PROVIDER_virtual/libgles2     = "adreno"
 
-BBMASK:sa8797 += "meta-qti-bsp/meta-qti-base/recipes-wlan"
 BBMASK:sa8797 += "meta-qti-bsp/meta-qti-base/recipes-kernel/edk2/edk2_4.0.bb"
 BBMASK:sa8797 += "meta-qti-bsp/meta-qti-base/recipes-kernel/edk2/edk2_5.0.bb"
 
@@ -73,6 +72,7 @@ MACHINE_FEATURES += "\
     qti-multimedia \
     qti-display \
     qti-audio \
+    qti-data \
     ${@bb.utils.contains("ACTUAL_KERNEL", "linux-ark", "qti-vmm", "", d)} \
     qti-camera \
     qti-safety \
@@ -82,15 +82,14 @@ MACHINE_FEATURES += "\
     qti-umd \
     ${@bb.utils.contains("ACTUAL_KERNEL", "linux-ark", "qti-gunyah", "", d)} \
 "
+
 MACHINE_FEATURES:remove = "\
-    qti-multimedia \
     qti-display \
     qti-audio \
     qti-camera \
     qti-safety \
     qti-vnw \
     early-ramdisk-init \
-    qti-security \
     qti-vmm \
 "
 

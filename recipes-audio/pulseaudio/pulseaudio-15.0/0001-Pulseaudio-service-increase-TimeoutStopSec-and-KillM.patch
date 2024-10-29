@@ -1,0 +1,28 @@
+From 9c6ff7ad520550f6e957bcea702b70ba85157164 Mon Sep 17 00:00:00 2001
+From: Jing Wang <quic_jingwa@quicinc.com>
+Date: Thu, 8 Jun 2023 16:46:17 +0530
+Subject: [PATCH] Pulseaudio service increase TimeoutStopSec and  KillMode
+
+Prevent reboot hang caused by pulseaudio long timeout.
+
+Signed-off-by: Jing Wang <quic_jingwa@quicinc.com>
+---
+ src/daemon/systemd/user/pulseaudio.service.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/daemon/systemd/user/pulseaudio.service.in b/src/daemon/systemd/user/pulseaudio.service.in
+index fc020a3..1f9007f 100644
+--- a/src/daemon/systemd/user/pulseaudio.service.in
++++ b/src/daemon/systemd/user/pulseaudio.service.in
+@@ -27,6 +27,8 @@ MemoryDenyWriteExecute=yes
+ NoNewPrivileges=yes
+ Restart=on-failure
+ RestrictNamespaces=yes
++KillMode=process
++TimeoutStopSec=5s
+ SystemCallArchitectures=native
+ SystemCallFilter=@system-service
+ # Note that notify will only work if --daemonize=no
+-- 
+2.17.1
+

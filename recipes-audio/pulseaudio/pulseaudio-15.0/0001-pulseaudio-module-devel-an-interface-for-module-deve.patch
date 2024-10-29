@@ -1,0 +1,238 @@
+From a4b6edebe9fff447a4414a3b4f2a1286e195098a Mon Sep 17 00:00:00 2001
+From: Guodong Hu <guodhu@codeaurora.org>
+Date: Thu, 15 Apr 2021 15:15:13 +0800
+Subject: [PATCH] pulseaudio-module-devel: an interface for module development
+
+pulseaudio-module-devel is as an interface for pulseaudio module
+development, which contains necessary headers for modules.
+
+Signed-off-by: Guodong Hu <guodhu@codeaurora.org>
+---
+ meson.build                   | 11 +++++
+ pulseaudio-module-devel.pc.in | 11 +++++
+ src/pulsecore/meson.build     | 97 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 119 insertions(+)
+ create mode 100644 pulseaudio-module-devel.pc.in
+
+diff --git a/meson.build b/meson.build
+index dd90bf2..7c71923 100644
+--- a/meson.build
++++ b/meson.build
+@@ -66,6 +66,7 @@ localedir = join_paths(prefix, get_option('localedir'))
+ localstatedir = join_paths(prefix, get_option('localstatedir'))
+ sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+ privlibdir = join_paths(libdir, 'pulseaudio')
++includedirpulsecore = join_paths(includedir, 'pulsecore')
+ 
+ alsadatadir = get_option('alsadatadir')
+ if alsadatadir == ''
+@@ -718,6 +719,14 @@ subdir('vala')
+ # Now generate config.h from everything above
+ configure_file(output : 'config.h', configuration : cdata)
+ 
++# Now generate pulsecore-config.h from everything above
++configure_file(
++  output : 'pulsecore-config.h',
++  configuration : cdata,
++  install : true,
++  install_dir : includedirpulsecore
++)
++
+ # pkg-config files
+ 
+ pc_cdata = configuration_data()
+@@ -744,6 +753,8 @@ if glib_dep.found()
+   pc_files += 'libpulse-mainloop-glib.pc'
+ endif
+ 
++pc_files += 'pulseaudio-module-devel.pc'
++
+ foreach file : pc_files
+   configure_file(
+     input : file + '.in',
+diff --git a/pulseaudio-module-devel.pc.in b/pulseaudio-module-devel.pc.in
+new file mode 100644
+index 0000000..59a8190
+--- /dev/null
++++ b/pulseaudio-module-devel.pc.in
+@@ -0,0 +1,11 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++modlibexecdir=@modlibexecdir@
++
++Name: pulseaudio-module-devel
++Description: PulseAudio Module Development Interface
++Version: @PACKAGE_VERSION@
++Libs: -L${libdir} -L${libdir}/pulseaudio -L${modlibexecdir} -lpulsecommon-@PA_MAJORMINOR@ -lpulsecore-@PA_MAJORMINOR@ -lprotocol-native
++Libs.private:
+diff --git a/src/pulsecore/meson.build b/src/pulsecore/meson.build
+index 99a702e..2c5db68 100644
+--- a/src/pulsecore/meson.build
++++ b/src/pulsecore/meson.build
+@@ -58,57 +58,144 @@ libpulsecore_sources = [
+ ]
+ 
+ libpulsecore_headers = [
++  'arpa-inet.h',
+   'asyncmsgq.h',
+   'asyncq.h',
++  'atomic.h',
++  'aupdate.h',
+   'auth-cookie.h',
++  'authkey.h',
++  'avahi-wrap.h',
++  'bitset.h',
+   'card.h',
+   'cli-command.h',
+   'cli-text.h',
+   'client.h',
++  'cli.h',
++  'conf-parser.h',
++  'core-error.h',
++  'core-format.h',
+   'core.h',
++  'core-rtclock.h',
+   'core-scache.h',
+   'core-subscribe.h',
+   'cpu.h',
++  'core-util.h',
+   'cpu-arm.h',
+   'cpu-orc.h',
+   'cpu-x86.h',
++  'creds.h',
+   'database.h',
++  'dbus-shared.h',
++  'dbus-util.h',
+   'device-port.h',
++  'dynarray.h',
++  'endianmacros.h',
++  'esound.h',
++  'fdsem.h',
+   'ffmpeg/avcodec.h',
+   'ffmpeg/dsputil.h',
+   'filter/biquad.h',
+   'filter/crossover.h',
+   'filter/lfe-filter.h',
++  'flist.h',
++  'g711.h',
++  'hashmap.h',
+   'hook-list.h',
++  'i18n.h',
++  'idxset.h',
++  'iochannel.h',
++  'ioline.h',
++  'ipacl.h',
++  'llist.h',
++  'lock-autospawn.h',
++  'log.h',
+   'ltdl-helper.h',
++  'macro.h',
++  'mcalign.h',
++  'memblock.h',
++  'memblockq.h',
++  'memchunk.h',
++  'memfd-wrappers.h',
++  'mem.h',
++  'memtrap.h',
+   'message-handler.h',
++  'mime-type.h',
+   'mix.h',
+   'modargs.h',
+   'modinfo.h',
+   'module.h',
+   'msgobject.h',
++  'mutex.h',
+   'namereg.h',
++  'native-common.h',
+   'object.h',
++  'once.h',
++  'packet.h',
++  'parseaddr.h',
++  'pdispatch.h',
++  'pid.h',
++  'pipe.h',
+   'play-memblockq.h',
+   'play-memchunk.h',
++  'poll.h',
++  'proplist-util.h',
++  'protocol-cli.h',
++  'protocol-dbus.h',
++  'protocol-esound.h',
++  'protocol-http.h',
++  'protocol-native.h',
++  'protocol-simple.h',
++  'pstream.h',
++  'pstream-util.h',
++  'queue.h',
++  'random.h',
++  'ratelimit.h',
++  'refcnt.h',
+   'remap.h',
+   'resampler.h',
++  'rtkit.h',
+   'rtpoll.h',
++  'sample-util.h',
+   'sconv.h',
+   'sconv-s16be.h',
+   'sconv-s16le.h',
++  'semaphore.h',
+   'shared.h',
+   'sink-input.h',
++  'shm.h',
+   'sink.h',
+   'sioman.h',
+   'sound-file-stream.h',
++  'sndfile-util.h',
++  'socket-client.h',
++  'socket.h',
++  'socket-server.h',
++  'socket-util.h',
+   'sound-file.h',
+   'source-output.h',
+   'source.h',
++  'srbchannel.h',
+   'start-child.h',
++  'strbuf.h',
+   'stream-util.h',
++  'strlist.h',
++  'tagstruct.h',
++  'thread.h',
+   'thread-mq.h',
++  'time-smoother.h',
++  'tokenizer.h',
+   'typedefs.h',
++  'usergroup.h',
++  'winerrno.h',
++  'x11prop.h',
++  'x11wrap.h',
++]
++
++libpulsecore_filter_headers = [
++  'filter/biquad.h',
++  'filter/crossover.h',
++  'filter/lfe-filter.h',
+ ]
+ 
+ if get_option('database') == 'tdb'
+@@ -204,6 +291,16 @@ libpulsecore = shared_library('pulsecore-' + pa_version_major_minor,
+ 
+ libpulsecore_dep = declare_dependency(link_with: libpulsecore)
+ 
++install_headers(
++  libpulsecore_headers,
++  subdir : 'pulsecore'
++)
++
++install_headers(
++  libpulsecore_filter_headers,
++  subdir : 'pulsecore/filter'
++)
++
+ # Internal libraries for modules
+ # TODO: understand 'c_args' and 'dependencies' better, maybe we can remove some
+ 
+-- 
+2.7.4
+

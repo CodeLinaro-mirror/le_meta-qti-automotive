@@ -7,10 +7,10 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 
 DEPENDS += "libcutils liblog"
 
-FILESPATH =+ "${AUTOSOURCES}:"
-SRC_URI     =  "file://system/core"
-S = "${WORKDIR}/system/core/logwrapper"
+SRC_URI = "${PATH_TO_REPO}/system/core/.git;protocol=${PROTO};destsuffix=system/core;usehead=1"
 SRCREV = "${AUTOREV}"
+
+S = "${WORKDIR}/system/core/logwrapper"
 
 inherit autotools pkgconfig
 

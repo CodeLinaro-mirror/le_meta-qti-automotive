@@ -1,0 +1,221 @@
+From c6f8d0cc12ce5fb3a7f31d52fa083c435b59dfbf Mon Sep 17 00:00:00 2001
+From: Guru Das Srinagesh <quic_gurus@quicinc.com>
+Date: Wed, 27 Sep 2023 12:03:41 -0700
+Subject: [PATCH 3/8] PENDING: firmware: qcom-scm: Add support for WAITQ_WAKE
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Picking up from where commit 6bf325992236 ("firmware: qcom: scm: Add
+wait-queue handling logic") left off, add a new dimension to the
+wait-queue design contract between HLOS and firmware (FW) in the form
+of a new return code, SCM_WAITQ_WAKE.
+
+This new return code is for firmware to handle a scenario where more
+than one request comes in from the _same_ VM, contrary to the scenario
+described in commit 6bf325992236 where more than one request comes in
+from _different_ VMs.
+
+ 1) SCM_WAITQ_WAKE:
+
+    When an SCM call receives this return code, that means FW has placed
+    another SCM call coming from the same VM on a wait-queue just prior
+    to this one.
+
+    Along with this return code, FW also passes to HLOS `wq_ctx` and
+    `smc_call_ctx` pertaining to the SCM call via the a1 and a2
+    registers.
+
+There is also a new SMC call involved in the handshake mechanism between
+HLOS and FW:
+
+ 1) wq_wake_ack(smc_call_ctx):
+
+    Arguments:      smc_call_ctx
+
+    HLOS needs to issue this in response to receiving WAITQ_WAKE, and
+    also wake up a previously-sleeping SCM call on the waitqueue
+    corresponding to the `wq_ctx` that it received via the WAITQ_WAKE
+    (these two actions can be in any order).
+
+The mechanism to handle an SCM call that has received a WAITQ_WAKE is
+described in detail below.
+
+  VM_1                                           Firmware
+    │                                                │
+    │                                                │
+    │                                                │
+    │                                                │
+    │      REQUEST_1                                 │
+    ├───────────────────────────────────────────────►│
+    │                                                │
+    │                                           ┌────┼───┐
+    │                                           │    │   │
+    │                                           │    │   │
+    │                                           │    │   │
+    │      REQUEST_2                            │    │   │
+    ├───────────────────────────────────────────┼───►│   │
+    │                                           │    │   │Resource
+    │                                           │    │   │is busy
+    │      {WQ_SLEEP}                           │    │   │
+    │◄──────────────────────────────────────────┼────┤   │
+    │      wq_ctx, req2_smc_call_ctx            │    │   │
+    │                                           │    │   │
+    │                                           └────┼───┘
+    │                                                │
+    │      {WQ_WAKE}                                 │
+    │◄───────────────────────────────────────────────┤
+    │      wq_ctx, req1_smc_call_ctx, flags          │
+    │                                                │
+    │                                                │
+    │      wq_wake_ack(req1_smc_call_ctx)            │
+    ├───────────────────────────────────────────────►│
+    │                                                │
+    │      REQUEST_1 COMPLETE                        │
+    │◄───────────────────────────────────────────────┤
+    │                                                │
+    │                                                │
+    │      wq_resume(req_2_smc_call_ctx)             │
+    ├───────────────────────────────────────────────►│
+    │                                                │
+    │      REQUEST_2 COMPLETE                        │
+    │◄───────────────────────────────────────────────┤
+    │                                                │
+
+Like in commit 6bf325992236, wq_wake_ack() can also return WQ_SLEEP -
+these nested rounds of WQ_SLEEP are not shown in the above diagram for
+the sake of simplicity. Extend the do-while loop in
+__scm_smc_do_quirk_handle_waitq() to handle this case.
+
+Change-Id: I529e50adf08e51dfb44c33492b99c69bda3b5a37
+Signed-off-by: Guru Das Srinagesh <quic_gurus@quicinc.com>
+Signed-off-by: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+Signed-off-by: Jian Shu <quic_jianshu@quicinc.com>
+---
+ drivers/firmware/qcom_scm-smc.c | 44 ++++++++++++++++++++++++---------
+ drivers/firmware/qcom_scm.c     |  2 +-
+ drivers/firmware/qcom_scm.h     |  3 +++
+ 3 files changed, 36 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
+index 20681a031409..263eb25d0427 100644
+--- a/drivers/firmware/qcom_scm-smc.c
++++ b/drivers/firmware/qcom_scm-smc.c
+@@ -67,6 +67,17 @@ static void fill_wq_resume_args(struct arm_smccc_args *resume, u32 smc_call_ctx)
+ 	resume->args[2] = smc_call_ctx;
+ }
+ 
++static void fill_wq_wake_ack_args(struct arm_smccc_args *wake_ack, u32 smc_call_ctx)
++{
++	memset(wake_ack->args, 0, sizeof(wake_ack->args[0]) * ARRAY_SIZE(wake_ack->args));
++	wake_ack->args[0] = ARM_SMCCC_CALL_VAL(ARM_SMCCC_STD_CALL,
++			ARM_SMCCC_SMC_64, ARM_SMCCC_OWNER_SIP,
++			SCM_SMC_FNID(QCOM_SCM_SVC_WAITQ, QCOM_SCM_WAITQ_ACK));
++
++	wake_ack->args[1] = QCOM_SCM_ARGS(1);
++	wake_ack->args[2] = smc_call_ctx;
++}
++
+ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
+ {
+ 	int ret;
+@@ -90,34 +101,43 @@ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
+ 	return 0;
+ }
+ 
+-static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_args *waitq,
++#define IS_WAITQ_SLEEP_OR_WAKE(res) \
++	(res->a0 == QCOM_SCM_WAITQ_SLEEP || res->a0 == QCOM_SCM_WAITQ_WAKE)
++
++static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_args *args,
+ 					   struct arm_smccc_res *res)
+ {
+ 	int ret;
+ 	u32 wq_ctx, smc_call_ctx;
+-	struct arm_smccc_args resume;
+-	struct arm_smccc_args *smc = waitq;
++	struct arm_smccc_args fill;
++	struct arm_smccc_args *smc = args;
+ 
+ 	do {
+ 		__scm_smc_do_quirk(smc, res);
+ 
+-		if (res->a0 == QCOM_SCM_WAITQ_SLEEP) {
++		if (IS_WAITQ_SLEEP_OR_WAKE(res)) {
+ 			wq_ctx = res->a1;
+ 			smc_call_ctx = res->a2;
+ 
+ 			if (!dev) {
+-				/* Protect the dev_get_drvdata() call that follows */
++				/* Protect the dev_get_drvdata() calls that follow */
+ 				return -EPROBE_DEFER;
+ 			}
+ 
+-			ret = qcom_scm_wait_for_wq_completion(dev_get_drvdata(dev), wq_ctx);
+-			if (ret)
+-				return ret;
+-
+-			fill_wq_resume_args(&resume, smc_call_ctx);
+-			smc = &resume;
++			if (res->a0 == QCOM_SCM_WAITQ_SLEEP) {
++				ret = qcom_scm_wait_for_wq_completion(dev_get_drvdata(dev), wq_ctx);
++				if (ret)
++					return ret;
++
++				fill_wq_resume_args(&fill, smc_call_ctx);
++				smc = &fill;
++			} else if (res->a0 == QCOM_SCM_WAITQ_WAKE) {
++				fill_wq_wake_ack_args(&fill, smc_call_ctx);
++				smc = &fill;
++				qcom_scm_waitq_wakeup(dev_get_drvdata(dev), wq_ctx);
++			}
+ 		}
+-	} while (res->a0 == QCOM_SCM_WAITQ_SLEEP);
++	} while (IS_WAITQ_SLEEP_OR_WAKE(res));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index b9a0e433de37..adad445a3a2b 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -1885,7 +1885,7 @@ int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx)
+ 	return 0;
+ }
+ 
+-static int qcom_scm_waitq_wakeup(struct qcom_scm *scm, unsigned int wq_ctx)
++int qcom_scm_waitq_wakeup(struct qcom_scm *scm, unsigned int wq_ctx)
+ {
+ 	struct completion *wq;
+ 
+diff --git a/drivers/firmware/qcom_scm.h b/drivers/firmware/qcom_scm.h
+index 8fe07c9b46eb..cd62d43eb753 100644
+--- a/drivers/firmware/qcom_scm.h
++++ b/drivers/firmware/qcom_scm.h
+@@ -63,6 +63,7 @@ struct qcom_scm_res {
+ 
+ struct qcom_scm;
+ int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx);
++int qcom_scm_waitq_wakeup(struct qcom_scm *scm, unsigned int wq_ctx);
+ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending);
+ 
+ #define SCM_SMC_FNID(s, c)	((((s) & 0xFF) << 8) | ((c) & 0xFF))
+@@ -140,6 +141,7 @@ extern int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+ #define QCOM_SCM_SMMU_CONFIG_ERRATA1_CLIENT_ALL	0x02
+ 
+ #define QCOM_SCM_SVC_WAITQ			0x24
++#define QCOM_SCM_WAITQ_ACK			0x01
+ #define QCOM_SCM_WAITQ_RESUME			0x02
+ #define QCOM_SCM_WAITQ_GET_WQ_CTX		0x03
+ 
+@@ -152,6 +154,7 @@ extern int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+ #define QCOM_SCM_ERROR		-1
+ #define QCOM_SCM_INTERRUPTED	1
+ #define QCOM_SCM_WAITQ_SLEEP	2
++#define QCOM_SCM_WAITQ_WAKE	3
+ 
+ static inline int qcom_scm_remap_error(int err)
+ {
+-- 
+2.34.1
+

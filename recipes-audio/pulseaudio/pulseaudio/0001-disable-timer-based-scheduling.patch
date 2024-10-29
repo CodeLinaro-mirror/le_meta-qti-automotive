@@ -1,0 +1,26 @@
+From f209f38579bf0e8c35933dd37c8f56893ea3dc52 Mon Sep 17 00:00:00 2001
+From: Hugh Guan <hhguan@codeaurora.org>
+Date: Wed, 31 Aug 2016 02:16:29 +0800
+Subject: [PATCH] disable timer based scheduling
+
+Signed-off-by: Hugh Guan <hhguan@codeaurora.org>
+---
+ src/daemon/default.pa.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index 5ec4641..d157da7 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
+@@ -68,7 +68,7 @@ ifelse(@HAVE_MKFIFO@, 1, [dnl
+ ### Automatically load driver modules depending on the hardware available
+ ifelse(@HAVE_UDEV@, 1, [dnl
+ .ifexists module-udev-detect@PA_SOEXT@
+-load-module module-udev-detect
++load-module module-udev-detect tsched=0
+ .else
+ ], [dnl
+ .ifexists module-detect@PA_SOEXT@
+-- 
+1.9.1
+

@@ -1,0 +1,63 @@
+From 6359b9db5cdae1d9c7bfa83a2eef915dac8e104b Mon Sep 17 00:00:00 2001
+From: xubaoj <quic_xubaoj@quicinc.com>
+Date: Tue, 3 May 2022 11:02:33 +0800
+Subject: [PATCH] systemd: Make root's home directory -configureable
+
+change default root home from /root/ to /home/root/.
+
+Upstream-Status: Inappropriate
+
+Change-Id: Ie236c216680675b759438aaedc745022cc263f37
+Signed-off-by: xubaoj <quic_xubaoj@quicinc.com>
+---
+ src/basic/user-util.c | 4 ++--
+ src/nspawn/nspawn.c   | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/basic/user-util.c b/src/basic/user-util.c
+index 63bef51b0b..366d739793 100644
+--- a/src/basic/user-util.c
++++ b/src/basic/user-util.c
+@@ -173,7 +173,7 @@ static int synthesize_user_creds(
+                         *gid = 0;
+ 
+                 if (home)
+-                        *home = "/root";
++                        *home = "/home/root";
+ 
+                 if (shell)
+                         *shell = "/bin/sh";
+@@ -578,7 +578,7 @@ int get_home_dir(char **_h) {
+         /* Hardcode home directory for root and nobody to avoid NSS */
+         u = getuid();
+         if (u == 0) {
+-                h = strdup("/root");
++                h = strdup("/home/root");
+                 if (!h)
+                         return -ENOMEM;
+ 
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 8f17ab8810..c89f01cc12 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -3443,7 +3443,7 @@ static int inner_child(
+                 n_env++;
+ 
+         if (home || !uid_is_valid(arg_uid) || arg_uid == 0)
+-                if (asprintf(envp + n_env++, "HOME=%s", home ?: "/root") < 0)
++                if (asprintf(envp + n_env++, "HOME=%s", home ?: "/home/root") < 0)
+                         return log_oom();
+ 
+         if (arg_user || !uid_is_valid(arg_uid) || arg_uid == 0)
+@@ -3550,7 +3550,7 @@ static int inner_child(
+         } else {
+                 if (!arg_chdir)
+                         /* If we cannot change the directory, we'll end up in /, that is expected. */
+-                        (void) chdir(home ?: "/root");
++                        (void) chdir(home ?: "/home/root");
+ 
+                 execle("/bin/bash", "-bash", NULL, env_use);
+                 execle("/bin/sh", "-sh", NULL, env_use);
+-- 
+2.17.1
+

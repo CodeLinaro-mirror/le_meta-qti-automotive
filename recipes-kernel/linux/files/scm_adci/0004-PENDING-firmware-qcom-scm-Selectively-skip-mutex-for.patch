@@ -1,0 +1,184 @@
+From 77dd37dbcc90733d320af6eb9d3de0fc6a7914a6 Mon Sep 17 00:00:00 2001
+From: Murali Nalajala <quic_mnalajal@quicinc.com>
+Date: Mon, 2 Oct 2023 10:05:52 -0700
+Subject: [PATCH 4/8] PENDING: firmware: qcom-scm: Selectively skip mutex for
+ some calls
+
+Unlock global mutex upon receiving WAITQ_SLEEP for a select few SCM
+calls. This is to support firmware versions that enable the ADCI
+(Arbitrary Destination Callback Invocations) feature. The firmware is
+deemed to have support to handle multiple SCM calls only if it can
+support at least two of them simultaneously.
+
+SCM calls that are marked with "skip_mutex" set to true are expected to
+sleep long-term, so relinquish the global SCM mutex lock before sleeping
+from WAITQ_SLEEP effects so that other SCM calls may go through.
+
+Change-Id: Ie363c0e2aee130f661c04b3e1e6c2698e0ac9f30
+Signed-off-by: Murali Nalajala <quic_mnalajal@quicinc.com>
+Co-developed-by: Guru Das Srinagesh <quic_gurus@quicinc.com>
+Signed-off-by: Guru Das Srinagesh <quic_gurus@quicinc.com>
+Signed-off-by: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
+Signed-off-by: Jian Shu <quic_jianshu@quicinc.com>
+---
+ drivers/firmware/qcom_scm-smc.c | 16 ++++++++++++----
+ drivers/firmware/qcom_scm.c     | 31 +++++++++++++++++++++++++++++++
+ drivers/firmware/qcom_scm.h     |  4 ++++
+ 3 files changed, 47 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
+index 263eb25d0427..ad1bc41176c8 100644
+--- a/drivers/firmware/qcom_scm-smc.c
++++ b/drivers/firmware/qcom_scm-smc.c
+@@ -105,7 +105,7 @@ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
+ 	(res->a0 == QCOM_SCM_WAITQ_SLEEP || res->a0 == QCOM_SCM_WAITQ_WAKE)
+ 
+ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_args *args,
+-					   struct arm_smccc_res *res)
++					   struct arm_smccc_res *res, bool skip_mutex)
+ {
+ 	int ret;
+ 	u32 wq_ctx, smc_call_ctx;
+@@ -125,10 +125,16 @@ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_
+ 			}
+ 
+ 			if (res->a0 == QCOM_SCM_WAITQ_SLEEP) {
++				if (skip_mutex)
++					mutex_unlock(&qcom_scm_lock);
++
+ 				ret = qcom_scm_wait_for_wq_completion(dev_get_drvdata(dev), wq_ctx);
+ 				if (ret)
+ 					return ret;
+ 
++				if (skip_mutex)
++					mutex_lock(&qcom_scm_lock);
++
+ 				fill_wq_resume_args(&fill, smc_call_ctx);
+ 				smc = &fill;
+ 			} else if (res->a0 == QCOM_SCM_WAITQ_WAKE) {
+@@ -143,9 +149,10 @@ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_
+ }
+ 
+ static int __scm_smc_do(struct device *dev, struct arm_smccc_args *smc,
+-			struct arm_smccc_res *res, bool atomic)
++			struct arm_smccc_res *res, bool atomic, bool desc_skip_mutex)
+ {
+ 	int ret, retry_count = 0;
++	bool skip_mutex = desc_skip_mutex && fw_supports_skip_mutex(dev);
+ 
+ 	if (atomic) {
+ 		__scm_smc_do_quirk(smc, res);
+@@ -155,7 +162,7 @@ static int __scm_smc_do(struct device *dev, struct arm_smccc_args *smc,
+ 	do {
+ 		mutex_lock(&qcom_scm_lock);
+ 
+-		ret = __scm_smc_do_quirk_handle_waitq(dev, smc, res);
++		ret = __scm_smc_do_quirk_handle_waitq(dev, smc, res, skip_mutex);
+ 
+ 		mutex_unlock(&qcom_scm_lock);
+ 
+@@ -186,6 +193,7 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
+ 	u32 smccc_call_type = atomic ? ARM_SMCCC_FAST_CALL : ARM_SMCCC_STD_CALL;
+ 	u32 qcom_smccc_convention = (qcom_convention == SMC_CONVENTION_ARM_32) ?
+ 				    ARM_SMCCC_SMC_32 : ARM_SMCCC_SMC_64;
++	bool desc_skip_mutex = desc->skip_mutex;
+ 	struct arm_smccc_res smc_res;
+ 	struct arm_smccc_args smc = {0};
+ 
+@@ -241,7 +249,7 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
+ 	}
+ 
+ 	/* ret error check follows after args_virt cleanup*/
+-	ret = __scm_smc_do(dev, &smc, &smc_res, atomic);
++	ret = __scm_smc_do(dev, &smc, &smc_res, atomic, desc_skip_mutex);
+ 
+ 	if (shm.vaddr) {
+ 		dma_unmap_single(dev, shm.paddr, alloc_len, DMA_TO_DEVICE);
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index adad445a3a2b..ea4993a68b08 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -36,6 +36,7 @@ struct qcom_scm {
+ 	struct clk *bus_clk;
+ 	struct icc_path *path;
+ 	struct xarray waitq;
++	bool fw_supports_skip_mutex;
+ 	struct reset_controller_dev reset;
+ 
+ 	/* control access to the interconnect path */
+@@ -1830,6 +1831,35 @@ bool qcom_scm_is_available(void)
+ }
+ EXPORT_SYMBOL_GPL(qcom_scm_is_available);
+ 
++#define MIN_SIMULTANEOUS_REQS 2
++static void __check_fw_for_skip_mutex_support(void)
++{
++	int ret, num_simultaneous_requests;
++	struct qcom_scm_desc desc = {
++		.svc = QCOM_SCM_SVC_WAITQ,
++		.cmd = QCOM_SCM_GET_WQ_QUEUE_INFO,
++		.owner = ARM_SMCCC_OWNER_SIP,
++	};
++	struct qcom_scm_res res;
++
++	ret = qcom_scm_call_atomic(__scm->dev, &desc, &res);
++	if (ret) {
++		dev_err(__scm->dev, "Failed to determine skip mutex fw support\n");
++		return;
++	}
++
++	num_simultaneous_requests = res.result[0] & 0xFF;
++
++	__scm->fw_supports_skip_mutex = (num_simultaneous_requests >= MIN_SIMULTANEOUS_REQS);
++}
++
++bool fw_supports_skip_mutex(struct device *dev)
++{
++	struct qcom_scm *scm = dev_get_drvdata(dev);
++
++	return scm->fw_supports_skip_mutex;
++}
++
+ static struct completion *qcom_scm_get_completion(struct qcom_scm *scm, u32 wq_ctx)
+ {
+ 	struct completion *wq;
+@@ -1997,6 +2027,7 @@ static int qcom_scm_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	__get_convention();
++	__check_fw_for_skip_mutex_support();
+ 
+ 	/*
+ 	 * If requested enable "download mode", from this point on warmboot
+diff --git a/drivers/firmware/qcom_scm.h b/drivers/firmware/qcom_scm.h
+index cd62d43eb753..e18c0446dcac 100644
+--- a/drivers/firmware/qcom_scm.h
++++ b/drivers/firmware/qcom_scm.h
+@@ -51,6 +51,7 @@ struct qcom_scm_desc {
+ 	u32 arginfo;
+ 	u64 args[MAX_QCOM_SCM_ARGS];
+ 	u32 owner;
++	bool skip_mutex;
+ };
+ 
+ /**
+@@ -65,6 +66,8 @@ struct qcom_scm;
+ int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx);
+ int qcom_scm_waitq_wakeup(struct qcom_scm *scm, unsigned int wq_ctx);
+ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending);
++bool qcom_scm_multi_call_allow(struct device *dev, bool multicall_allowed);
++bool fw_supports_skip_mutex(struct device *dev);
+ 
+ #define SCM_SMC_FNID(s, c)	((((s) & 0xFF) << 8) | ((c) & 0xFF))
+ extern int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
+@@ -144,6 +147,7 @@ extern int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+ #define QCOM_SCM_WAITQ_ACK			0x01
+ #define QCOM_SCM_WAITQ_RESUME			0x02
+ #define QCOM_SCM_WAITQ_GET_WQ_CTX		0x03
++#define QCOM_SCM_GET_WQ_QUEUE_INFO		0x04
+ 
+ /* common error codes */
+ #define QCOM_SCM_V2_EBUSY	-12
+-- 
+2.34.1
+

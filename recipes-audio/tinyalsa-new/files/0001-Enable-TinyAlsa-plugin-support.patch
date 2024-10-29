@@ -1,0 +1,28 @@
+From 442204f8de0a4e235bc88cd6daca40cf1982f2b6 Mon Sep 17 00:00:00 2001
+From: Huicheng Liu <huicliu@quicinc.com>
+Date: Tue, 26 Mar 2024 02:47:18 -0400
+Subject: [PATCH] Enable TinyAlsa plugin support
+
+Upstream-Status: Pending
+
+Signed-off-by: Huicheng Liu <quic_huicliu@quicinc.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 84de10b..ccb0c62 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,7 +12,7 @@ set(CMAKE_C_EXTENSIONS OFF)
+ 
+ # Options
+ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+-option(TINYALSA_USES_PLUGINS "Whether or not to build with plugin support" OFF)
++option(TINYALSA_USES_PLUGINS "Whether or not to build with plugin support" ON)
+ option(TINYALSA_BUILD_EXAMPLES "Build examples" ON)
+ option(TINYALSA_BUILD_UTILS "Build utility tools" ON)
+ 
+-- 
+2.25.1
+

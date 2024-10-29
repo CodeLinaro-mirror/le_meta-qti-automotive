@@ -8,11 +8,8 @@ SYSTEMD_SERVICE:${PN} = "\
     vfio-device-probe.service \
 "
 
-FILESPATH =+ "${AUTOSOURCES}:"
-FILESEXTRAPATHS:prepend := " ${THISDIR}/files:"
-
 SRC_URI = "\
-    file://vendor/qcom/opensource/safelinux-system-cfg \
+    ${PATH_TO_REPO}/vendor/qcom/opensource/safelinux-system-cfg/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/safelinux-system-cfg;usehead=1 \
     file://vm_net.conf \
     file://vfio.conf \
     file://vfio_param.conf \
@@ -51,7 +48,7 @@ do_install:append:sa8775() {
 }
 
 do_install:append:sa8797() {
-    # install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
+    install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
 }
 
 FILES:${PN} += "${libdir}/modules-load.d/*"

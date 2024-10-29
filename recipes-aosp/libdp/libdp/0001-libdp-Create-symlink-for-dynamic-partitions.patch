@@ -1,0 +1,63 @@
+From 87e59b22c4f30b85734e302b2f1342acf5a07808 Mon Sep 17 00:00:00 2001
+From: Futao He <quic_fhe@quicinc.com>
+Date: Wed, 20 Jul 2022 17:27:09 +0530
+Subject: [PATCH] libdp: Create symlink for dynamic partitions
+
+Create symlink for dynamic partitions, which will be mounted to
+given dir, like system, vendor.
+
+Upstream-Status:Inappropriate [Android has similar design already]
+
+Change-Id: I9903753da8d5e8b10d994dc9c77908427ab950b3
+Signed-off-by: Futao He <quic_fhe@quicinc.com>
+---
+ fs_mgr/fs_mgr_dm_linear.cpp | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/fs_mgr/fs_mgr_dm_linear.cpp b/fs_mgr/fs_mgr_dm_linear.cpp
+index 1ad218d..fc33dfb 100644
+--- a/fs_mgr/fs_mgr_dm_linear.cpp
++++ b/fs_mgr/fs_mgr_dm_linear.cpp
+@@ -43,6 +43,9 @@
+ 
+ #include "fs_mgr_priv.h"
+ 
++// for device mapper links
++#define DM_MAPPER_DIR "/dev/device-mapper/"
++
+ namespace android {
+ namespace fs_mgr {
+ 
+@@ -250,6 +253,8 @@ bool CreateLogicalPartitionParams::InitDefaults(CreateLogicalPartitionParams::Ow
+ 
+ bool CreateLogicalPartition(CreateLogicalPartitionParams params, std::string* path) {
+     CreateLogicalPartitionParams::OwnedData owned_data;
++    std::string src,dest,name;
++
+     if (!params.InitDefaults(&owned_data)) return false;
+ 
+     DmTable table;
+@@ -262,6 +267,20 @@ bool CreateLogicalPartition(CreateLogicalPartitionParams params, std::string* pa
+         return false;
+     }
+     LINFO << "Created logical partition " << params.device_name << " on device " << *path;
++
++    if (mkdir(DM_MAPPER_DIR, 0755) && errno != EEXIST) {
++        LERROR << "Failed to create device mapper dir: " << DM_MAPPER_DIR;
++        return false;
++    }
++    name = params.device_name;
++    dest = DM_MAPPER_DIR + name;
++    src = *path;
++    //force to create symlink for relate logic partition
++    remove(dest.c_str());
++    if(symlink(src.c_str(), dest.c_str())) {
++        LERROR << "Created symlink:" << src.c_str() << " on device: " << dest.c_str() << "failed";
++        return false;
++    }
+     return true;
+ }
+ 
+-- 
+2.7.4
+

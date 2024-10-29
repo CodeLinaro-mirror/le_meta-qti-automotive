@@ -1,0 +1,39 @@
+From bdef888bf016bea9044b5a36c3cb5a319417bb97 Mon Sep 17 00:00:00 2001
+From: Deru Wang <quic_deruwang@quicinc.com>
+Date: Tue, 6 Feb 2024 13:21:01 +0800
+Subject: [PATCH] alsa_lib: add mmap, munmap and channel_info callback for
+ ioplug
+
+Upstream-Status: Pending
+
+Signed-off-by: Deru Wang <quic_deruwang@quicinc.com>
+---
+ include/pcm_ioplug.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/include/pcm_ioplug.h b/include/pcm_ioplug.h
+index 81ac861..9f68124 100644
+--- a/include/pcm_ioplug.h
++++ b/include/pcm_ioplug.h
+@@ -211,6 +211,18 @@ struct snd_pcm_ioplug_callback {
+ 	 * set the channel map; optional; since v1.0.2
+ 	 */
+ 	int (*set_chmap)(snd_pcm_ioplug_t *io, const snd_pcm_chmap_t *map);
++	/**
++	 * mmap; optional;
++	 */
++	int (*mmap) (snd_pcm_ioplug_t *io);
++	/**
++	 * munmap; optional;
++	 */
++	int (*munmap) (snd_pcm_ioplug_t *io);
++	/**
++	 * set channel info fd; optional;
++	 */
++	int (*channel_info) (snd_pcm_ioplug_t *io, int *fd);
+ };
+ 
+ 
+-- 
+2.17.1
+

@@ -1,0 +1,4 @@
+ACTION!="add", GOTO="sensor_end"
+SUBSYSTEM!="input", GOTO="sensor_end"
+KERNEL=="event*", MODE="0660", GROUP="plugdev", RUN+="/etc/udev/scripts/sensors.sh '%E{DEVNAME}'"
+LABEL="sensor_end"
