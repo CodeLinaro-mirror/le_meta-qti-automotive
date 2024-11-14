@@ -91,6 +91,9 @@ MACHINE_FEATURES:remove = "\
     qti-vnw \
     early-ramdisk-init \
     qti-vmm \
+    qti-umd \
+    qti-multimedia \
+    qti-security \
 "
 
 SECTOOLS_VERSION = "sectools-v2"
