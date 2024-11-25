@@ -9,10 +9,8 @@ Description=eth1 QOS installer
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=tc qdisc add dev eth1 handle 100: parent root mqprio num_tc 4 map 0 2 1 2 3 2 2 2 2 2 2 2 2 2 2 2 queues 1@0 1@1 1@2 1@3 hw 0
-ExecStart=tc qdisc add dev eth1 clsact
-ExecStart=tc filter add dev eth1 egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
-ExecStart=tc filter add dev eth1 egress prio 0 u32 match u16 0x22f0 0xffff at -2 action skbedit queue_mapping 2
+ExecStart=ifconfig eth1 up
+ExecStart=/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini eth1
 ExecStop=tc qdisc del dev eth1 root
 Nice=-20
 Restart=on-failure

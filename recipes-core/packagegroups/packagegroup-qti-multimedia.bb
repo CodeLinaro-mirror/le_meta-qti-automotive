@@ -31,3 +31,9 @@ RDEPENDS:${PN} = "\
 RDEPENDS:${PN}:remove:sa8797 = "\
         videodlkm \
 "
+
+# need codec2-app for Lemans targets since codec2-service not enabled yet on Lemans
+RDEPENDS:${PN}:append:quin-gvm-lemans = " codec2-app"
+RDEPENDS:${PN}:append:quin-gvm-lemans-dpk = " codec2-app"
+RDEPENDS:${PN}:append:quin-gvm-monaco = " codec2-app"
+RDEPENDS:${PN}:append:quin-gvm-monaco-dpk = " codec2-app"

@@ -8,7 +8,55 @@ DEPENDS += "\
     mkdtimg-native \
     sectool5-native \
     virtual/kernel \
+    python3-native \
 "
+
+ghgvm_pilsplitter() {
+    PILTOOLS_PATH="${STAGING_BINDIR_NATIVE}/scripts/pil_tools"
+
+    DTB_FILE_LIST=$(find ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb -name "*.dtb" | sort)
+    if [ -z "${DTB_FILE_LIST}" ]; then
+        echo "No *.dtb files found in $DEPLOY_DIR_IMAGE/dtbs"
+        exit 1
+    else
+        ${STAGING_BINDIR_NATIVE}/build/prebuilts/kernel-build-tools/linux-x86/bin/mkdtimg create ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gunyah-vm-lv-cob.dtb ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gunyah-vm-lv-qam.dtb
+    fi
+
+    install -d ${DEPLOY_DIR_IMAGE}/signing
+
+    # copy necessary files into signing dir
+    cp ${DEPLOY_DIR_IMAGE}/Image ${DEPLOY_DIR_IMAGE}/signing
+    cp ${DEPLOY_DIR_IMAGE}/ramdisk.img ${DEPLOY_DIR_IMAGE}/signing
+    cp ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img ${DEPLOY_DIR_IMAGE}/signing
+
+    cd ${DEPLOY_DIR_IMAGE}/signing
+
+    # autoghgvmlv-boot.elf is not a standard elf file, verify_elf in image_header.py
+    # will fail and return 1.bypass yocto by adding 'set +e' and 'set -e'
+    set +e
+    python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-boot.elf Image,0x0 dtb.img,0x3000000 ramdisk.img,0x3100000 --32
+    set -e
+
+    ${SECTOOLS_V2_DIR}/sectools secure-image autoghgvmlv-boot.elf --image-id GVM1 --security-profile ${SECTOOLS_SECURITY_PROFILE} --sign --signing-mode TEST --outfile autoghgvmlv_signed-boot.elf
+    ${SECTOOLS_V2_DIR}/sectools secure-image autoghgvmlv-boot.elf --inspect
+
+    install -d ${DEPLOY_DIR_IMAGE}/signing/boot
+    python3 ${PILTOOLS_PATH}/pil-splitter.py autoghgvmlv_signed-boot.elf boot/autoghgvmlv
+
+    ${STAGING_BINDIR_NATIVE}/build/prebuilts/kernel-build-tools/linux-x86/bin/mkuserimg_mke2fs ${DEPLOY_DIR_IMAGE}/signing/boot ${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_TARGET} ext4 / 60000000
+}
+
+do_ghgvm_pilsplitter() {
+    touch ${DEPLOY_DIR_IMAGE}/ramdisk.img
+    ghgvm_pilsplitter
+}
+
+do_ghgvm_pilsplitter[cleandirs] = "${DEPLOY_DIR_IMAGE}/signing"
+
+python () {
+    if bb.utils.contains('MACHINE_FEATURES', 'qti-ghgvm', True, False, d):
+        bb.build.addtask('do_ghgvm_pilsplitter', 'do_sign_boot_img', 'do_makeboot', d)
+}
 
 do_merge_dtbs() {
      install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs

@@ -20,5 +20,7 @@ RDEPENDS:${PN} = "\
     vhost-user-scmi \
     gvm-net-config \
     vhost-device-i2c \
+    vhost-device-ssr \
     hyp-udmabuf \
+    hyp-udmabuf-test \
 "

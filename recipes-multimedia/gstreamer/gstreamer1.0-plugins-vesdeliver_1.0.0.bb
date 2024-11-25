@@ -10,7 +10,7 @@ DEPENDS += "\
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
     virtual/kernel-headers \
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', 'libvmmem-headers', d)} \
+    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', 'libdmabufheap libvmmem-headers', d)} \
 "
 
 SRC_URI = "${PATH_TO_REPO}/gstreamer/gst-plugins-qti-oss/.git;protocol=${PROTO};destsuffix=gstreamer/gst-plugins-qti-oss;usehead=1"

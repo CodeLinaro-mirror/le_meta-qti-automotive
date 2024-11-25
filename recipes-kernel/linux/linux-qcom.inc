@@ -8,7 +8,6 @@ SRCREV_kernel = "${AUTOREV}"
 inherit kernel
 
 KERNEL_ARCH ?= "gen4auto"
-
 KBRANCH ?= ""
 KCONFIG_MODE = "--alldefconfig"
 KBUILD_DEFCONFIG ?= "${KERNEL_CONFIG}"

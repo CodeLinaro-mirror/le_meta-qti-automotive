@@ -8,9 +8,8 @@ require recipes-kernel/linux/linux-qcom.inc
 
 COMPATIBLE_MACHINE = "sa8775|sa8797"
 
-FILESEXTRAPATHS:prepend = "${WORKSPACE}/kernel/kernel_platform:"
 SRC_URI = "\
-    file://kernel \
+    ${PATH_TO_REPO}/kernel/kernel_platform/kernel/.git;protocol=${PROTO};destsuffix=kernel/kernel_platform/kernel;usehead=1 \
     file://generic.cfg \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'file://selinux.cfg', '', d)} \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'file://devmem.cfg', d)} \
@@ -40,8 +39,8 @@ SRC_URI = "\
     file://scm_adci/0007-BACKPORT-UPSTREAM-firmware-qcom-scm-Mark-get_wq_ctx-.patch \
     file://scm_adci/0008-BACKPORT-UPSTREAM-firmware-qcom-scm-add-support-for-.patch \
 "
-SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/kernel"
+
+S = "${WORKDIR}/kernel/kernel_platform/kernel"
 
 KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/generic.cfg"
 KERNEL_CONFIG_FRAGMENTS:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '${WORKDIR}/selinux.cfg', '', d)}"

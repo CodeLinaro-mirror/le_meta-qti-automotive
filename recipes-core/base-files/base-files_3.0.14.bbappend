@@ -11,7 +11,7 @@ dirs755:append = " \
     ${userfsdatadir} ${MACHINE_MNT_POINTS} \
 "
 
-# dirs755:append:sa8775 = " /data/var_upper /data/var_work "
+dirs755:append:sa8775 = " /data/var_upper /data/var_work "
 
 do_install:append(){
     if(${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}); then

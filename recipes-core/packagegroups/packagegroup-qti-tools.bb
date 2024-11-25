@@ -20,6 +20,7 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'lttng-modules lttng-tools lttng-ust', '', d)} \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'devmem2', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'cntvct-log', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', bb.utils.contains('TCMODE', 'external-ubuntu', '', 'pcp', d), '', d)} \
     "
 
 # systemd-analyze is included in ubuntu's systemd package
