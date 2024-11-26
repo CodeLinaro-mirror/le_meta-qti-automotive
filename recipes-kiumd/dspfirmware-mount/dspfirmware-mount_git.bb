@@ -90,11 +90,13 @@ do_install:append:sa8797() {
     install -m 0777 ${S}/firmware-qcom-sa8797p.automount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.automount
 
     install -d ${D}${sysconfdir}/sysconfig/
-    install -m 0777 ${S}/sa8797_lpass_cfg ${D}${sysconfdir}/sysconfig/sa8797_lpass_cfg
+    install -m 0777 ${S}/sa8797_hpass0_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_cfg
+    install -m 0777 ${S}/sa8797_hpass1_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_cfg
+    install -m 0777 ${S}/sa8797_hpass2_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_cfg
     install -m 0777 ${S}/sa8797_cdsp0_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp0_cfg
     install -m 0777 ${S}/sa8797_cdsp1_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp1_cfg
-    install -m 0777 ${S}/sa8797_gpdsp0_cfg ${D}${sysconfdir}/sysconfig/sa8797_gpdsp0_cfg
-    install -m 0777 ${S}/sa8797_gpdsp1_cfg ${D}${sysconfdir}/sysconfig/sa8797_gpdsp1_cfg
+    install -m 0777 ${S}/sa8797_cdsp2_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp2_cfg
+    install -m 0777 ${S}/sa8797_cdsp3_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp3_cfg
 }
 
 FILES:${PN}:append:sa8797 = " \
