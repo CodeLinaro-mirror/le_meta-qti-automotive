@@ -1,0 +1,24 @@
+From 831352dc8e6f85ba170507d22f47baf2b9fbbffe Mon Sep 17 00:00:00 2001
+From: Lei wang <quic_leiwan@quicinc.com>
+Date: Wed, 21 Aug 2024 09:47:14 +0800
+Subject: [PATCH] udev-trigger: only enable must part while leave others late
+
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ units/systemd-udev-trigger.service | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/units/systemd-udev-trigger.service b/units/systemd-udev-trigger.service
+index 3d0f7b4f20..39e59ea70f 100644
+--- a/units/systemd-udev-trigger.service
++++ b/units/systemd-udev-trigger.service
+@@ -19,5 +19,4 @@ ConditionPathIsReadWrite=/sys
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=-udevadm trigger --type=subsystems --action=add
+-ExecStart=-udevadm trigger --type=devices --action=add
++ExecStart=-udevadm trigger --subsystem-match=block --type=devices --action=add
+-- 
+2.25.1
+
