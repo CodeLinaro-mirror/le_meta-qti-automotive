@@ -1,7 +1,7 @@
-From ece46b10f61154409af0a1f470e9de0dc48a160b Mon Sep 17 00:00:00 2001
+From 8bcba7ff664b42fc892e583b65835ed045ec6a34 Mon Sep 17 00:00:00 2001
 From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Date: Mon, 27 May 2024 14:55:02 +0200
-Subject: [PATCH 8/8] BACKPORT: UPSTREAM: firmware: qcom: scm: add support for
+Subject: [PATCH 7/7] BACKPORT: UPSTREAM: firmware: qcom: scm: add support for
  SHM bridge memory carveout
 
 Parse the "memory-region" property and - if present - use it to assign
@@ -45,5 +45,5 @@ index 01370964b9d0..88c115e9f4df 100644
  }
  
 -- 
-2.34.1
+2.46.0
 
