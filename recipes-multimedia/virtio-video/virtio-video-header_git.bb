@@ -22,6 +22,9 @@ do_install:append() {
     if [ -f ${S}/include/virtio_video_msm_ext.h ]; then
        ${STAGING_KERNEL_DIR}/scripts/headers_install.sh ${S}/include/virtio_video_msm_ext.h ${D}${includedir}/virtio_video_msm_ext.h
     fi
+    if [ -f ${S}/include/virtio_video_hw_virt.h ]; then
+       ${STAGING_KERNEL_DIR}/scripts/headers_install.sh ${S}/include/virtio_video_hw_virt.h ${D}${includedir}/virtio_video_hw_virt.h
+    fi
 }
 
 ALLOW_EMPTY:${PN} = "1"
