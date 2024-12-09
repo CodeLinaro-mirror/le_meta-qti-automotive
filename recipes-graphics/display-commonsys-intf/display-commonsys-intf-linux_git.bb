@@ -17,6 +17,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display"
 inherit autotools pkgconfig
 
 EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
+EXTRA_OECONF:remove:sa8797 = "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
