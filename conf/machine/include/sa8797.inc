@@ -77,7 +77,6 @@ MACHINE_FEATURES += "\
     qti-umd \
 "
 MACHINE_FEATURES:remove = "\
-    qti-display \
     qti-camera \
     qti-safety \
     qti-vnw \
