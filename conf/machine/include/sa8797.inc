@@ -82,7 +82,6 @@ MACHINE_FEATURES:remove = "\
     qti-audio \
     qti-camera \
     qti-safety \
-    qti-vnw \
     early-ramdisk-init \
     qti-vmm \
 "
