@@ -12,7 +12,8 @@ WESTON_MAJOR_VERSION = "10"
 
 DEPENDS += "cairo \
             dbus \
-            display-hal-headers display-hal-linux display-noship-linux display-ship-linux \
+            display-hal-headers display-hal-linux display-noship-linux \
+            ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'display-intf-headers', 'display-ship-linux', d)} \
             gbm gbm-headers \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'libuhab', '', d)} \
             libinput \
@@ -24,10 +25,12 @@ DEPENDS += "cairo \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging', '', d)} \
 "
 
-SRC_URI = "${PATH_TO_REPO}/graphics/weston-sdm-extension/.git;protocol=${PROTO};destsuffix=graphics/weston-sdm-extension;usehead=1"
+CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/weston-sdm-extension", "graphics/weston-sdm-extension", d)}"
+
+SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/graphics/weston-sdm-extension"
+S = "${WORKDIR}/${CODE_DIR}"
 
 inherit meson pkgconfig
 

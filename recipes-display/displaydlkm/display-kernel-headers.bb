@@ -13,6 +13,8 @@ DRM_UAPI_HEADERS = "\
     drm/sde_drm.h \
 "
 
+DRM_UAPI_HEADERS:append:sa8797 = " drm/msm_drm_aiqe.h"
+
 MEDIA_UAPI_HEADERS = "\
     media/mmm_color_fmt.h \
     media/msm_sde_rotator.h \
@@ -37,6 +39,18 @@ do_install() {
    install -d ${D}${includedir}/media
    for h in ${MEDIA_UAPI_HEADERS}; do
         ${HEADER_INSTALL_TOOL} ${S}/display/$h ${D}${includedir}/$h
+   done
+}
+
+do_install:append:sa8797() {
+   install -d ${D}${includedir}/display/drm
+   for h in ${DRM_UAPI_HEADERS}; do
+        ${HEADER_INSTALL_TOOL} ${S}/display/$h ${D}${includedir}/display/$h
+   done
+
+   install -d ${D}${includedir}/display/media
+   for h in ${MEDIA_UAPI_HEADERS}; do
+        ${HEADER_INSTALL_TOOL} ${S}/display/$h ${D}${includedir}/display/$h
    done
 }
 
