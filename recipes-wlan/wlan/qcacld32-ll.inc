@@ -1,7 +1,7 @@
 PROVIDES_NAME = "kernel-module-${_MODNAME}"
 
-DEPENDS += "wlan-platform-dlkm"
-inherit autotools-brokensep module qperf module-sign qti-kernel-arch-clang
+DEPENDS += "wlan-platform-dlkm virtual/kernel"
+inherit autotools-brokensep module qperf module-sign
 
 WLAN_PLATFORM_PATH = "${STAGING_INCDIR}/wlan-platform"
 WLAN_KBUILD_EXTRA = "KBUILD_EXTRA_SYMBOLS=${WLAN_PLATFORM_PATH}/Module.symvers"
@@ -17,7 +17,7 @@ WLAN_PLATFORM_CFG = "\
                    "
 EXTRA_OEMAKE:append = " ${WLAN_PLATFORM_CFG} "
 
-_LINUX_BUILD_TOP = "${WORKDIR}/wlan"
+_LINUX_BUILD_TOP = "${WORKDIR}/sources/wlan"
 
 do_unpack[deptask] = "do_populate_sysroot"
 do_compile:prepend() {
