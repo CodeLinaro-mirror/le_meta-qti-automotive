@@ -1,0 +1,36 @@
+From 559477b8b1376453be2e97efc636b1101f1c1c9c Mon Sep 17 00:00:00 2001
+From: Debraj Mukhopadhyay <quic_dmukhopa@quicinc.com>
+Date: Thu, 28 Nov 2024 14:33:29 +0530
+Subject: [PATCH] Add changes in Makefile
+
+Change-Id: I02286234a0c1ee8ebe01b8e7c4816898f4b327d2
+Signed-off-by: Debraj Mukhopadhyay <quic_dmukhopa@quicinc.com>
+---
+ libckteec/Makefile | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/libckteec/Makefile b/libckteec/Makefile
+index de7e330..77629cd 100644
+--- a/libckteec/Makefile
++++ b/libckteec/Makefile
+@@ -29,14 +29,15 @@ LIBCKTEEC_SRCS		+= pkcs11_processing.c
+ LIBCKTEEC_SRCS		+= pkcs11_token.c
+ LIBCKTEEC_SRCS		+= serializer.c
+ LIBCKTEEC_SRCS		+= serialize_ck.c
++LIBCKTEEC_SRCS		+= ../../libteec/src/teec_trace.c
+ 
+ LIBCKTEEC_INCLUDES	= ${CURDIR}/include
+ LIBCKTEEC_INCLUDES 	+= ${CURDIR}/../libteec/include
+ 
+ LIBCKTEEC_CFLAGS	:= $(addprefix -I, $(LIBCKTEEC_INCLUDES)) \
+-			$(CFLAGS) -D_GNU_SOURCE -fPIC
++			$(CFLAGS) -D_GNU_SOURCE -fPIC -DBINARY_PREFIX=\"ckteec\"
+ 
+-LIBCKTEEC_LFLAGS	:= $(LDFLAGS) -L$(OUT_DIR)/../libteec -lteec
++LIBCKTEEC_LFLAGS	:= $(LDFLAGS) -lGPTEE
+ 
+ LIBCKTEEC_OBJ_DIR	:= $(OUT_DIR)
+ LIBCKTEEC_OBJS		:= $(patsubst %.c,$(LIBCKTEEC_OBJ_DIR)/%.o, $(LIBCKTEEC_SRCS))
+-- 
+2.17.1
+

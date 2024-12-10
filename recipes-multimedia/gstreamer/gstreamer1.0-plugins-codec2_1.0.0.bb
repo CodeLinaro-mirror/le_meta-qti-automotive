@@ -19,7 +19,7 @@ DEPENDS += "\
     virtual/kernel-headers \
 "
 
-# default enable C2 service on all targets and disable on Lemans
+# default enable C2 service on all targets
 DEPENDS:append = " binder codec2-service"
 EXTRA_OEMESON:append = " -Dagl-c2service=true"
 
