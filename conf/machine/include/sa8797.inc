@@ -4,9 +4,9 @@ SOC_FAMILY = "sa8797"
 SOC_FAMILY ?= "sa-common"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
-PREFERRED_PROVIDER_virtual/kernel = "linux-qcom-custom"
+PREFERRED_PROVIDER_virtual/kernel = "linux-qcom-custom-rt"
 PREFERRED_PROVIDER_virtual/kernel-headers = "linux-kernel-qcom-headers"
-PREFERRED_VERSION_linux-qcom-custom = "6.6"
+PREFERRED_VERSION_linux-qcom-custom-rt = "6.6"
 
 # Prefer Wayland/Weston version
 PREFERRED_VERSION_weston = "8.0.0"
@@ -14,7 +14,7 @@ PREFERRED_VERSION_wayland = "1.18.0"
 PREFERRED_VERSION_wayland-native = "1.18.0"
 PREFERRED_VERSION_wayland-protocols = "1.20"
 PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
-preferred-kernel = "PREFERRED_VERSION_linux-qcom-custom"
+preferred-kernel = "PREFERRED_VERSION_linux-qcom-custom-rt"
 kernel-version = "6.6"
 # Prefer gbm
 PREFERRED_PROVIDER_virtual/libgbm = "gbm"
