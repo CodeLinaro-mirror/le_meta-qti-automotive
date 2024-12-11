@@ -1,0 +1,70 @@
+From b20b6d944a9ebcfd0f9f839f116cb1092d7d3547 Mon Sep 17 00:00:00 2001
+From: linlzhan <quic_linlzhan@quicinc.com>
+Date: Fri, 18 Oct 2024 16:22:11 +0800
+Subject: [PATCH] PENDING: ice: Enable ICE on SA8255p Qualcomm platforms
+
+Enable ICE and ignore the UFS ICE clock in ICE driver
+since this clock is already requested ON/OFF via UFS
+power domain channel due to SCMI support.
+
+Change-Id: I75eefe9481033ee6e0c1110fa350fd348f90aeb3
+Signed-off-by: linlzhan <quic_linlzhan@quicinc.com>
+---
+ drivers/soc/qcom/ice.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index 8fb9493f0b99..b8cc311dcae4 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -77,6 +77,7 @@ struct qcom_ice {
+ 	u8 hwkm_version;
+ 	bool use_hwkm;
+ 	bool hwkm_init_complete;
++	bool skip_clk;
+ };
+ 
+ union crypto_cfg {
+@@ -531,20 +532,25 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+ 	engine->dev = dev;
+ 	engine->base = base;
+ 
+-	/*
+-	 * Legacy DT binding uses different clk names for each consumer,
+-	 * so lets try those first. If none of those are a match, it means
+-	 * the we only have one clock and it is part of the dedicated DT node.
+-	 * Also, enable the clock before we check what HW version the driver
+-	 * supports.
+-	 */
+-	engine->core_clk = devm_clk_get_optional_enabled(dev, "ice_core_clk");
+-	if (!engine->core_clk)
+-		engine->core_clk = devm_clk_get_optional_enabled(dev, "ice");
+-	if (!engine->core_clk)
+-		engine->core_clk = devm_clk_get_enabled(dev, NULL);
+-	if (IS_ERR(engine->core_clk))
+-		return ERR_CAST(engine->core_clk);
++	engine->skip_clk = of_property_read_bool(dev->of_node,
++						 "qcom,ice-skip-clk");
++	if (!engine->skip_clk) {
++		/*
++		 * Legacy DT binding uses different clk names for each consumer,
++		 * so lets try those first. If none of those are a match, it means
++		 * the we only have one clock and it is part of the dedicated DT node.
++		 * Also, enable the clock before we check what HW version the driver
++		 * supports.
++		 */
++		engine->core_clk = devm_clk_get_optional_enabled(dev, "ice_core_clk");
++		if (!engine->core_clk)
++			engine->core_clk = devm_clk_get_optional_enabled(dev, "ice");
++		if (!engine->core_clk)
++			engine->core_clk = devm_clk_get_enabled(dev, NULL);
++		if (IS_ERR(engine->core_clk))
++			return ERR_CAST(engine->core_clk);
++	}
++
+ 	engine->use_hwkm = of_property_read_bool(dev->of_node,
+ 						 "qcom,ice-use-hwkm");
+ 
+-- 
+2.17.1
+

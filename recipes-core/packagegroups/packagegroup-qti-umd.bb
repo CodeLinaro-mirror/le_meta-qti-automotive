@@ -15,6 +15,5 @@ RDEPENDS:${PN} = "\
     safelinux-cfg-modules \
     safelinux-system-cfg \
     safelinux-dbg-modules \
-    ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark linux-qcom-custom', '', 'umd-power', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah', 'dspfirmware-mount', '', d)} \
 "

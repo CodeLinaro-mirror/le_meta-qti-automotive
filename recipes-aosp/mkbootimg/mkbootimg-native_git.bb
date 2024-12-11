@@ -21,5 +21,9 @@ do_install() {
     install -m 0755 ${S}/mkbootimg.py ${D}/${bindir}/scripts/
     install -d ${D}/${bindir}/scripts/gki/
     install -m 0755 ${S}/gki/generate_gki_certificate.py ${D}/${bindir}/scripts/gki/
+    install -d ${D}/${bindir}/scripts/pil_tools/
+    install -m 0755 ${S}/pil_tools/elf_tools.py ${D}/${bindir}/scripts/pil_tools/
+    install -m 0755 ${S}/pil_tools/image_header.py ${D}/${bindir}/scripts/pil_tools/
+    install -m 0755 ${S}/pil_tools/pil-splitter.py ${D}/${bindir}/scripts/pil_tools/
 }
 

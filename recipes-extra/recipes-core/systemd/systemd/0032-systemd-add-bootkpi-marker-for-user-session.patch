@@ -1,0 +1,118 @@
+From ca803fdfa81a618d395d9c9844dcef6c17e8d354 Mon Sep 17 00:00:00 2001
+From: Lei wang <quic_leiwan@quicinc.com>
+Date: Fri, 14 Oct 2022 17:37:58 +0800
+Subject: [PATCH] systemd: add userspace marker support
+
+support userspace entry and unit marker
+
+Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
+---
+ src/basic/util.h | 19 +++++++++++++++++++
+ src/core/job.c   | 26 ++++++++++++++++++++++++++
+ src/core/main.c  |  2 ++
+ 3 files changed, 47 insertions(+)
+
+diff --git a/src/basic/util.h b/src/basic/util.h
+index 68ae3b51e0..81f9fc61f2 100644
+--- a/src/basic/util.h
++++ b/src/basic/util.h
+@@ -2,6 +2,9 @@
+ #pragma once
+ 
+ #include <stdint.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <string.h>
+ 
+ #include "macro.h"
+ 
+@@ -73,6 +76,22 @@ static inline unsigned log2u_round_up(unsigned x) {
+         return log2u(x - 1) + 1;
+ }
+ 
++#define KPI_VALUE_PATH "/sys/kernel/boot_kpi/kpi_values"
++
++static inline void write_marker(const char *label) {
++        int fd = -1;
++
++        fd = open(KPI_VALUE_PATH, O_WRONLY);
++        if (fd >= 0) {
++                write(fd, label, strlen(label));
++                close(fd);
++        } else {
++                log_error("open bootkpi_values failed");
++        }
++
++        return;
++}
++
+ int container_get_leader(const char *machine, pid_t *pid);
+ 
+ int version(void);
+diff --git a/src/core/job.c b/src/core/job.c
+index 94ab381626..40c9517118 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -28,6 +28,12 @@
+ #include "unit.h"
+ #include "virt.h"
+ 
++#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0][0]))
++
++static const char* bootkpi_unit_list[][3]= {
++        {"systemd-logind.service", "V - agl system session complete", "V - agl first user logged in"},
++};
++
+ Job* job_new_raw(Unit *unit) {
+         Job *j;
+ 
+@@ -816,6 +822,16 @@ static int job_perform_on_unit(Job **j) {
+                         assert_not_reached();
+         }
+ 
++        if (t == JOB_START && u->type == UNIT_SERVICE) {
++                for (size_t idx = 0; idx < (ARRAY_SIZE(bootkpi_unit_list) / 3); idx++) {
++                        if (strneq(u->id, bootkpi_unit_list[idx][0],
++                                   strlen(bootkpi_unit_list[idx][0])) &&
++                                   bootkpi_unit_list[idx][1]) {
++                                write_marker(bootkpi_unit_list[idx][1]);
++                        }
++                }
++        }
++
+         /* Log if the job still exists and the start/stop/reload function actually did something. Note that this means
+          * for units for which there's no 'activating' phase (i.e. because we transition directly from 'inactive' to
+          * 'active') we'll possibly skip the "Starting..." message. */
+@@ -943,6 +959,16 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive, bool alr
+         log_unit_debug(u, "Job %" PRIu32 " %s/%s finished, result=%s",
+                        j->id, u->id, job_type_to_string(t), job_result_to_string(result));
+ 
++        if (result == JOB_DONE && u->type == UNIT_SERVICE) {
++                for (size_t idx = 0; idx < (ARRAY_SIZE(bootkpi_unit_list) / 3); idx++) {
++                        if (strneq(u->id, bootkpi_unit_list[idx][0],
++                                   strlen(bootkpi_unit_list[idx][0])) &&
++                                   bootkpi_unit_list[idx][2]) {
++                                write_marker(bootkpi_unit_list[idx][2]);
++                        }
++                }
++        }
++
+         /* If this job did nothing to the respective unit we don't log the status message */
+         if (!already)
+                 job_emit_done_message(u, j->id, t, result);
+diff --git a/src/core/main.c b/src/core/main.c
+index 57aedb9b93..6aa012d5e0 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -2795,6 +2795,8 @@ int main(int argc, char *argv[]) {
+                                  * available, and it previously wasn't. */
+                                 log_open();
+ 
++                                write_marker("M - User Space Start");
++
+                                 disable_printk_ratelimit();
+ 
+                                 r = initialize_security(
+-- 
+2.37.3
+

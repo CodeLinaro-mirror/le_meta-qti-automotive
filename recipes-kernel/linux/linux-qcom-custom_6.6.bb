@@ -6,11 +6,10 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require recipes-kernel/linux/linux-qcom.inc
 
-COMPATIBLE_MACHINE = "sa8775|sa8797"
+COMPATIBLE_MACHINE = "sa8775|sa8797|sa7255"
 
-FILESEXTRAPATHS:prepend = "${WORKSPACE}/kernel/kernel_platform:"
 SRC_URI = "\
-    file://kernel \
+    ${PATH_TO_REPO}/kernel/kernel_platform/kernel/.git;protocol=${PROTO};destsuffix=kernel/kernel_platform/kernel;usehead=1 \
     file://generic.cfg \
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'file://selinux.cfg', '', d)} \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'file://devmem.cfg', d)} \
@@ -31,17 +30,18 @@ SRC_URI = "\
     file://0013-net-stmmac-dwmac-qcom-ethqos-Enable-SCMI-ETH.patch \
     file://0014-PENDING-qcom-Add-sa7255p-compatibles-for-core-driver.patch \
     file://0015-PENDING-PCI-Add-Qualcomm-PCIe-ECAM-root-complex-driv.patch \
+    file://0016-PENDING-ice-Enable-ICE-on-SA8255p-Qualcomm-platforms.patch \
     file://scm_adci/0001-QCLINUX-arm64-dts-qcom-sa8255p-Modify-correct-dt-nam.patch \
     file://scm_adci/0002-BACKPORT-FROMLIST-firmware-qcom-scm-Support-multiple.patch \
     file://scm_adci/0003-PENDING-firmware-qcom-scm-Add-support-for-WAITQ_WAKE.patch \
     file://scm_adci/0004-PENDING-firmware-qcom-scm-Selectively-skip-mutex-for.patch \
     file://scm_adci/0005-UPSTREAM-firmware-qcom-scm-Remove-QCOM_SMC_WAITQ_FLA.patch \
     file://scm_adci/0006-PENDING-firmware-qcom-scm-Introduce-new-locking-mech.patch \
-    file://scm_adci/0007-BACKPORT-UPSTREAM-firmware-qcom-scm-Mark-get_wq_ctx-.patch \
-    file://scm_adci/0008-BACKPORT-UPSTREAM-firmware-qcom-scm-add-support-for-.patch \
+    file://scm_adci/0007-BACKPORT-UPSTREAM-firmware-qcom-scm-add-support-for-.patch \
+    file://scm_adci/0009-QCLINUX-arm64-dts-qcom-sa7255p-Modify-correct-dt-nam.patch \
 "
-SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/kernel"
+
+S = "${WORKDIR}/kernel/kernel_platform/kernel"
 
 KERNEL_CONFIG_FRAGMENTS:append = " ${WORKDIR}/generic.cfg"
 KERNEL_CONFIG_FRAGMENTS:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '${WORKDIR}/selinux.cfg', '', d)}"

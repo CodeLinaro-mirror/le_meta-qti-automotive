@@ -58,8 +58,3 @@ do_install:append:monaco() {
     fi
 }
 
-do_install:append:sa8775() {
-    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
-        sed -i 's/systemd-notify.so/systemd-notify.so,compositor-pm-ds.so/g' ${D}${systemd_system_unitdir}/weston.service
-    fi
-}

@@ -4,6 +4,7 @@ LICENSE = "BSD-3-Clause-Clear"
 
 DEPENDS += "mkbootimg-native mkdtimg-native openssl-native  python3-native virtual/kernel"
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'oot-dtbo', '', d)}"
+DEPENDS += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', 'audiolite-devicetree', '', d)}"
 DEPENDS += "${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar', bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', 'audiolite-devicetree', '', d), '', d)}"
 
 IMAGE_CLASSES:remove = "qimage"
@@ -30,6 +31,7 @@ do_make_dtb() {
 }
 do_make_dtb[depends] += "virtual/kernel:do_deploy"
 do_make_dtb[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'oot-dtbo:do_deploy', '', d)}"
+do_make_dtb[depends] += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', 'audiolite-devicetree:do_deploy', '', d)}"
 do_make_dtb[depends] += "${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar', bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', 'audiolite-devicetree:do_deploy', '', d), '', d)}"
 
 addtask do_make_dtb after do_image before do_makeboot

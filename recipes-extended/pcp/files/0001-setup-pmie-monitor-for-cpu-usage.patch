@@ -1,0 +1,47 @@
+From 630352bbcecc7b686c5368ce13561f7e582dfadd Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <quic_naiwyu@quicinc.com>
+Date: Thu, 8 Aug 2024 22:24:00 +0800
+Subject: [PATCH] setup pmie monitor for cpu usage
+
+Set cpu usage monitor rule for primary pmie instance, remove dependency
+of pmie_farm because it need to write to r/o rootfs and is not
+neccessary to local pmie usage.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Naiwen Yu <quic_naiwyu@quicinc.com>
+---
+ src/pmie/control.local   | 4 +++-
+ src/pmie/pmie.service.in | 4 ++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/pmie/control.local b/src/pmie/control.local
+index 2998e2e..d5b1ba1 100644
+--- a/src/pmie/control.local
++++ b/src/pmie/control.local
+@@ -2,4 +2,6 @@ $version=1.1
+ 
+ # local primary inference engine
+ #Host		P?  S?	Log File 				  Arguments
+-LOCALHOSTNAME   y   n   PCP_LOG_DIR/pmie/LOCALHOSTNAME/pmie.log   -c config.default
++#LOCALHOSTNAME   y   n   PCP_LOG_DIR/pmie/LOCALHOSTNAME/pmie.log   -c config.default
++LOCALHOSTNAME   y   n   PCP_LOG_DIR/pmie/LOCALHOSTNAME/cpu_usage.log -c /var/lib/pcp/config/pmie/cpu_usage_monitor
++
+diff --git a/src/pmie/pmie.service.in b/src/pmie/pmie.service.in
+index d659c39..d234c8a 100644
+--- a/src/pmie/pmie.service.in
++++ b/src/pmie/pmie.service.in
+@@ -2,8 +2,8 @@
+ Description=Performance Metrics Inference Engine
+ Documentation=man:pmie(1)
+ After=network-online.target pmcd.service
+-Before=pmie_farm.service pmie_check.timer pmie_daily.timer
+-BindsTo=pmie_farm.service pmie_check.timer pmie_daily.timer
++Before=pmie_check.timer pmie_daily.timer
++BindsTo=pmie_check.timer pmie_daily.timer
+ Wants=pmcd.service
+ 
+ [Service]
+-- 
+2.25.1
+

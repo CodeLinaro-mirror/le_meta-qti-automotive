@@ -27,3 +27,7 @@ IMAGE_FEATURES:append = " ${@bb.utils.contains('VARIANT', 'debug', 'debug-tweaks
 IMAGE_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'ssh-server-openssh read-only-rootfs', '', d)}"
 
 INCOMPATIBLE_LICENSE:sa8797 = "GPL-3.0-only LGPL-3.0-only AGPL-3.0-only"
+
+# Add libgomp support
+IMAGE_INSTALL += "libgomp"
+

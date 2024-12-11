@@ -38,9 +38,7 @@ RPROVIDES:${PN} += "kernel-module-qtee-shmbridge-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-smcinvoke-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-scm-oot-${KERNEL_VERSION}"
 
-RPROVIDES:${PN}:remove:sa8775-flex = "kernel-module-tz-log-${KERNEL_VERSION}"
-RPROVIDES:${PN}:remove:sa8255-ivi = "kernel-module-tz-log-${KERNEL_VERSION}"
-RPROVIDES:${PN}:remove:sa8650-adas = "kernel-module-tz-log-${KERNEL_VERSION}"
+RPROVIDES:${PN}:remove = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'kernel-module-tz-log-${KERNEL_VERSION}', '', d)}"
 
 FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"

@@ -72,3 +72,46 @@ merge_dtbos () {
     done
 }
 
+merge_dtbos_single () {
+    dtb_dir=$1
+    dtbo_dir=$2
+    out_dir=$3
+
+    dtb_files=$(find $dtb_dir -name "*.dtb*")
+    dtbo_files=$(find $dtbo_dir -name "*.dtbo")
+
+    if [ -z "$dtb_files" ]; then
+        echo "ERR : Base DTB files NOT found"
+        exit 1
+    fi
+
+    if [ -z "$dtbo_files" ]; then
+        echo "WARN: Overlay DTB files not found"
+        cp $dtb_dir/* $out_dir
+        return 0
+    fi
+
+    for dtb_file in $dtb_files; do
+        dtbo_matched=""
+        for dtbo_file in $dtbo_files; do
+            if match_dtb_to_dtbo $dtb_file $dtbo_file; then
+                dtbo_matched="true"
+                dtbo_string=$(basename $dtbo_file)
+                dtbo_string=$(echo "$dtbo_string" | sed -e 's/\.[^.]*$//')
+                out_dtb=${dtbo_string}.dtb
+                # execute the command in verbose mode(-v)
+                fdtoverlay -i $dtb_file -o ${out_dir}/${out_dtb} -v $dtbo_file
+                #exit in case of failure
+                if [ $? -ne 0 ]; then
+                    exit 1
+                fi
+            fi
+        done
+        if [ -z "$dtbo_matched" ]; then
+            base_name=$(basename $dtb_file)
+            base_dtb_name=$(echo "$base_name" | sed -e 's/\.[^.]*$//')
+            out_dtb=${base_dtb_name}-overlay.dtb
+            cp $dtb_file ${out_dir}/${out_dtb}
+        fi
+    done
+}

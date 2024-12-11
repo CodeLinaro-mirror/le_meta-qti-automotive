@@ -1,0 +1,28 @@
+// Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: LGPL-2.1
+
+delta = 10 sec;
+total_cpu.usage =
+100 * ( kernel.all.cpu.user +
+        kernel.all.cpu.nice +
+        kernel.all.cpu.sys +
+        kernel.all.cpu.intr +
+        kernel.all.cpu.steal +
+        kernel.all.cpu.guest +
+        kernel.all.cpu.guest_nice ) / hinv.ncpu
+        > 70
+-> print "High total CPU usage!\n" " %v% total on %h\n";
+
+delta = 10 sec;
+per_cpu.usage =
+some_inst (
+    ( 100 * ( kernel.percpu.cpu.user +
+              kernel.percpu.cpu.nice +
+              kernel.percpu.cpu.sys +
+              kernel.percpu.cpu.intr +
+              kernel.percpu.cpu.steal +
+              kernel.percpu.cpu.guest +
+              kernel.percpu.cpu.guest_nice ) )
+      > 70
+)
+-> print "High per CPU usage!\n" " %v% on [%i] %h\n";
