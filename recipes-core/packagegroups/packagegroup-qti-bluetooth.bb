@@ -9,7 +9,5 @@ PACKAGES = "\
 ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
-    synergy-opensource \
-    csrspp-tty \
     bt-dlkm \
     "
