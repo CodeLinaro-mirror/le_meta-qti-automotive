@@ -85,5 +85,4 @@ MACHINE_FEATURES:remove = "\
 "
 
 SECTOOLS_VERSION = "sectools-v2"
-SECTOOLS_V2_DIR = "${BSPDIR}/vendor/qcom/proprietary/sectools/Linux"
-SECTOOLS_SECURITY_PROFILE = "${BSPDIR}/security/securemsm/security_profiles/nord_tz_security_profile.xml"
+SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"

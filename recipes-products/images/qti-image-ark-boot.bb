@@ -111,7 +111,7 @@ avb_sign_boot_image() {
 
 #Sign boot image after generation
 do_sign_boot_img[dirs] = "${DEPLOY_DIR_IMAGE}"
-do_sign_boot_img[depends] += "sectool5-native:do_populate_sysroot avbtool-native:do_populate_sysroot"
+do_sign_boot_img[depends] += "sectools-native:do_populate_sysroot avbtool-native:do_populate_sysroot"
 
 addtask do_makeboot_setscene
 
