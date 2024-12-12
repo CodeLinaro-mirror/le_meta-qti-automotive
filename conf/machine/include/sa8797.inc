@@ -67,7 +67,7 @@ MACHINE_FEATURES += "\
     qti-tools \
     qti-multimedia \
     qti-display \
-    qti-audio \
+    qti-audio-aw \
     qti-data \
     qti-camera \
     qti-safety \
@@ -76,10 +76,8 @@ MACHINE_FEATURES += "\
     qti-security \
     qti-umd \
 "
-
 MACHINE_FEATURES:remove = "\
     qti-display \
-    qti-audio \
     qti-camera \
     qti-safety \
     qti-vnw \

@@ -25,4 +25,4 @@ RDEPENDS:${PN} += "\
 
 # systemd-analyze is included in ubuntu's systemd package
 # systemd-bootchart does not build properly for ubuntu yet
-RDEPENDS:${PN}:remove = "${@bb.utils.contains('TCMODE', 'external-ubuntu', 'cntvct-log systemd-analyze systemd-bootchart', '', d)}"
+RDEPENDS:${PN}:remove = "${@bb.utils.contains('TCMODE', 'external-ubuntu', 'systemd-analyze systemd-bootchart', '', d)}"
