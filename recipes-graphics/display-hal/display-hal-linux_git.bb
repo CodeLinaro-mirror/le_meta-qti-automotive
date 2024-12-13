@@ -19,11 +19,15 @@ DEPENDS += "display-commonsys-intf-linux \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'display-kernel-headers', '', d)} \
 "
 
+DEPENDS:append:sa8797 = "display-kernel-headers display-intf-headers"
+
 PR = "r8"
 
-SRC_URI = "${PATH_TO_REPO}/display/display-hal/.git;protocol=${PROTO};destsuffix=display/display-hal;usehead=1"
+DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "display/display-hal", d)}"
+
+SRC_URI = "${PATH_TO_REPO}/${DISPLAY_DIR}/.git;protocol=${PROTO};destsuffix=${DISPLAY_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/display/display-hal"
+S = "${WORKDIR}/${DISPLAY_DIR}"
 
 inherit autotools-brokensep pkgconfig
 
@@ -33,17 +37,18 @@ EXTRA_OECONF += "--enable-sdmhaldrm"
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
 CPPFLAGS += "-DCOMPILE_DRM"
-CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/libdrmutils"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/gpu_tonemapper"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/libqdutils"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/libqservice"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/sdm/include"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/include"
-CPPFLAGS += "-I${WORKDIR}/display/display-hal/libdebug"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/include"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/sdm/include"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libdebug"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libdrmutils"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/gpu_tonemapper"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqdutils"
+CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqservice"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
+
+CPPFLAGS:append:sa8797 = " -DDEMURA_STAND_ALONE"
 
 # fix for uapi msm_drm.h header file related compilation issue
 CPPFLAGS += "-fno-operator-names"

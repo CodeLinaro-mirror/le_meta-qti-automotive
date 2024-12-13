@@ -34,5 +34,9 @@ do_install:append() {
     install -m 644 ${S}/include/*.h ${D}${includedir}
 }
 
+do_install:append:sa8797() {
+    rm -f ${D}${includedir}/color_extensions.h
+}
+
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
