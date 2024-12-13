@@ -1,7 +1,7 @@
-From c6f8d0cc12ce5fb3a7f31d52fa083c435b59dfbf Mon Sep 17 00:00:00 2001
-From: Guru Das Srinagesh <quic_gurus@quicinc.com>
-Date: Wed, 27 Sep 2023 12:03:41 -0700
-Subject: [PATCH 3/8] PENDING: firmware: qcom-scm: Add support for WAITQ_WAKE
+From 57e49148e2e6329cf6935432fd89612ed319346d Mon Sep 17 00:00:00 2001
+From: Ninad Naik <quic_ninanaik@quicinc.com>
+Date: Tue, 3 Dec 2024 18:18:21 +0530
+Subject: [PATCH 5/9] PENDING: firmware: qcom-scm: Add support for WAITQ_WAKE
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -87,21 +87,22 @@ these nested rounds of WQ_SLEEP are not shown in the above diagram for
 the sake of simplicity. Extend the do-while loop in
 __scm_smc_do_quirk_handle_waitq() to handle this case.
 
-Change-Id: I529e50adf08e51dfb44c33492b99c69bda3b5a37
+Change-Id: I5281535e2240d84043f1fbb5f2dbdc4a1c8cab2b
 Signed-off-by: Guru Das Srinagesh <quic_gurus@quicinc.com>
 Signed-off-by: Venkatakrishnaiah Pari <quic_vpari@quicinc.com>
 Signed-off-by: Jian Shu <quic_jianshu@quicinc.com>
+Signed-off-by: Ninad Naik <quic_ninanaik@quicinc.com>
 ---
- drivers/firmware/qcom_scm-smc.c | 44 ++++++++++++++++++++++++---------
+ drivers/firmware/qcom_scm-smc.c | 46 +++++++++++++++++++++++----------
  drivers/firmware/qcom_scm.c     |  2 +-
  drivers/firmware/qcom_scm.h     |  3 +++
- 3 files changed, 36 insertions(+), 13 deletions(-)
+ 3 files changed, 37 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
-index 20681a031409..263eb25d0427 100644
+index c26e82e490fc..bccf417b895c 100644
 --- a/drivers/firmware/qcom_scm-smc.c
 +++ b/drivers/firmware/qcom_scm-smc.c
-@@ -67,6 +67,17 @@ static void fill_wq_resume_args(struct arm_smccc_args *resume, u32 smc_call_ctx)
+@@ -68,6 +68,17 @@ static void fill_wq_resume_args(struct arm_smccc_args *resume, u32 smc_call_ctx)
  	resume->args[2] = smc_call_ctx;
  }
  
@@ -119,7 +120,7 @@ index 20681a031409..263eb25d0427 100644
  int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
  {
  	int ret;
-@@ -90,34 +101,43 @@ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
+@@ -91,34 +102,43 @@ int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending)
  	return 0;
  }
  
@@ -157,6 +158,8 @@ index 20681a031409..263eb25d0427 100644
 -
 -			fill_wq_resume_args(&resume, smc_call_ctx);
 -			smc = &resume;
+-		}
+-	} while (res->a0 == QCOM_SCM_WAITQ_SLEEP);
 +			if (res->a0 == QCOM_SCM_WAITQ_SLEEP) {
 +				ret = qcom_scm_wait_for_wq_completion(dev_get_drvdata(dev), wq_ctx);
 +				if (ret)
@@ -169,17 +172,16 @@ index 20681a031409..263eb25d0427 100644
 +				smc = &fill;
 +				qcom_scm_waitq_wakeup(dev_get_drvdata(dev), wq_ctx);
 +			}
- 		}
--	} while (res->a0 == QCOM_SCM_WAITQ_SLEEP);
++ 		}
 +	} while (IS_WAITQ_SLEEP_OR_WAKE(res));
  
  	return 0;
  }
 diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
-index b9a0e433de37..adad445a3a2b 100644
+index 42f99da6e137..251a31d1b6c2 100644
 --- a/drivers/firmware/qcom_scm.c
 +++ b/drivers/firmware/qcom_scm.c
-@@ -1885,7 +1885,7 @@ int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx)
+@@ -1739,7 +1739,7 @@ int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx)
  	return 0;
  }
  
@@ -189,10 +191,10 @@ index b9a0e433de37..adad445a3a2b 100644
  	struct completion *wq;
  
 diff --git a/drivers/firmware/qcom_scm.h b/drivers/firmware/qcom_scm.h
-index 8fe07c9b46eb..cd62d43eb753 100644
+index 14735eeda963..addddf89aa04 100644
 --- a/drivers/firmware/qcom_scm.h
 +++ b/drivers/firmware/qcom_scm.h
-@@ -63,6 +63,7 @@ struct qcom_scm_res {
+@@ -65,6 +65,7 @@ struct qcom_scm_res {
  
  struct qcom_scm;
  int qcom_scm_wait_for_wq_completion(struct qcom_scm *scm, u32 wq_ctx);
@@ -200,7 +202,7 @@ index 8fe07c9b46eb..cd62d43eb753 100644
  int scm_get_wq_ctx(u32 *wq_ctx, u32 *flags, u32 *more_pending);
  
  #define SCM_SMC_FNID(s, c)	((((s) & 0xFF) << 8) | ((c) & 0xFF))
-@@ -140,6 +141,7 @@ extern int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+@@ -147,6 +148,7 @@ struct qcom_tzmem_pool *qcom_scm_get_tzmem_pool(void);
  #define QCOM_SCM_SMMU_CONFIG_ERRATA1_CLIENT_ALL	0x02
  
  #define QCOM_SCM_SVC_WAITQ			0x24
@@ -208,7 +210,7 @@ index 8fe07c9b46eb..cd62d43eb753 100644
  #define QCOM_SCM_WAITQ_RESUME			0x02
  #define QCOM_SCM_WAITQ_GET_WQ_CTX		0x03
  
-@@ -152,6 +154,7 @@ extern int scm_legacy_call(struct device *dev, const struct qcom_scm_desc *desc,
+@@ -159,6 +161,7 @@ struct qcom_tzmem_pool *qcom_scm_get_tzmem_pool(void);
  #define QCOM_SCM_ERROR		-1
  #define QCOM_SCM_INTERRUPTED	1
  #define QCOM_SCM_WAITQ_SLEEP	2
@@ -217,5 +219,5 @@ index 8fe07c9b46eb..cd62d43eb753 100644
  static inline int qcom_scm_remap_error(int err)
  {
 -- 
-2.34.1
+2.46.0
 
