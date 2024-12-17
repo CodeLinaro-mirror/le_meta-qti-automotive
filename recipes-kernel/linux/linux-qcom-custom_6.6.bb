@@ -39,6 +39,7 @@ SRC_URI = "\
     file://scm_adci/0006-PENDING-firmware-qcom-scm-Selectively-skip-mutex-for.patch \
     file://scm_adci/0007-UPSTREAM-firmware-qcom-scm-Remove-QCOM_SMC_WAITQ_FLA.patch \
     file://scm_adci/0008-PENDING-firmware-qcom-scm-Introduce-new-locking-mech.patch \
+    file://scm_adci/0009-QCLINUX-arm64-dts-qcom-qcs9100-Modify-correct-dt-nam.patch \
 "
 
 S = "${WORKDIR}/kernel/kernel_platform/kernel"
