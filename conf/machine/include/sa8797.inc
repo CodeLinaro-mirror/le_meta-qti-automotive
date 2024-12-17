@@ -66,6 +66,7 @@ MACHINE_FEATURES += "\
     qti-core \
     qti-tools \
     qti-multimedia \
+    qti-cv \
     qti-display \
     qti-graphics \
     qti-audio-aw \
