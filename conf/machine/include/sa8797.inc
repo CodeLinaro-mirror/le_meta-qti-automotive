@@ -75,13 +75,13 @@ MACHINE_FEATURES += "\
     early-ramdisk-init \
     qti-security \
     qti-umd \
+    qti-vmm \
 "
 MACHINE_FEATURES:remove = "\
     qti-camera \
     qti-safety \
     qti-vnw \
     early-ramdisk-init \
-    qti-vmm \
 "
 
 SECTOOLS_VERSION = "sectools-v2"
