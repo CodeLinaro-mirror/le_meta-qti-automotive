@@ -1,7 +1,7 @@
-From c733bce82ac6e2435e20deb589d9ab3f4ec6b0a1 Mon Sep 17 00:00:00 2001
+From 1efb69190ae32218007ab61cb4387d6cfca108ee Mon Sep 17 00:00:00 2001
 From: Praveen Talari <quic_ptalari@quicinc.com>
 Date: Wed, 17 Jul 2024 19:28:53 +0530
-Subject: [PATCH 2/2] PENDING: spi: geni-qcom: Enable SPI on SA8255p Qualcomm
+Subject: [PATCH 2/3] PENDING: spi: geni-qcom: Enable SPI on SA8255p Qualcomm
  platforms
 
 Enable or disable resources such as clocks, interconnect
@@ -22,11 +22,11 @@ Change-Id: Icc00e341d5d1ca98f56e06fbcb234f9094c97256
 Signed-off-by: Praveen Talari <quic_ptalari@quicinc.com>
 Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
 ---
- drivers/spi/spi-geni-qcom.c | 241 ++++++++++++++++++++++++++++--------
- 1 file changed, 189 insertions(+), 52 deletions(-)
+ drivers/spi/spi-geni-qcom.c | 246 ++++++++++++++++++++++++++++--------
+ 1 file changed, 194 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/spi/spi-geni-qcom.c b/drivers/spi/spi-geni-qcom.c
-index 05028cdd39a9..a68831a15f94 100644
+index cc6619d73967..7bc01403c912 100644
 --- a/drivers/spi/spi-geni-qcom.c
 +++ b/drivers/spi/spi-geni-qcom.c
 @@ -93,6 +93,12 @@ void spi_trace_log(struct device *dev, const char *fmt, ...)
@@ -96,7 +96,7 @@ index 05028cdd39a9..a68831a15f94 100644
  }
  
  static int setup_fifo_params(struct spi_device *spi_slv,
-@@ -1062,13 +1084,98 @@ static irqreturn_t geni_spi_isr(int irq, void *data)
+@@ -1074,13 +1096,98 @@ static irqreturn_t geni_spi_isr(int irq, void *data)
  	return IRQ_HANDLED;
  }
  
@@ -196,7 +196,7 @@ index 05028cdd39a9..a68831a15f94 100644
  	struct device *dev = &pdev->dev;
  
  	irq = platform_get_irq(pdev, 0);
-@@ -1083,10 +1190,6 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1095,10 +1202,6 @@ static int spi_geni_probe(struct platform_device *pdev)
  	if (IS_ERR(base))
  		return PTR_ERR(base);
  
@@ -207,7 +207,7 @@ index 05028cdd39a9..a68831a15f94 100644
  	spi = devm_spi_alloc_host(dev, sizeof(*mas));
  	if (!spi)
  		return -ENOMEM;
-@@ -1098,16 +1201,42 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1110,16 +1213,46 @@ static int spi_geni_probe(struct platform_device *pdev)
  	mas->se.dev = dev;
  	mas->se.wrapper = dev_get_drvdata(dev->parent);
  	mas->se.base = base;
@@ -230,6 +230,10 @@ index 05028cdd39a9..a68831a15f94 100644
 +						&mas->se.pd_list);
 +		if (ret < 0)
 +			return ret;
++
++		ret = pm_runtime_resume_and_get(mas->se.pd_list->pd_devs[DOMAIN_IDX_PERF]);
++		if (ret)
++			goto spi_geni_pm_domain_detach;
 +	} else {
 +		mas->se.clk = devm_clk_get(mas->se.dev, "se");
 +		if (IS_ERR(mas->se.clk))
@@ -259,7 +263,7 @@ index 05028cdd39a9..a68831a15f94 100644
  	}
  
  	spi->bus_num = -1;
-@@ -1135,25 +1264,14 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1147,25 +1280,14 @@ static int spi_geni_probe(struct platform_device *pdev)
  	pm_runtime_set_autosuspend_delay(&pdev->dev, 250);
  	ret = devm_pm_runtime_enable(dev);
  	if (ret)
@@ -287,7 +291,7 @@ index 05028cdd39a9..a68831a15f94 100644
  
  	/*
  	 * check the mode supported and set_cs for fifo mode only
-@@ -1182,6 +1300,8 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1194,6 +1316,8 @@ static int spi_geni_probe(struct platform_device *pdev)
  	free_irq(mas->irq, spi);
  spi_geni_release_dma:
  	spi_geni_release_dma_chan(mas);
@@ -296,7 +300,7 @@ index 05028cdd39a9..a68831a15f94 100644
  	return ret;
  }
  
-@@ -1196,41 +1316,43 @@ static void spi_geni_remove(struct platform_device *pdev)
+@@ -1208,41 +1332,43 @@ static void spi_geni_remove(struct platform_device *pdev)
  	free_irq(mas->irq, spi);
  
  	spi_geni_release_dma_chan(mas);
@@ -357,7 +361,7 @@ index 05028cdd39a9..a68831a15f94 100644
  }
  
  static int __maybe_unused spi_geni_suspend(struct device *dev)
-@@ -1273,8 +1395,23 @@ static const struct dev_pm_ops spi_geni_pm_ops = {
+@@ -1285,8 +1411,24 @@ static const struct dev_pm_ops spi_geni_pm_ops = {
  	SET_SYSTEM_SLEEP_PM_OPS(spi_geni_suspend, spi_geni_resume)
  };
  
@@ -368,6 +372,7 @@ index 05028cdd39a9..a68831a15f94 100644
 +
 +static const struct geni_spi_desc remotely_geni_spi = {
 +	.pd_data = {
++		.pd_flags = PD_FLAG_NO_DEV_LINK,
 +		.pd_names = (const char*[]) { "power", "perf" },
 +		.num_pd_names = 2,
 +	},
