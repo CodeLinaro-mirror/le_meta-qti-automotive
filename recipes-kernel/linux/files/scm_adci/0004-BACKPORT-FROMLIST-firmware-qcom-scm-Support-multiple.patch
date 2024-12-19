@@ -1,7 +1,7 @@
-From 504e6bac0709b22a161241b2cc433e10a9c1ecaa Mon Sep 17 00:00:00 2001
-From: Unnathi Chalicheemala <quic_uchalich@quicinc.com>
-Date: Wed, 27 Sep 2023 09:47:09 -0700
-Subject: [PATCH 2/8] BACKPORT: FROMLIST: firmware: qcom-scm: Support multiple
+From a3e17e4efe24e098aaa0109887b86a375a8f75c5 Mon Sep 17 00:00:00 2001
+From: Ninad Naik <quic_ninanaik@quicinc.com>
+Date: Tue, 3 Dec 2024 18:08:35 +0530
+Subject: [PATCH 4/9] BACKPORT: FROMLIST: firmware: qcom-scm: Support multiple
  waitq contexts
 
 Currently, only a single waitqueue context is supported, with waitqueue
@@ -14,29 +14,23 @@ variable for easy lookup.
 The waitqueue ids can be >=0 as now we have more than one waitqueue
 context.
 
-Change-Id: Ia3f4eec905f7ce44425a81a910f8d4c5d3f0eba3
+Change-Id: I4085406f972e9cdccdad313e9e1fd1927032a0eb
 Signed-off-by: Unnathi Chalicheemala <quic_uchalich@quicinc.com>
 Link: https://lore.kernel.org/all/20240228-multi_waitq-v1-2-ccb096419af0@quicinc.com/
 [quic_jianshu@quicinc.com: Minor change for the file path]
 Signed-off-by: Jian Shu <quic_jianshu@quicinc.com>
+Signed-off-by: Ninad Naik <quic_ninanaik@quicinc.com>
 ---
- drivers/firmware/qcom_scm-smc.c |  8 ++-
- drivers/firmware/qcom_scm.c     | 90 +++++++++++++++++++++++++--------
+ drivers/firmware/qcom_scm-smc.c |  7 ++-
+ drivers/firmware/qcom_scm.c     | 94 +++++++++++++++++++++++++--------
  drivers/firmware/qcom_scm.h     |  3 +-
- 3 files changed, 78 insertions(+), 23 deletions(-)
+ 3 files changed, 79 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/firmware/qcom_scm-smc.c b/drivers/firmware/qcom_scm-smc.c
-index 850f0f99c38f..20681a031409 100644
+index 552231cc7684..c26e82e490fc 100644
 --- a/drivers/firmware/qcom_scm-smc.c
 +++ b/drivers/firmware/qcom_scm-smc.c
-@@ -1,5 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /* Copyright (c) 2015,2019 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #include <linux/io.h>
-@@ -104,7 +105,12 @@ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_
+@@ -106,7 +106,12 @@ static int __scm_smc_do_quirk_handle_waitq(struct device *dev, struct arm_smccc_
  			wq_ctx = res->a1;
  			smc_call_ctx = res->a2;
  
@@ -51,18 +45,18 @@ index 850f0f99c38f..20681a031409 100644
  				return ret;
  
 diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
-index fa11f5db80da..b9a0e433de37 100644
+index 5bd473202d83..42f99da6e137 100644
 --- a/drivers/firmware/qcom_scm.c
 +++ b/drivers/firmware/qcom_scm.c
-@@ -21,6 +21,7 @@
- #include <linux/clk.h>
+@@ -26,6 +26,7 @@
  #include <linux/reset-controller.h>
+ #include <linux/sizes.h>
  #include <linux/arm-smccc.h>
 +#include <linux/xarray.h>
- #include <linux/qtee_shmbridge.h>
  
  #include "qcom_scm.h"
-@@ -34,7 +35,7 @@ struct qcom_scm {
+ #include "qcom/qcom_tzmem.h"
+@@ -39,7 +40,7 @@ struct qcom_scm {
  	struct clk *iface_clk;
  	struct clk *bus_clk;
  	struct icc_path *path;
@@ -71,7 +65,7 @@ index fa11f5db80da..b9a0e433de37 100644
  	struct reset_controller_dev reset;
  
  	/* control access to the interconnect path */
-@@ -1829,42 +1830,73 @@ bool qcom_scm_is_available(void)
+@@ -1683,42 +1684,73 @@ bool qcom_scm_is_available(void)
  }
  EXPORT_SYMBOL_GPL(qcom_scm_is_available);
  
@@ -107,17 +101,17 @@ index fa11f5db80da..b9a0e433de37 100644
 +	if (!wq) {
 +		wq = ERR_PTR(-ENOMEM);
 +		goto out;
- 	}
++ 	}
 +	init_completion(wq);
- 
--	return 0;
++
 +	err = xa_err(xa_store(&scm->waitq, wq_ctx, wq, GFP_ATOMIC));
 +	if (err) {
 +		/* Don't wait for driver to be unloaded to free wq */
 +		kfree(wq);
 +		wq = ERR_PTR(err);
-+	}
-+
+ 	}
+ 
+-	return 0;
 +out:
 +	return wq;
  }
@@ -164,7 +158,7 @@ index fa11f5db80da..b9a0e433de37 100644
  
  	return 0;
  }
-@@ -1915,7 +1947,6 @@ static int qcom_scm_probe(struct platform_device *pdev)
+@@ -1770,7 +1802,6 @@ static int qcom_scm_probe(struct platform_device *pdev)
  	if (ret < 0)
  		return ret;
  
@@ -172,7 +166,7 @@ index fa11f5db80da..b9a0e433de37 100644
  	mutex_init(&scm->scm_bw_lock);
  
  	scm->path = devm_of_icc_get(&pdev->dev, NULL);
-@@ -1947,9 +1978,13 @@ static int qcom_scm_probe(struct platform_device *pdev)
+@@ -1802,9 +1833,13 @@ static int qcom_scm_probe(struct platform_device *pdev)
  	if (ret)
  		return ret;
  
@@ -186,18 +180,20 @@ index fa11f5db80da..b9a0e433de37 100644
  	irq = platform_get_irq_optional(pdev, 0);
  	if (irq < 0) {
  		if (irq != -ENXIO)
-@@ -1987,8 +2022,21 @@ static int qcom_scm_probe(struct platform_device *pdev)
+@@ -1862,8 +1897,21 @@ static int qcom_scm_probe(struct platform_device *pdev)
  
  static void qcom_scm_shutdown(struct platform_device *pdev)
  {
+-	/* Clean shutdown, disable download mode to allow normal restart */
+-	qcom_scm_set_download_mode(false);
 +	struct qcom_scm *scm;
 +	struct completion *c;
 +	unsigned long index;
 +
 +	scm = platform_get_drvdata(pdev);
 +
- 	/* Clean shutdown, disable download mode to allow normal restart */
- 	qcom_scm_set_download_mode(false);
++ 	/* Clean shutdown, disable download mode to allow normal restart */
++ 	qcom_scm_set_download_mode(false);
 +
 +	xa_for_each(&scm->waitq, index, c) {
 +		xa_erase(&scm->waitq, index);
@@ -209,10 +205,10 @@ index fa11f5db80da..b9a0e433de37 100644
  
  static const struct of_device_id qcom_scm_dt_match[] = {
 diff --git a/drivers/firmware/qcom_scm.h b/drivers/firmware/qcom_scm.h
-index 78110c703798..8fe07c9b46eb 100644
+index ad21cf3719a2..14735eeda963 100644
 --- a/drivers/firmware/qcom_scm.h
 +++ b/drivers/firmware/qcom_scm.h
-@@ -61,7 +61,8 @@ struct qcom_scm_res {
+@@ -63,7 +63,8 @@ struct qcom_scm_res {
  	u64 result[MAX_QCOM_SCM_RETS];
  };
  
@@ -223,5 +219,5 @@ index 78110c703798..8fe07c9b46eb 100644
  
  #define SCM_SMC_FNID(s, c)	((((s) & 0xFF) << 8) | ((c) & 0xFF))
 -- 
-2.34.1
+2.46.0
 
