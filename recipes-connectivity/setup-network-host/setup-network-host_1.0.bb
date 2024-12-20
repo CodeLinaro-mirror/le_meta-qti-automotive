@@ -14,15 +14,18 @@ SRC_URI = "\
     file://setup-network-host-gunyah.service \
     file://setup-network-host-gunyah-vmm.sh \
     file://setup-network-host-gunyah-vmm.service \
+    file://gvm_net_run.sh \
 "
 
 inherit systemd
 
 do_install() {
-  install -d ${D}${systemd_system_unitdir}
   install -d ${D}${bindir}
 
   if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah', 'true', 'false', d)}; then
+
+      install -d ${D}${systemd_system_unitdir}
+
       if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
           install -m 0755 ${WORKDIR}/setup-network-host-gunyah-vmm.sh ${D}${bindir}/setup-network-host.sh
           install -m 0644 ${WORKDIR}/setup-network-host-gunyah-vmm.service ${D}${systemd_unitdir}/system/setup-network-host.service
@@ -30,10 +33,10 @@ do_install() {
           install -m 0755 ${WORKDIR}/setup-network-host-gunyah.sh ${D}${bindir}/setup-network-host.sh
           install -m 0644 ${WORKDIR}/setup-network-host-gunyah.service ${D}${systemd_unitdir}/system/setup-network-host.service
       fi
-  else
-      install -m 0755 ${WORKDIR}/setup-network-host.sh ${D}${bindir}/setup-network-host.sh
-      install -m 0644 ${WORKDIR}/setup-network-host.service ${D}${systemd_unitdir}/system/setup-network-host.service
+
   fi
+
+  install -m 0755 ${WORKDIR}/gvm_net_run.sh ${D}${bindir}/gvm_net_run.sh
 }
 
-SYSTEMD_SERVICE:${PN} = "setup-network-host.service"
+SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah', 'setup-network-host.service', '', d)}"
