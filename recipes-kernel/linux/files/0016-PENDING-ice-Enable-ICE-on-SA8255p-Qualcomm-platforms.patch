@@ -1,4 +1,4 @@
-From b20b6d944a9ebcfd0f9f839f116cb1092d7d3547 Mon Sep 17 00:00:00 2001
+From fba5cfab8effe290af4cd8d1fea2a800c4510bb1 Mon Sep 17 00:00:00 2001
 From: linlzhan <quic_linlzhan@quicinc.com>
 Date: Fri, 18 Oct 2024 16:22:11 +0800
 Subject: [PATCH] PENDING: ice: Enable ICE on SA8255p Qualcomm platforms
@@ -10,22 +10,22 @@ power domain channel due to SCMI support.
 Change-Id: I75eefe9481033ee6e0c1110fa350fd348f90aeb3
 Signed-off-by: linlzhan <quic_linlzhan@quicinc.com>
 ---
- drivers/soc/qcom/ice.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ drivers/soc/qcom/ice.c | 33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 8fb9493f0b99..b8cc311dcae4 100644
+index eb73a37d4dd8..e0b01d4aaf29 100644
 --- a/drivers/soc/qcom/ice.c
 +++ b/drivers/soc/qcom/ice.c
-@@ -77,6 +77,7 @@ struct qcom_ice {
+@@ -75,6 +75,7 @@ struct qcom_ice {
  	u8 hwkm_version;
  	bool use_hwkm;
  	bool hwkm_init_complete;
 +	bool skip_clk;
+ 	uint32_t max_freq;
+ 	uint32_t min_freq;
  };
- 
- union crypto_cfg {
-@@ -531,20 +532,25 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+@@ -544,20 +545,24 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
  	engine->dev = dev;
  	engine->base = base;
  
@@ -61,7 +61,6 @@ index 8fb9493f0b99..b8cc311dcae4 100644
 +		if (IS_ERR(engine->core_clk))
 +			return ERR_CAST(engine->core_clk);
 +	}
-+
  	engine->use_hwkm = of_property_read_bool(dev->of_node,
  						 "qcom,ice-use-hwkm");
  

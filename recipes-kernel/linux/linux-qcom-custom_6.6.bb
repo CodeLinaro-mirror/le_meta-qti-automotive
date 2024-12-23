@@ -32,14 +32,14 @@ SRC_URI = "\
     file://0015-PENDING-PCI-Add-Qualcomm-PCIe-ECAM-root-complex-driv.patch \
     file://0016-PENDING-ice-Enable-ICE-on-SA8255p-Qualcomm-platforms.patch \
     file://scm_adci/0001-QCLINUX-arm64-dts-qcom-sa8255p-Modify-correct-dt-nam.patch \
-    file://scm_adci/0002-BACKPORT-FROMLIST-firmware-qcom-scm-Support-multiple.patch \
-    file://scm_adci/0003-PENDING-firmware-qcom-scm-Add-support-for-WAITQ_WAKE.patch \
-    file://scm_adci/0004-PENDING-firmware-qcom-scm-Selectively-skip-mutex-for.patch \
-    file://scm_adci/0005-UPSTREAM-firmware-qcom-scm-Remove-QCOM_SMC_WAITQ_FLA.patch \
-    file://scm_adci/0006-PENDING-firmware-qcom-scm-Introduce-new-locking-mech.patch \
-    file://scm_adci/0007-BACKPORT-UPSTREAM-firmware-qcom-scm-add-support-for-.patch \
-    file://scm_adci/0008-arm64-dts-qcom-sa8775p-Modify-correct-dt-name-for-SC.patch \
-    file://scm_adci/0009-QCLINUX-arm64-dts-qcom-sa7255p-Modify-correct-dt-nam.patch \
+    file://scm_adci/0002-QCLINUX-arm64-dts-qcom-sa8775p-Modify-correct-dt-nam.patch \
+    file://scm_adci/0003-QCLINUX-arm64-dts-qcom-sa7255p-Modify-correct-dt-nam.patch \
+    file://scm_adci/0004-BACKPORT-FROMLIST-firmware-qcom-scm-Support-multiple.patch \
+    file://scm_adci/0005-PENDING-firmware-qcom-scm-Add-support-for-WAITQ_WAKE.patch \
+    file://scm_adci/0006-PENDING-firmware-qcom-scm-Selectively-skip-mutex-for.patch \
+    file://scm_adci/0007-UPSTREAM-firmware-qcom-scm-Remove-QCOM_SMC_WAITQ_FLA.patch \
+    file://scm_adci/0008-PENDING-firmware-qcom-scm-Introduce-new-locking-mech.patch \
+    file://scm_adci/0009-QCLINUX-arm64-dts-qcom-qcs9100-Modify-correct-dt-nam.patch \
 "
 
 S = "${WORKDIR}/kernel/kernel_platform/kernel"

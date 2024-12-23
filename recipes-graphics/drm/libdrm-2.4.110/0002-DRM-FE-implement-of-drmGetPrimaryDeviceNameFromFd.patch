@@ -1,0 +1,49 @@
+#This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+
+#Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From b2d8a00f6bf0f26882c9fb84db76dff2540628c7 Mon Sep 17 00:00:00 2001
+From: Lan Zou <quic_lanz@quicinc.com>
+Date: Tue, 16 Apr 2024 10:00:40 +0800
+Subject: [PATCH] DRM-FE: implement of drmGetPrimaryDeviceNameFromFd
+
+drmGetPrimaryDeviceNameFromFd return NULL because drm fd
+of drm-fe is not device fd. So hardcode a name for this
+function if DRM_FE is enabled.
+
+Upstream-Status: Pending
+
+Signed-off-by: Lan Zou <quic_lanz@quicinc.com>
+---
+ xf86drm.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/xf86drm.c b/xf86drm.c
+index f364f17..c0dc9d9 100755
+--- a/xf86drm.c
++++ b/xf86drm.c
+@@ -3358,6 +3358,7 @@ static bool drmNodeIsDRM(int maj, int min)
+ 
+     if (!devname_r(makedev(maj, min), S_IFCHR, name, sizeof(name)))
+       return 0;
++
+     /* Handle drm/ and dri/ as both are present in different FreeBSD version
+      * FreeBSD on amd64/i386/powerpc external kernel modules create node in
+      * in /dev/drm/ and links in /dev/dri while a WIP in kernel driver creates
+@@ -3548,7 +3549,12 @@ static char *drmGetMinorNameForFD(int fd, int type)
+ 
+ drm_public char *drmGetPrimaryDeviceNameFromFd(int fd)
+ {
++#ifdef DRM_FE
++	char name[] = "/dev/dri/card0";
++	return strdup(name);
++#else
+     return drmGetMinorNameForFD(fd, DRM_NODE_PRIMARY);
++#endif
+ }
+ 
+ drm_public char *drmGetRenderDeviceNameFromFd(int fd)
+-- 
+2.7.4
+

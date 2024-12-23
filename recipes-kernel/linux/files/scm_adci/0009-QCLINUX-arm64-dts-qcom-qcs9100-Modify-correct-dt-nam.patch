@@ -1,0 +1,45 @@
+From 49aa11907d6d116c28b3fe51f44f7e2fb658f870 Mon Sep 17 00:00:00 2001
+From: Ninad Naik <quic_ninanaik@quicinc.com>
+Date: Tue, 17 Dec 2024 23:47:36 +0530
+Subject: [PATCH 9/9] QCLINUX: arm64: dts: qcom: qcs9100: Modify correct dt name
+ for SCM
+
+This change is required as this node is looked up and
+patched by hypervisor.
+
+Change-Id: Id9ec73baf6aa7e05b26f5421c1f64c69287e9abf
+Signed-off-by: Ninad Naik <quic_ninanaik@quicinc.com>
+---
+ arch/arm64/boot/dts/qcom/qcs9100-ride-r3.dts | 2 +-
+ arch/arm64/boot/dts/qcom/qcs9100-ride.dts    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9100-ride-r3.dts b/arch/arm64/boot/dts/qcom/qcs9100-ride-r3.dts
+index 9e647573db25..133828056945 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9100-ride-r3.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9100-ride-r3.dts
+@@ -108,7 +108,7 @@ trusted_apps_mem: trusted-apps@d1900000 {
+ 	};
+ 
+ 	firmware {
+-		scm {
++		qcom_scm {
+ 			/delete-property/ memory-region;
+ 		};
+ 	};
+diff --git a/arch/arm64/boot/dts/qcom/qcs9100-ride.dts b/arch/arm64/boot/dts/qcom/qcs9100-ride.dts
+index 5080f4f4eacf..9036655717d0 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9100-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9100-ride.dts
+@@ -108,7 +108,7 @@ trusted_apps_mem: trusted-apps@d1900000 {
+ 	};
+ 
+ 	firmware {
+-		scm {
++		qcom_scm {
+ 			/delete-property/ memory-region;
+ 		};
+ 	};
+-- 
+2.46.0
+

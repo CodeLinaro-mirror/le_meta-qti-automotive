@@ -15,5 +15,5 @@ RDEPENDS:${PN} = "\
     safelinux-cfg-modules \
     safelinux-system-cfg \
     safelinux-dbg-modules \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah', 'dspfirmware-mount', '', d)} \
+    dspfirmware-mount \
 "

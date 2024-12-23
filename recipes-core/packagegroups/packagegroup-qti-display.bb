@@ -26,6 +26,12 @@ RDEPENDS:${PN} += "\
 
 RDEPENDS:${PN}:remove:sa8797 = "display-hal-linux"
 RDEPENDS:${PN}:remove:sa8797 = "display-commonsys-intf-linux"
+RDEPENDS:${PN}:remove:sa8797 = "wayland"
+RDEPENDS:${PN}:remove:sa8797 = "wayland-ivi-extension"
+RDEPENDS:${PN}:remove:sa8797 = "weston"
+RDEPENDS:${PN}:remove:sa8797 = "weston-init"
+RDEPENDS:${PN}:remove:sa8797 = "weston-examples"
+RDEPENDS:${PN}:remove:sa8797 = "weston-sdm-extension"
 RDEPENDS:${PN}:remove:qti-dpk = "wayland-ivi-extension"
 RDEPENDS:${PN}:append:qti-dpk = " weston-udev"
 RDEPENDS:${PN}:remove:qti-dpk = "weston-sdm-extension"

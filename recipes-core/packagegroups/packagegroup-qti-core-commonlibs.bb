@@ -16,4 +16,5 @@ RDEPENDS:${PN} += "\
     liblog \
     glib-2.0 \
     procps \
+    libatomic \
     "
