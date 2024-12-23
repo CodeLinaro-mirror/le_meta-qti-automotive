@@ -78,7 +78,6 @@ MACHINE_FEATURES += "\
     qti-umd \
 "
 MACHINE_FEATURES:remove = "\
-    qti-camera \
     qti-safety \
     early-ramdisk-init \
     qti-vmm \
