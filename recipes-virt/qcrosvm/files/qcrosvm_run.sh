@@ -1,0 +1,35 @@
+#!/bin/sh
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+mount -o remount rw /
+mkdir -p /firmware/vm/boot
+mount /dev/disk/by-partlabel/la_bootloader_a /firmware/vm/boot
+echo "Mounted /firmware/vm/boot"
+/usr/bin/qcrosvm \
+--vm=autoghgvm \
+--use-non-protected-virtio \
+--disk=/dev/disk/by-partlabel/la_init_boot_a,label=22,rw=true \
+--disk=/dev/disk/by-partlabel/la_v_boot_a,label=24,rw=true \
+--disk=/dev/disk/by-partlabel/dsp_a,label=26,rw=false \
+--disk=/dev/disk/by-partlabel/la_dtbo_a,label=28,rw=true \
+--disk=/dev/disk/by-partlabel/la_boot_a,label=2A,rw=true \
+--disk=/dev/disk/by-partlabel/bluetooth_a,label=2C,rw=false \
+--disk=/dev/disk/by-partlabel/modem_a,label=2E,rw=false \
+--disk=/dev/disk/by-partlabel/la_vbmeta_a,label=30,rw=true \
+--disk=/dev/disk/by-partlabel/la_misc,label=32,rw=true \
+--disk=/dev/disk/by-partlabel/la_persist,label=33,rw=true \
+--disk=/dev/disk/by-partlabel/la_metadata,label=34,rw=true \
+--disk=/dev/disk/by-partlabel/la_userdata,label=35,rw=true \
+--disk=/dev/disk/by-partlabel/la_super,label=36,rw=true \
+--net=true,label=38,ip_addr=10.10.10.10,netmask=255.255.255.0,mac=5A:6F:F0:05:7C:24 \
+--vhost-user-hab "/tmp/linux-vm2-vnw-skt",label=48,device-id=96,queue-num=2 \
+--vhost-user-hab "/tmp/linux-vm2-gpce-skt",label=49,device-id=98,queue-num=2 \
+--vhost-user-hab "/tmp/linux-vm2-ext-skt",label=4A,device-id=97,queue-num=2 \
+--vhost-user-hab "/tmp/linux-vm2-disp-skt",label=3C,device-id=93,queue-num=10 \
+--vhost-user-hab "/tmp/linux-vm2-ogles-skt",label=39,device-id=94,queue-num=2 \
+--vhost-user-hab "/tmp/linux-vm2-misc-skt",label=3A,device-id=90,queue-num=2 \
+--vhost-user-hab "/tmp/linux-vm2-aud-skt",label=3B,device-id=91,queue-num=8 \
+--vhost-user-hab "/tmp/linux-vm2-vid-skt",label=3D,device-id=95,queue-num=6 \
+--vhost-user-hab "/tmp/linux-vm2-cam-skt",label=3E,device-id=92,queue-num=4 \
+--console=stdio,label=41
+echo "Launched qcrosvm"
