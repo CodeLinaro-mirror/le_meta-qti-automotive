@@ -2,7 +2,7 @@ SUMMARY = "Provide display-intf Headers"
 DESCRIPTION = "Provide display interface header files."
 HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "BSD-3-Clause-Clear"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/display-intf/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/display-intf;usehead=1"
 SRCREV = "${AUTOREV}"
