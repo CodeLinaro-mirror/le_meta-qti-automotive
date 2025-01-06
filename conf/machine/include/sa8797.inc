@@ -80,7 +80,6 @@ MACHINE_FEATURES += "\
     qti-vmm \
 "
 MACHINE_FEATURES:remove = "\
-    qti-camera \
     qti-safety \
     early-ramdisk-init \
 "
