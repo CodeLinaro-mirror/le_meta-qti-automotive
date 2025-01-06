@@ -9,7 +9,6 @@ DEPENDS += "bison-native dtc-native virtual/kernel"
 SRC_URI = "\
            ${PATH_TO_REPO}/vendor/qcom/opensource/safelinux-system-cfg/devicetree/.git;protocol=${PROTO};usehead=1 \
            ${PATH_TO_REPO}/kernel/${RH_KERNEL_NAME}/.git;protocol=${PROTO};usehead=1 \
-           file://0001-devicetree-Adding-early-ramdisk-bootargs.patch \
 "
 SRCREV = "${AUTOREV}"
 
