@@ -97,6 +97,7 @@ do_install:append:sa8797() {
     install -m 0777 ${S}/sa8797_cdsp1_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp1_cfg
     install -m 0777 ${S}/sa8797_cdsp2_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp2_cfg
     install -m 0777 ${S}/sa8797_cdsp3_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp3_cfg
+    install -m 0777 ${S}/sa8797_soccp_cfg ${D}${sysconfdir}/sysconfig/sa8797_soccp_cfg
 }
 
 FILES:${PN}:append:sa8797 = " \
