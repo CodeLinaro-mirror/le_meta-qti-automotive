@@ -6,7 +6,7 @@ DEPENDS += "\
     dtc-native \
     kernel-aosp-tools-native \
     mkdtimg-native \
-    sectool5-native \
+    sectools-native \
     virtual/kernel \
     python3-native \
 "
@@ -37,8 +37,8 @@ ghgvm_pilsplitter() {
     python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-boot.elf Image,0x0 dtb.img,0x3000000 ramdisk.img,0x3100000 --32
     set -e
 
-    ${SECTOOLS_V2_DIR}/sectools secure-image autoghgvmlv-boot.elf --image-id GVM1 --security-profile ${SECTOOLS_SECURITY_PROFILE} --sign --signing-mode TEST --outfile autoghgvmlv_signed-boot.elf
-    ${SECTOOLS_V2_DIR}/sectools secure-image autoghgvmlv-boot.elf --inspect
+    sectools secure-image autoghgvmlv-boot.elf --image-id GVM1 --security-profile ${STAGING_BINDIR_NATIVE}/${SECTOOLS_SECURITY_PROFILE} --sign --signing-mode TEST --outfile autoghgvmlv_signed-boot.elf
+    sectools secure-image autoghgvmlv-boot.elf --inspect
 
     install -d ${DEPLOY_DIR_IMAGE}/signing/boot
     python3 ${PILTOOLS_PATH}/pil-splitter.py autoghgvmlv_signed-boot.elf boot/autoghgvmlv
