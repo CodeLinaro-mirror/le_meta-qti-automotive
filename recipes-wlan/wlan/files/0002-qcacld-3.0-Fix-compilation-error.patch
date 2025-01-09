@@ -1,0 +1,56 @@
+From b1b1be174de8e44df333789652ef0a64647cdb36 Mon Sep 17 00:00:00 2001
+From: Dharmendra Tiwari <quic_dhartiwa@quicinc.com>
+Date: Thu, 12 Sep 2024 05:39:30 -0700
+Subject: [PATCH 2/2] qcacld-3.0: Fix compilation error
+
+This change is to fix compilation error for gcc.
+
+Change-Id: I4b448b6a27e892047b393c05af9a3f502e21cd2c
+CRs-Fixed: 3919308
+Signed-off-by: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+---
+ .../logging/inc/wlan_connectivity_logging.h          | 12 ++++++------
+ core/mac/src/pe/lim/lim_assoc_utils.c                |  3 ++-
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/components/cmn_services/logging/inc/wlan_connectivity_logging.h b/components/cmn_services/logging/inc/wlan_connectivity_logging.h
+index 59d790827f..a666c30d56 100644
+--- a/components/cmn_services/logging/inc/wlan_connectivity_logging.h
++++ b/components/cmn_services/logging/inc/wlan_connectivity_logging.h
+@@ -511,12 +511,12 @@ struct wlan_diag_mlo_t2lm_teardown {
+  */
+ struct wlan_diag_mlo_link_status {
+ 	struct wlan_connectivity_log_diag_cmn diag_cmn;
+-	uint8_t version;
+-	uint8_t active_link:5;
+-	uint8_t prev_active_link:5;
+-	uint8_t associated_links:5;
+-	uint8_t reserved:1;
+-	uint8_t reason;
++	uint32_t version;
++	uint32_t active_link:5;
++	uint32_t prev_active_link:5;
++	uint32_t associated_links:5;
++	uint32_t reserved:17;
++	uint32_t reason;
+ } qdf_packed;
+ 
+ #define DIAG_NBR_RPT_VERSION 1
+diff --git a/core/mac/src/pe/lim/lim_assoc_utils.c b/core/mac/src/pe/lim/lim_assoc_utils.c
+index 22e05ccc4a..df61a8e4a1 100644
+--- a/core/mac/src/pe/lim/lim_assoc_utils.c
++++ b/core/mac/src/pe/lim/lim_assoc_utils.c
+@@ -2833,8 +2833,9 @@ lim_del_sta(struct mac_context *mac,
+ 	MTRACE(mac_trace_msg_tx(mac, pe_session->peSessionId, msgQ.type));
+ 	retCode = wma_post_ctrl_msg(mac, &msgQ);
+ 	if (QDF_STATUS_SUCCESS != retCode) {
+-		if (fRespReqd)
++		if (fRespReqd) {
+ 			SET_LIM_PROCESS_DEFD_MESGS(mac, true);
++		}
+ 		pe_err("Posting DELETE_STA_REQ to HAL failed, reason=%X",
+ 			retCode);
+ 		qdf_mem_free(pDelStaParams);
+-- 
+2.17.1
+

@@ -31,3 +31,4 @@ RDEPENDS:${PN} += "\
     "
 
 RDEPENDS:${PN}:append:quin-gvm-gen4-2 = " hs20-osu-client dhcpcd"
+RDEPENDS:${PN}:remove:sa8797 = "wireless-tools"

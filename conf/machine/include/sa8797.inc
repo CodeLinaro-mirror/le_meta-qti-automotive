@@ -79,6 +79,9 @@ MACHINE_FEATURES += "\
     qti-security \
     qti-umd \
     qti-vmm \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
 MACHINE_FEATURES:remove = "\
     qti-safety \

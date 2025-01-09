@@ -1,0 +1,72 @@
+From f3680fd0af010808d5fe2c75da703be978f2e6c7 Mon Sep 17 00:00:00 2001
+From: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+Date: Tue, 13 Aug 2024 11:34:55 +0800
+Subject: [PATCH] qcacmn: Remove unnecessary debug code
+
+spin_lock is re-defined to spin_lock_bh in i_osdep.h which is indirectly
+included by cds_sched.c/qdf_trace.c/wlan_logging_sock_svc.c. In RT Linux
+this would cause "rcu_preempt detected stalls on CPUs/tasks".
+
+Change-Id: Ia700633ff6f231d2ab4d0d8f65cef41573c8e02e
+CRs-Fixed: 3901497
+Signed-off-by: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+---
+ qdf/linux/src/i_osdep.h | 29 +----------------------------
+ 1 file changed, 1 insertion(+), 28 deletions(-)
+
+diff --git a/qdf/linux/src/i_osdep.h b/qdf/linux/src/i_osdep.h
+index 205191be2..e72b48415 100644
+--- a/qdf/linux/src/i_osdep.h
++++ b/qdf/linux/src/i_osdep.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2013-2019 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for
+  * any purpose with or without fee is hereby granted, provided that the
+@@ -39,30 +39,6 @@
+ #define    be32toh(_x)    be32_to_cpu(_x)
+ #define    htobe32(_x)    cpu_to_be32(_x)
+ 
+-#ifdef CONFIG_SMP
+-/* Undo the one provided by the kernel to debug spin locks */
+-#undef spin_lock
+-#undef spin_unlock
+-#undef spin_trylock
+-
+-#define spin_lock(x)  spin_lock_bh(x)
+-
+-#define spin_unlock(x) \
+-	do { \
+-		if (!spin_is_locked(x)) { \
+-			WARN_ON(1); \
+-			qdf_info("unlock addr=%pK, %s", x, \
+-				      !spin_is_locked(x) ? "Not locked" : ""); \
+-		} \
+-		spin_unlock_bh(x); \
+-	} while (0)
+-#define spin_trylock(x) spin_trylock_bh(x)
+-#define OS_SUPPORT_ASYNC_Q 1    /* support for handling asyn function calls */
+-
+-#else
+-#define OS_SUPPORT_ASYNC_Q 0
+-#endif /* ifdef CONFIG_SMP */
+-
+ /**
+  * typedef os_mesg_t - maintain attributes of message
+  * @mesg_next: pointer to the nexgt message
+@@ -172,9 +148,6 @@ struct _NIC_DEV {
+ 	struct device *device;
+ 	wait_queue_head_t event_queue;
+ #endif /* PERF_PWR_OFFLOAD */
+-#if OS_SUPPORT_ASYNC_Q
+-	os_mesg_queue_t async_q;
+-#endif
+ #ifdef ATH_BUS_PM
+ 	uint8_t is_device_asleep;
+ #endif /* ATH_BUS_PM */
+-- 
+2.17.1
+

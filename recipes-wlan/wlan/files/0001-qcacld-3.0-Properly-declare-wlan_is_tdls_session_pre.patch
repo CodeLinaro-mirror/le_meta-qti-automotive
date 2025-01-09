@@ -1,0 +1,35 @@
+From 6917769f5dcdfb043f3a261c30da97731857ec65 Mon Sep 17 00:00:00 2001
+From: Jia Ding <quic_jiad@quicinc.com>
+Date: Mon, 13 May 2024 10:22:08 +0800
+Subject: [PATCH 1/2] qcacld-3.0: Properly declare wlan_is_tdls_session_present
+
+implicit declaration of function 'wlan_is_tdls_session_present'
+is seen with CONFIG_FEATURE_WLAN_TDLS=n. Hence declare same API.
+
+CRs-Fixed: 3811612
+Change-Id: I70a3a5c6c4949ae33ca4e0302e3548e38173941d
+Signed-off-by: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+---
+ components/tdls/dispatcher/inc/wlan_tdls_api.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/components/tdls/dispatcher/inc/wlan_tdls_api.h b/components/tdls/dispatcher/inc/wlan_tdls_api.h
+index 8b1b9e22a1..f6e6f24fb7 100644
+--- a/components/tdls/dispatcher/inc/wlan_tdls_api.h
++++ b/components/tdls/dispatcher/inc/wlan_tdls_api.h
+@@ -296,6 +296,12 @@ wlan_tdls_notify_sta_connect(uint8_t vdev_id,
+ 			     bool tdls_prohibited,
+ 			     struct wlan_objmgr_vdev *vdev) {}
+ 
++static inline QDF_STATUS
++wlan_is_tdls_session_present(struct wlan_objmgr_vdev *vdev)
++{
++	return QDF_STATUS_E_INVAL;
++}
++
+ static inline void
+ wlan_tdls_update_tx_pkt_cnt(struct wlan_objmgr_vdev *vdev,
+ 			    struct qdf_mac_addr *mac_addr)
+-- 
+2.17.1
+

@@ -1,0 +1,401 @@
+From cb37a5cf3f3be1dcd6486ab95d194f589340ac16 Mon Sep 17 00:00:00 2001
+From: Qun Zhang <quic_qunz@quicinc.com>
+Date: Tue, 23 Jul 2024 13:58:15 +0800
+Subject: [PATCH 2/2] cnss2: Support SCMI based power control
+
+As AUTO Gunyah GVM have switched to SCMI way to manage
+system module power and PCIe driver also switch to
+upstream qcom-pcie-ecam-rc driver, add related changes
+in cnss2 to support it.
+
+Change-Id: I5d63e2e46ec2fb301f461d494a3405b2dfc652a4
+CRs-Fixed: 3877349
+Signed-off-by: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+---
+ cnss2/main.c         |  24 +++++
+ cnss2/main.h         |  13 +++
+ cnss2/pci.c          |   1 -
+ cnss2/pci_platform.h |   1 +
+ cnss2/power.c        | 218 ++++++++++++++++++++++++++++++++++++-------
+ 5 files changed, 222 insertions(+), 35 deletions(-)
+
+diff --git a/cnss2/main.c b/cnss2/main.c
+index 7602d01..74bee4c 100644
+--- a/cnss2/main.c
++++ b/cnss2/main.c
+@@ -1520,6 +1520,11 @@ static int cnss_get_resources(struct cnss_plat_data *plat_priv)
+ {
+ 	int ret = 0;
+ 
++	if (plat_priv->is_fw_managed_pwr) {
++		ret = cnss_fw_managed_domain_attach(plat_priv);
++		goto out;
++	}
++
+ 	ret = cnss_get_vreg_type(plat_priv, CNSS_VREG_PRIM);
+ 	if (ret < 0) {
+ 		cnss_pr_err("Failed to get vreg, err = %d\n", ret);
+@@ -1550,6 +1555,16 @@ out:
+ 
+ static void cnss_put_resources(struct cnss_plat_data *plat_priv)
+ {
++	if (plat_priv->is_fw_managed_pwr) {
++		if (plat_priv->powered_on) {
++			cnss_fw_managed_power_gpio(plat_priv,
++						   false);
++			cnss_fw_managed_power_regulator(plat_priv,
++							false);
++		}
++		cnss_fw_managed_domain_detach(plat_priv);
++		return;
++	}
+ 	cnss_put_clk(plat_priv);
+ 	cnss_put_vreg_type(plat_priv, CNSS_VREG_PRIM);
+ }
+@@ -5002,6 +5017,13 @@ cnss_dt_type(struct cnss_plat_data *plat_priv)
+ 	return CNSS_DTT_LEGACY;
+ }
+ 
++static inline bool
++cnss_resource_is_fw_managed(struct cnss_plat_data *plat_priv)
++{
++	return of_property_read_bool(plat_priv->plat_dev->dev.of_node,
++				     "firmware-managed-resources");
++}
++
+ static int cnss_wlan_device_init(struct cnss_plat_data *plat_priv)
+ {
+ 	int ret = 0;
+@@ -5323,6 +5345,8 @@ static int cnss_probe(struct platform_device *plat_dev)
+ 	plat_priv->use_fw_path_with_prefix =
+ 		cnss_use_fw_path_with_prefix(plat_priv);
+ 
++	plat_priv->is_fw_managed_pwr = cnss_resource_is_fw_managed(plat_priv);
++
+ 	ret = cnss_get_dev_cfg_node(plat_priv);
+ 	if (ret) {
+ 		cnss_pr_err("Failed to get device cfg node, err = %d\n", ret);
+diff --git a/cnss2/main.h b/cnss2/main.h
+index 1df83d9..dd4d715 100644
+--- a/cnss2/main.h
++++ b/cnss2/main.h
+@@ -46,6 +46,10 @@
+ #include "qmi.h"
+ #include "cnss_prealloc.h"
+ #include "cnss_common.h"
++#include <linux/pm_runtime.h>
++#if IS_ENABLED(CONFIG_PCIE_QCOM_ECAM)
++#include <linux/pm_domain.h>
++#endif
+ 
+ #define MAX_NO_OF_MAC_ADDR		4
+ #define QMI_WLFW_MAX_TIMESTAMP_LEN	32
+@@ -636,6 +640,9 @@ struct cnss_plat_data {
+ 	bool no_bwscale;
+ 	bool sleep_clk;
+ 	bool is_msm_ramdump;
++	bool is_fw_managed_pwr;
++	struct device **pd_devs;
++	int pd_count;
+ };
+ 
+ #if IS_ENABLED(CONFIG_ARCH_QCOM)
+@@ -746,4 +753,10 @@ size_t cnss_get_platform_name(struct cnss_plat_data *plat_priv,
+ 			      char *buf, const size_t buf_len);
+ int cnss_iommu_map(struct iommu_domain *domain, unsigned long iova,
+ 		   phys_addr_t paddr, size_t size, int prot);
++int cnss_fw_managed_power_regulator(struct cnss_plat_data *plat_priv,
++				    bool enabled);
++int cnss_fw_managed_power_gpio(struct cnss_plat_data *plat_priv,
++			       bool enabled);
++int cnss_fw_managed_domain_attach(struct cnss_plat_data *plat_priv);
++void cnss_fw_managed_domain_detach(struct cnss_plat_data *plat_priv);
+ #endif /* _CNSS_MAIN_H */
+diff --git a/cnss2/pci.c b/cnss2/pci.c
+index dcc5c90..2b3435f 100644
+--- a/cnss2/pci.c
++++ b/cnss2/pci.c
+@@ -12,7 +12,6 @@
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_gpio.h>
+-#include <linux/pm_runtime.h>
+ #include <linux/suspend.h>
+ #include <linux/version.h>
+ #include <linux/sched.h>
+diff --git a/cnss2/pci_platform.h b/cnss2/pci_platform.h
+index 79d5da3..b0981f1 100644
+--- a/cnss2/pci_platform.h
++++ b/cnss2/pci_platform.h
+@@ -154,4 +154,5 @@ void cnss_pci_sw_reset(struct cnss_pci_data *pci_priv, bool power_on);
+  * Return: 0 for success, error code on failure
+  */
+ int cnss_mhi_get_soc_info(struct mhi_controller *mhi_ctrl);
++
+ #endif /* _CNSS_PCI_PLATFORM_H*/
+diff --git a/cnss2/power.c b/cnss2/power.c
+index ef8dee5..68a4e5a 100644
+--- a/cnss2/power.c
++++ b/cnss2/power.c
+@@ -477,6 +477,9 @@ static int cnss_vreg_unvote(struct cnss_plat_data *plat_priv,
+ {
+ 	struct cnss_vreg_info *vreg;
+ 
++	if (plat_priv->is_fw_managed_pwr)
++		return 0;
++
+ 	list_for_each_entry_reverse(vreg, vreg_list, list) {
+ 		if (IS_ERR_OR_NULL(vreg->reg))
+ 			continue;
+@@ -1133,6 +1136,140 @@ int cnss_get_input_gpio_value(struct cnss_plat_data *plat_priv, int gpio_num)
+ 	return gpio_get_value(gpio_num);
+ }
+ 
++#if IS_ENABLED(CONFIG_PCIE_QCOM_ECAM)
++enum domains_t {
++	POWER_REGULATOR = 0,
++	POWER_GPIO = 1,
++};
++
++int
++cnss_fw_managed_power_regulator(struct cnss_plat_data *plat_priv,
++				bool enabled)
++{
++	struct device *dev = plat_priv->pd_devs[POWER_REGULATOR];
++	int ret;
++
++	if (enabled)
++		ret = pm_runtime_resume_and_get(dev);
++	else
++		ret = pm_runtime_put_sync(dev);
++
++	if (ret < 0)
++		cnss_pr_err("regulator operation failed with err=%d\n", ret);
++
++	return ret;
++}
++
++int
++cnss_fw_managed_power_gpio(struct cnss_plat_data *plat_priv, bool enabled)
++{
++	struct device *dev = plat_priv->pd_devs[POWER_GPIO];
++	int ret;
++
++	if (enabled)
++		ret = pm_runtime_resume_and_get(dev);
++	else
++		ret = pm_runtime_put_sync(dev);
++
++	if (ret < 0)
++		cnss_pr_err("gpio operation failed with err=%d\n", ret);
++
++	return ret;
++}
++
++static int cnss_scmi_pm_enable(struct cnss_plat_data *plat_priv)
++{
++	int ret = 0;
++
++	ret = cnss_fw_managed_power_regulator(plat_priv, true);
++	if (ret)
++		goto out;
++
++	if (plat_priv->device_id == QCA6490_DEVICE_ID &&
++	    plat_priv->pinctrl_info.bt_en_gpio >= 0)
++		msleep(100);
++
++	ret = cnss_fw_managed_power_gpio(plat_priv, true);
++	if (ret)
++		goto scmi_reg_off;
++
++	return 0;
++
++scmi_reg_off:
++	cnss_fw_managed_power_regulator(plat_priv, false);
++out:
++	return ret;
++}
++
++int cnss_fw_managed_domain_attach(struct cnss_plat_data *plat_priv)
++{
++	struct device *dev = &plat_priv->plat_dev->dev;
++	int i;
++
++	plat_priv->pd_count = of_count_phandle_with_args(
++		dev->of_node, "power-domains", "#power-domain-cells");
++	if (plat_priv->pd_count <= 1)
++		return 0;
++
++	plat_priv->pd_devs = devm_kcalloc(dev, plat_priv->pd_count,
++					  sizeof(*plat_priv->pd_devs),
++					  GFP_KERNEL);
++	if (!plat_priv->pd_devs)
++		return -ENOMEM;
++
++	for (i = 0; i < plat_priv->pd_count; i++) {
++		plat_priv->pd_devs[i] = dev_pm_domain_attach_by_id(dev, i);
++		if (IS_ERR(plat_priv->pd_devs[i])) {
++			cnss_fw_managed_domain_detach(plat_priv);
++			return PTR_ERR(plat_priv->pd_devs[i]);
++		}
++	}
++
++	return 0;
++}
++
++void cnss_fw_managed_domain_detach(struct cnss_plat_data *plat_priv)
++{
++	int i;
++
++	if (plat_priv->pd_count <= 1)
++		return;
++
++	for (i = plat_priv->pd_count - 1; i >= 0; i--) {
++		if (!IS_ERR_OR_NULL(plat_priv->pd_devs[i]))
++			dev_pm_domain_detach(plat_priv->pd_devs[i], true);
++	}
++}
++#else
++static int cnss_scmi_pm_enable(struct cnss_plat_data *plat_priv)
++{
++	return -EOPNOTSUPP;
++}
++
++int
++cnss_fw_managed_power_gpio(struct cnss_plat_data *plat_priv, bool enabled)
++{
++	return -EOPNOTSUPP;
++}
++
++int
++cnss_fw_managed_power_regulator(struct cnss_plat_data *plat_priv,
++				bool enabled)
++{
++	return -EOPNOTSUPP;
++}
++
++int cnss_fw_managed_domain_attach(struct cnss_plat_data *plat_priv)
++{
++	return -EOPNOTSUPP;
++}
++
++void cnss_fw_managed_domain_detach(struct cnss_plat_data *plat_priv)
++{
++	return;
++}
++#endif
++
+ int cnss_power_on_device(struct cnss_plat_data *plat_priv, bool reset)
+ {
+ 	int ret = 0;
+@@ -1148,42 +1285,48 @@ int cnss_power_on_device(struct cnss_plat_data *plat_priv, bool reset)
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = cnss_vreg_on_type(plat_priv, CNSS_VREG_PRIM);
+-	if (ret) {
+-		cnss_pr_err("Failed to turn on vreg, err = %d\n", ret);
+-		goto out;
+-	}
+-
+-	ret = cnss_clk_on(plat_priv, &plat_priv->clk_list);
+-	if (ret) {
+-		cnss_pr_err("Failed to turn on clocks, err = %d\n", ret);
+-		goto vreg_off;
+-	}
++	if (plat_priv->is_fw_managed_pwr) {
++		ret = cnss_scmi_pm_enable(plat_priv);
++		if (ret)
++			goto out;
++	} else {
++		ret = cnss_vreg_on_type(plat_priv, CNSS_VREG_PRIM);
++		if (ret) {
++			cnss_pr_err("Failed to turn on vreg, err = %d\n", ret);
++			goto out;
++		}
+ 
+-#ifdef CONFIG_PULLDOWN_WLANEN
+-	if (reset) {
+-		/* The default state of wlan_en maybe not low,
+-		 * according to datasheet, we should put wlan_en
+-		 * to low first, and trigger high.
+-		 * And the default delay for qca6390 is at least 4ms,
+-		 * for qcn7605/qca6174, it is 10us. For safe, set 5ms delay
+-		 * here.
+-		 */
+-		ret = cnss_select_pinctrl_state(plat_priv, false);
++		ret = cnss_clk_on(plat_priv, &plat_priv->clk_list);
+ 		if (ret) {
+-			cnss_pr_err("Failed to select pinctrl state, err = %d\n",
+-				    ret);
+-			goto clk_off;
++			cnss_pr_err("Failed to turn on clocks, err = %d\n", ret);
++			goto vreg_off;
+ 		}
+ 
+-		usleep_range(4000, 5000);
+-	}
++#ifdef CONFIG_PULLDOWN_WLANEN
++		if (reset) {
++			/* The default state of wlan_en maybe not low,
++			 * according to datasheet, we should put wlan_en
++			 * to low first, and trigger high.
++			 * And the default delay for qca6390 is at least 4ms,
++			 * for qcn7605/qca6174, it is 10us. For safe, set 5ms delay
++			 * here.
++			 */
++			ret = cnss_select_pinctrl_state(plat_priv, false);
++			if (ret) {
++				cnss_pr_err("Failed to select pinctrl state, err = %d\n",
++					    ret);
++				goto clk_off;
++			}
++
++			usleep_range(4000, 5000);
++		}
+ #endif
+ 
+-	ret = cnss_select_pinctrl_enable(plat_priv);
+-	if (ret) {
+-		cnss_pr_err("Failed to select pinctrl state, err = %d\n", ret);
+-		goto clk_off;
++		ret = cnss_select_pinctrl_enable(plat_priv);
++		if (ret) {
++			cnss_pr_err("Failed to select pinctrl state, err = %d\n", ret);
++			goto clk_off;
++		}
+ 	}
+ 
+ 	plat_priv->powered_on = true;
+@@ -1209,9 +1352,15 @@ void cnss_power_off_device(struct cnss_plat_data *plat_priv)
+ 	}
+ 
+ 	cnss_disable_dev_sol_irq(plat_priv);
+-	cnss_select_pinctrl_state(plat_priv, false);
+-	cnss_clk_off(plat_priv, &plat_priv->clk_list);
+-	cnss_vreg_off_type(plat_priv, CNSS_VREG_PRIM);
++	if (plat_priv->is_fw_managed_pwr) {
++		cnss_fw_managed_power_gpio(plat_priv, false);
++		cnss_fw_managed_power_regulator(plat_priv, false);
++
++	} else {
++		cnss_select_pinctrl_state(plat_priv, false);
++		cnss_clk_off(plat_priv, &plat_priv->clk_list);
++		cnss_vreg_off_type(plat_priv, CNSS_VREG_PRIM);
++	}
+ 	plat_priv->powered_on = false;
+ }
+ #else
+@@ -2014,7 +2163,8 @@ int cnss_dev_specific_power_on(struct cnss_plat_data *plat_priv)
+ {
+ 	int ret;
+ 
+-	if (plat_priv->dt_type != CNSS_DTT_MULTIEXCHG)
++	if (plat_priv->dt_type != CNSS_DTT_MULTIEXCHG ||
++	    plat_priv->is_fw_managed_pwr)
+ 		return 0;
+ 
+ 	ret = cnss_get_vreg_type(plat_priv, CNSS_VREG_PRIM);
+-- 
+2.17.1
+

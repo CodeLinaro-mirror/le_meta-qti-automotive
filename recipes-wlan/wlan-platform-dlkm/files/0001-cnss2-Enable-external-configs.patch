@@ -1,0 +1,36 @@
+From f4b0c0164ee470bf17384650bd49234d10d616e6 Mon Sep 17 00:00:00 2001
+From: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+Date: Fri, 15 Nov 2024 08:52:16 +0530
+Subject: [PATCH 1/2] cnss2: Enable external configs
+
+Auto uses external configs defined in yocto layer.
+
+Change-Id: Id4c5506dc1d95492743d281dbb6a09f39ebab0a7
+Signed-off-by: Xiaoning Ma <quic_mxiaonin@quicinc.com>
+---
+ Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index b1e9d67..5f70a53 100644
+--- a/Makefile
++++ b/Makefile
+@@ -9,6 +9,7 @@ KBUILD_OPTIONS += WLAN_PLATFORM_ROOT=$(WLAN_PLATFORM_ROOT)
+ KBUILD_OPTIONS += KERNEL_ROOT=$(ROOT_DIR)/$(KERNEL_DIR)
+ KBUILD_OPTIONS += CONFIG_CNSS_OUT_OF_TREE=y
+ 
++ifeq ($(USE_EXTERNAL_CONFIGS),)
+ ifeq ($(WLAN_PLATFORM_DRIVER_CNSS),y)
+ KBUILD_OPTIONS += CONFIG_CNSS2=m
+ KBUILD_OPTIONS += CONFIG_CNSS2_QMI=y
+@@ -27,6 +28,7 @@ KBUILD_OPTIONS += CONFIG_WCNSS_MEM_PRE_ALLOC=m
+ KBUILD_OPTIONS += CONFIG_CNSS_UTILS=m
+ KBUILD_OPTIONS += CONFIG_CNSS_GENL=m
+ KBUILD_OPTIONS += CONFIG_CNSS_PLAT_IPC_QMI_SVC=m
++endif
+ 
+ SRC := $(shell pwd)
+ 
+-- 
+2.17.1
+
