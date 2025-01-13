@@ -8,14 +8,15 @@ echo "Mounted /firmware/vm/boot"
 /usr/bin/qcrosvm \
 --vm=autoghgvm \
 --use-non-protected-virtio \
+--disk=/dev/disk/by-partlabel/la_devinfo,label=21,rw=true \
 --disk=/dev/disk/by-partlabel/la_init_boot_a,label=22,rw=true \
 --disk=/dev/disk/by-partlabel/la_v_boot_a,label=24,rw=true \
 --disk=/dev/disk/by-partlabel/dsp_a,label=26,rw=false \
 --disk=/dev/disk/by-partlabel/la_dtbo_a,label=28,rw=true \
 --disk=/dev/disk/by-partlabel/la_boot_a,label=2A,rw=true \
+--disk=/dev/disk/by-partlabel/la_boot_b,label=2B,rw=true \
 --disk=/dev/disk/by-partlabel/bluetooth_a,label=2C,rw=false \
 --disk=/dev/disk/by-partlabel/modem_a,label=2E,rw=false \
---disk=/dev/disk/by-partlabel/la_vbmeta_a,label=30,rw=true \
 --disk=/dev/disk/by-partlabel/la_misc,label=32,rw=true \
 --disk=/dev/disk/by-partlabel/la_persist,label=33,rw=true \
 --disk=/dev/disk/by-partlabel/la_metadata,label=34,rw=true \
