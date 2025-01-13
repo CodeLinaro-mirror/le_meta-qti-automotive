@@ -58,6 +58,18 @@ do_install:append() {
         ln -sf ${systemd_unitdir}/system/firmware-lvgvm-boot.mount \
             ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-lvgvm-boot.mount
     fi
+
+    if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
+
+        install -m 0777 ${S}/bluetooth.mount -D ${D}${systemd_unitdir}/system/bluetooth.mount
+        install -m 0777 ${S}/bluetooth.automount -D ${D}${systemd_unitdir}/system/bluetooth.automount
+
+        ln -sf ${systemd_unitdir}/system/bluetooth.mount \
+            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.mount
+        ln -sf ${systemd_unitdir}/system/bluetooth.automount \
+            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.automount
+    fi
+
     if [ -f ${S}/99-persist-storage-ab.rules ]; then
         install -m 0644 ${S}/99-persist-storage-ab.rules -D ${D}${sysconfdir}/udev/rules.d/99-persist-storage-ab.rules
     fi
