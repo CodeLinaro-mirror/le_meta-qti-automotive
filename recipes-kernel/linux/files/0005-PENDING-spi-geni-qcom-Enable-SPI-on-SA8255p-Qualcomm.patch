@@ -1,7 +1,7 @@
-From 1efb69190ae32218007ab61cb4387d6cfca108ee Mon Sep 17 00:00:00 2001
+From f9d318118332749c3fc5e95f85c12c6b9cb98d8d Mon Sep 17 00:00:00 2001
 From: Praveen Talari <quic_ptalari@quicinc.com>
 Date: Wed, 17 Jul 2024 19:28:53 +0530
-Subject: [PATCH 2/3] PENDING: spi: geni-qcom: Enable SPI on SA8255p Qualcomm
+Subject: [PATCH] PENDING: spi: geni-qcom: Enable SPI on SA8255p Qualcomm
  platforms
 
 Enable or disable resources such as clocks, interconnect
@@ -22,11 +22,11 @@ Change-Id: Icc00e341d5d1ca98f56e06fbcb234f9094c97256
 Signed-off-by: Praveen Talari <quic_ptalari@quicinc.com>
 Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
 ---
- drivers/spi/spi-geni-qcom.c | 246 ++++++++++++++++++++++++++++--------
- 1 file changed, 194 insertions(+), 52 deletions(-)
+ drivers/spi/spi-geni-qcom.c | 243 ++++++++++++++++++++++++++++--------
+ 1 file changed, 194 insertions(+), 49 deletions(-)
 
 diff --git a/drivers/spi/spi-geni-qcom.c b/drivers/spi/spi-geni-qcom.c
-index cc6619d73967..7bc01403c912 100644
+index 8a217028b552..54920800e4c6 100644
 --- a/drivers/spi/spi-geni-qcom.c
 +++ b/drivers/spi/spi-geni-qcom.c
 @@ -93,6 +93,12 @@ void spi_trace_log(struct device *dev, const char *fmt, ...)
@@ -263,7 +263,7 @@ index cc6619d73967..7bc01403c912 100644
  	}
  
  	spi->bus_num = -1;
-@@ -1147,25 +1280,14 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1152,22 +1285,14 @@ static int spi_geni_probe(struct platform_device *pdev)
  	pm_runtime_set_autosuspend_delay(&pdev->dev, 250);
  	ret = devm_pm_runtime_enable(dev);
  	if (ret)
@@ -273,9 +273,6 @@ index cc6619d73967..7bc01403c912 100644
  	if (device_property_read_bool(&pdev->dev, "spi-slave"))
  		spi->target = true;
  
--	ret = geni_icc_get(&mas->se, NULL);
--	if (ret)
--		return ret;
 -	/* Set the bus quota to a reasonable value for register access */
 -	mas->se.icc_paths[GENI_TO_CORE].avg_bw = Bps_to_icc(CORE_2X_50_MHZ);
 -	mas->se.icc_paths[CPU_TO_GENI].avg_bw = GENI_DEFAULT_BW;
@@ -291,7 +288,7 @@ index cc6619d73967..7bc01403c912 100644
  
  	/*
  	 * check the mode supported and set_cs for fifo mode only
-@@ -1194,6 +1316,8 @@ static int spi_geni_probe(struct platform_device *pdev)
+@@ -1196,6 +1321,8 @@ static int spi_geni_probe(struct platform_device *pdev)
  	free_irq(mas->irq, spi);
  spi_geni_release_dma:
  	spi_geni_release_dma_chan(mas);
@@ -300,7 +297,7 @@ index cc6619d73967..7bc01403c912 100644
  	return ret;
  }
  
-@@ -1208,41 +1332,43 @@ static void spi_geni_remove(struct platform_device *pdev)
+@@ -1210,41 +1337,43 @@ static void spi_geni_remove(struct platform_device *pdev)
  	free_irq(mas->irq, spi);
  
  	spi_geni_release_dma_chan(mas);
@@ -361,7 +358,7 @@ index cc6619d73967..7bc01403c912 100644
  }
  
  static int __maybe_unused spi_geni_suspend(struct device *dev)
-@@ -1285,8 +1411,24 @@ static const struct dev_pm_ops spi_geni_pm_ops = {
+@@ -1287,8 +1416,24 @@ static const struct dev_pm_ops spi_geni_pm_ops = {
  	SET_SYSTEM_SLEEP_PM_OPS(spi_geni_suspend, spi_geni_resume)
  };
  
