@@ -1,7 +1,7 @@
-From 4dcfd0053084171f14531436da3188f079c10e6c Mon Sep 17 00:00:00 2001
+From cad060b118065082840616dceacfc68fcdc490a8 Mon Sep 17 00:00:00 2001
 From: Sriram Dash <quic_sriramd@quicinc.com>
 Date: Tue, 9 Jul 2024 13:47:09 +0530
-Subject: [PATCH 10/14] PENDING: phy: qcom: qmp-usb: Add support for SA8255P
+Subject: [PATCH] PENDING: phy: qcom: qmp-usb: Add support for SA8255P
 
 QCOM SoC sa8255p allow multiple resources to be managed
 by firmware. On this platform, tasks related to clocks, regulators,
@@ -26,11 +26,11 @@ Change-Id: I718bdf0e9901018e2c16223cf5252d9181f45372
 Signed-off-by: Sriram Dash <quic_sriramd@quicinc.com>
 Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-usb.c | 174 +++++++++++++++++++++---
- 1 file changed, 154 insertions(+), 20 deletions(-)
+ drivers/phy/qualcomm/phy-qcom-qmp-usb.c | 175 +++++++++++++++++++++---
+ 1 file changed, 155 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
-index dda44a70a165..bcfe211224ac 100644
+index dbee22bca2e7..27943b8a291d 100644
 --- a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
 +++ b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
 @@ -15,6 +15,7 @@
@@ -41,7 +41,7 @@ index dda44a70a165..bcfe211224ac 100644
  #include <linux/regulator/consumer.h>
  #include <linux/reset.h>
  #include <linux/slab.h>
-@@ -1330,6 +1331,9 @@ struct qmp_phy_cfg {
+@@ -1071,6 +1072,9 @@ struct qmp_phy_cfg {
  
  	/* Offset from PCS to PCS_USB region */
  	unsigned int pcs_usb_offset;
@@ -51,7 +51,7 @@ index dda44a70a165..bcfe211224ac 100644
  };
  
  struct qmp_usb {
-@@ -1358,6 +1362,8 @@ struct qmp_usb {
+@@ -1099,6 +1103,8 @@ struct qmp_usb {
  	struct phy *phy;
  
  	struct clk_fixed_rate pipe_clk_fixed;
@@ -60,7 +60,7 @@ index dda44a70a165..bcfe211224ac 100644
  };
  
  static inline void qphy_setbits(void __iomem *base, u32 offset, u32 val)
-@@ -1508,6 +1514,27 @@ static const struct qmp_phy_cfg sa8775p_usb3_uniphy_cfg = {
+@@ -1249,6 +1255,27 @@ static const struct qmp_phy_cfg sa8775p_usb3_uniphy_cfg = {
  	.regs			= qmp_v5_usb3phy_regs_layout,
  };
  
@@ -88,8 +88,8 @@ index dda44a70a165..bcfe211224ac 100644
  static const struct qmp_phy_cfg sc8280xp_usb3_uniphy_cfg = {
  	.lanes			= 1,
  
-@@ -1707,6 +1734,75 @@ static const struct qmp_phy_cfg qcm2290_usb3phy_cfg = {
- 	.regs			= qmp_v3_usb3phy_regs_layout,
+@@ -1414,6 +1441,76 @@ static const struct qmp_phy_cfg sm8350_usb3_uniphy_cfg = {
+ 	.has_pwrdn_delay	= true,
  };
  
 +static void qmp_usb_domain_detach(struct qmp_usb *qmp)
@@ -161,10 +161,11 @@ index dda44a70a165..bcfe211224ac 100644
 +	pm_runtime_put_sync(qmp->pd_list->pd_devs[0]);
 +}
 +
- static void qmp_usb_configure_lane(void __iomem *base,
- 					const struct qmp_phy_init_tbl tbl[],
- 					int num,
-@@ -1752,6 +1848,12 @@ static int qmp_usb_init(struct phy *phy)
++
+ static int qmp_usb_serdes_init(struct qmp_usb *qmp)
+ {
+ 	const struct qmp_phy_cfg *cfg = qmp->cfg;
+@@ -1433,6 +1530,12 @@ static int qmp_usb_init(struct phy *phy)
  	void __iomem *pcs = qmp->pcs;
  	int ret;
  
@@ -177,7 +178,7 @@ index dda44a70a165..bcfe211224ac 100644
  	ret = regulator_bulk_enable(cfg->num_vregs, qmp->vregs);
  	if (ret) {
  		dev_err(qmp->dev, "failed to enable regulators, err=%d\n", ret);
-@@ -1791,6 +1893,8 @@ static int qmp_usb_exit(struct phy *phy)
+@@ -1472,6 +1575,8 @@ static int qmp_usb_exit(struct phy *phy)
  	struct qmp_usb *qmp = phy_get_drvdata(phy);
  	const struct qmp_phy_cfg *cfg = qmp->cfg;
  
@@ -186,7 +187,7 @@ index dda44a70a165..bcfe211224ac 100644
  	reset_control_bulk_assert(qmp->num_resets, qmp->resets);
  
  	clk_bulk_disable_unprepare(qmp->num_clks, qmp->clks);
-@@ -1981,6 +2085,8 @@ static int __maybe_unused qmp_usb_runtime_suspend(struct device *dev)
+@@ -1662,6 +1767,8 @@ static int __maybe_unused qmp_usb_runtime_suspend(struct device *dev)
  
  	qmp_usb_enable_autonomous_mode(qmp);
  
@@ -195,7 +196,7 @@ index dda44a70a165..bcfe211224ac 100644
  	clk_disable_unprepare(qmp->pipe_clk);
  	clk_bulk_disable_unprepare(qmp->num_clks, qmp->clks);
  
-@@ -1999,6 +2105,12 @@ static int __maybe_unused qmp_usb_runtime_resume(struct device *dev)
+@@ -1680,6 +1787,12 @@ static int __maybe_unused qmp_usb_runtime_resume(struct device *dev)
  		return 0;
  	}
  
@@ -208,7 +209,7 @@ index dda44a70a165..bcfe211224ac 100644
  	ret = clk_bulk_prepare_enable(qmp->num_clks, qmp->clks);
  	if (ret)
  		return ret;
-@@ -2212,10 +2324,12 @@ static int qmp_usb_parse_dt_legacy(struct qmp_usb *qmp, struct device_node *np)
+@@ -1893,10 +2006,12 @@ static int qmp_usb_parse_dt_legacy(struct qmp_usb *qmp, struct device_node *np)
  		qmp->pcs_misc = NULL;
  	}
  
@@ -225,7 +226,7 @@ index dda44a70a165..bcfe211224ac 100644
  	}
  
  	ret = devm_clk_bulk_get_all(qmp->dev, &qmp->clks);
-@@ -2224,10 +2338,12 @@ static int qmp_usb_parse_dt_legacy(struct qmp_usb *qmp, struct device_node *np)
+@@ -1905,10 +2020,12 @@ static int qmp_usb_parse_dt_legacy(struct qmp_usb *qmp, struct device_node *np)
  
  	qmp->num_clks = ret;
  
@@ -242,7 +243,7 @@ index dda44a70a165..bcfe211224ac 100644
  
  	return 0;
  }
-@@ -2264,17 +2380,19 @@ static int qmp_usb_parse_dt(struct qmp_usb *qmp)
+@@ -1945,17 +2062,19 @@ static int qmp_usb_parse_dt(struct qmp_usb *qmp)
  	if (ret)
  		return ret;
  
@@ -271,7 +272,7 @@ index dda44a70a165..bcfe211224ac 100644
  	return 0;
  }
  
-@@ -2296,6 +2414,14 @@ static int qmp_usb_probe(struct platform_device *pdev)
+@@ -1978,6 +2097,14 @@ static int qmp_usb_probe(struct platform_device *pdev)
  	if (!qmp->cfg)
  		return -EINVAL;
  
@@ -286,7 +287,7 @@ index dda44a70a165..bcfe211224ac 100644
  	ret = qmp_usb_vreg_init(qmp);
  	if (ret)
  		return ret;
-@@ -2321,9 +2447,11 @@ static int qmp_usb_probe(struct platform_device *pdev)
+@@ -2003,9 +2130,11 @@ static int qmp_usb_probe(struct platform_device *pdev)
  	 */
  	pm_runtime_forbid(dev);
  
@@ -301,7 +302,7 @@ index dda44a70a165..bcfe211224ac 100644
  
  	qmp->phy = devm_phy_create(dev, np, &qmp_usb_phy_ops);
  	if (IS_ERR(qmp->phy)) {
-@@ -2350,6 +2478,9 @@ static void qmp_usb_remove(struct platform_device *pdev)
+@@ -2032,6 +2161,9 @@ static void qmp_usb_remove(struct platform_device *pdev)
  	struct qmp_usb *qmp = platform_get_drvdata(pdev);
  	const struct qmp_phy_cfg *cfg = qmp->cfg;
  
@@ -311,7 +312,7 @@ index dda44a70a165..bcfe211224ac 100644
  	clk_disable_unprepare(qmp->pipe_clk);
  	reset_control_bulk_assert(qmp->num_resets, qmp->resets);
  	clk_bulk_disable_unprepare(qmp->num_clks, qmp->clks);
-@@ -2378,6 +2509,9 @@ static const struct of_device_id qmp_usb_of_match_table[] = {
+@@ -2057,6 +2189,9 @@ static const struct of_device_id qmp_usb_of_match_table[] = {
  	}, {
  		.compatible = "qcom,sa8775p-qmp-usb3-uni-phy",
  		.data = &sa8775p_usb3_uniphy_cfg,
@@ -322,5 +323,5 @@ index dda44a70a165..bcfe211224ac 100644
  		.compatible = "qcom,sc8280xp-qmp-usb3-uni-phy",
  		.data = &sc8280xp_usb3_uniphy_cfg,
 -- 
-2.34.1
+2.17.1
 

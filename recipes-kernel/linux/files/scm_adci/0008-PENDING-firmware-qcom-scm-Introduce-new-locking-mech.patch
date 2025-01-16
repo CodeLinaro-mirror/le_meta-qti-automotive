@@ -1,8 +1,8 @@
-From 6aca3c783bad0fb93832e2a4a880efb2c7d0a5ee Mon Sep 17 00:00:00 2001
+From 9c5d129372c37cf585c2113bc4272fa6a91a3789 Mon Sep 17 00:00:00 2001
 From: Ninad Naik <quic_ninanaik@quicinc.com>
 Date: Tue, 3 Dec 2024 18:55:55 +0530
-Subject: [PATCH 8/9] PENDING: firmware: qcom-scm: Introduce new locking
- mechanism for SCM driver
+Subject: [PATCH] PENDING: firmware: qcom-scm: Introduce new locking mechanism
+ for SCM driver
 
 With the existing global mutex lock, there is a possibility that it
 could resulty into a deadlock when SMCInvoke and smc call go to
@@ -90,7 +90,7 @@ index f4fa8b74d1f3..78bcb7eb491a 100644
  		if (ret)
  			return ret;
 diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
-index 8b01c2f1c1db..adff0c488e33 100644
+index 6480f0f0ea4b..1d394764b805 100644
 --- a/drivers/firmware/qcom_scm.c
 +++ b/drivers/firmware/qcom_scm.c
 @@ -48,11 +48,14 @@ struct qcom_scm {
@@ -105,10 +105,10 @@ index 8b01c2f1c1db..adff0c488e33 100644
  
 +DEFINE_SEMAPHORE(qcom_scm_sem_lock, 1);
 +
+ #define SHMBRIDGE_RESULT_NOTSUPP		4
+ 
  /* Each bit configures cold/warm boot address for one of the 4 CPUs */
- static const u8 qcom_scm_cpu_cold_bits[QCOM_SCM_BOOT_MAX_CPUS] = {
- 	0, BIT(0), BIT(3), BIT(5)
-@@ -1703,6 +1706,8 @@ static void __check_fw_for_skip_mutex_support(void)
+@@ -1715,6 +1718,8 @@ static void __check_fw_for_skip_mutex_support(void)
  
  	num_simultaneous_requests = res.result[0] & 0xFF;
  
@@ -117,7 +117,7 @@ index 8b01c2f1c1db..adff0c488e33 100644
  	__scm->fw_supports_skip_mutex = (num_simultaneous_requests >= MIN_SIMULTANEOUS_REQS);
  }
  
-@@ -1881,6 +1886,7 @@ static int qcom_scm_probe(struct platform_device *pdev)
+@@ -1893,6 +1898,7 @@ static int qcom_scm_probe(struct platform_device *pdev)
  
  	__get_convention();
  	__check_fw_for_skip_mutex_support();
@@ -147,5 +147,5 @@ index f06381eece5f..7811528ab418 100644
  #define MAX_QCOM_SCM_ARGS 10
  #define MAX_QCOM_SCM_RETS 3
 -- 
-2.46.0
+2.17.1
 
