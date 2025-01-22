@@ -11,7 +11,6 @@ if [ ! -f /firmware/vm/boot/autoghgvm.mdt ]; then
     echo "Mounted gvm bootloader on /firmware/vm/boot"
 fi
 
-echo "Launch qcrosvm ..."
 /usr/bin/qcrosvm \
 --vm=autoghgvm \
 --use-non-protected-virtio \
@@ -39,4 +38,5 @@ echo "Launch qcrosvm ..."
 --disk=/dev/disk/by-partlabel/la_super,label=36,rw=true \
 --net=true,label=38,ip_addr=10.10.10.10,netmask=255.255.255.0,mac=5A:6F:F0:05:7C:24 \
 --console=stdio,label=41 \
---vsock cid=100,label=43
+--vsock cid=100,label=43 &
+echo "Launched qcrosvm"
