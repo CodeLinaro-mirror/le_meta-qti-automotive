@@ -79,6 +79,7 @@ MACHINE_FEATURES += "\
     qti-security \
     qti-umd \
     qti-vmm \
+    qti-compute-platform \
 "
 MACHINE_FEATURES:remove = "\
     qti-safety \
