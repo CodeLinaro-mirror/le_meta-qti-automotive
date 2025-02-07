@@ -5,11 +5,11 @@
 # Flexibility is provided for the customers to modify QoS using TC.
 [Unit]
 Description=eth0 QOS installer
+After=early_eth0.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=ifconfig eth0 up
 ExecStart=/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini eth0
 Nice=-20
 Restart=on-failure
