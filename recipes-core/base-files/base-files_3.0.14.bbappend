@@ -12,6 +12,7 @@ dirs755:append = " \
 "
 
 dirs755:append:sa8775 = " /data/var_upper /data/var_work "
+dirs755:append:sa8797 = " /data/var_upper /data/var_work "
 
 do_install:append(){
     if(${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}); then
