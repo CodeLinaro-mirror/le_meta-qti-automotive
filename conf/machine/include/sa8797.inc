@@ -82,6 +82,7 @@ MACHINE_FEATURES += "\
     qti-wlan \
     qti-wlan-hsp \
     qti-wlan-hmt \
+    qti-compute-platform \
 "
 MACHINE_FEATURES:remove = "\
     qti-safety \

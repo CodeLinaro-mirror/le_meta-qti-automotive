@@ -16,4 +16,5 @@ RDEPENDS:${PN} = "\
     safelinux-system-cfg \
     safelinux-dbg-modules \
     dspfirmware-mount \
+    scmi-test \
 "

@@ -25,7 +25,6 @@ RDEPENDS:${PN} += "\
     "
 
 RDEPENDS:${PN}:remove:sa8797 = "display-commonsys-intf-linux"
-RDEPENDS:${PN}:remove:sa8797 = "wayland-ivi-extension"
 RDEPENDS:${PN}:remove:qti-dpk = "wayland-ivi-extension"
 RDEPENDS:${PN}:append:qti-dpk = " weston-udev"
 RDEPENDS:${PN}:remove:qti-dpk = "weston-sdm-extension"
