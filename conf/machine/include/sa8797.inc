@@ -58,7 +58,7 @@ IMAGE_INSTALL:remove = "${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'ope
 
 IMAGE_FEATURES += "ssh-server-openssh"
 
-EXTRA_IMAGEDEPENDS += "qti-image-ark-boot:do_sign_boot_img"
+EXTRA_IMAGEDEPENDS += "qcom-image-boot:do_sign_boot_img"
 
 IMAGE_FEATURES:append = " read-only-rootfs"
 
