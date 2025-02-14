@@ -49,5 +49,6 @@ echo "Launch qcrosvm ..."
 --vhost-user-hab "/tmp/linux-vm2-cam-skt",label=3E,device-id=92,queue-num=4 \
 --input=/dev/input/event0,label=3F \
 --console=stdio,label=41 \
+--vhost-user-scmi "/tmp/pt-dev-skt",label=42 \
 --vsock cid=100,label=43 &
 echo "Launched qcrosvm"
