@@ -1,7 +1,7 @@
 SUMMARY = "provide display drivers header"
 DESCRIPTION = "export display driver headers"
 HOMEPAGE = "https://git.codelinaro.org/"
-LICENSE = "GPL-2.0 WITH Linux-syscall-note"
+LICENSE = "GPLv2.0-with-linux-syscall-note"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/display-drivers;usehead=1"
