@@ -23,6 +23,7 @@ RDEPENDS:${PN} = "\
     vhost-device-ssr \
     hyp-udmabuf \
     hyp-udmabuf-test \
+    virtiofsd \
 "
 RDEPENDS:${PN}:remove:sa8797 = "\
     gvm-net-config \
