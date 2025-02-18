@@ -1,5 +1,5 @@
-SUMMARY = "QTI ARK Kernel Boot image"
-DESCRIPTION = "Build QTI ARK kernel boot image"
+SUMMARY = "QCOM Kernel Boot image"
+DESCRIPTION = "Build QCOM kernel boot image"
 LICENSE = "BSD-3-Clause-Clear"
 
 DEPENDS += "mkbootimg-native mkdtimg-native openssl-native  python3-native virtual/kernel"
