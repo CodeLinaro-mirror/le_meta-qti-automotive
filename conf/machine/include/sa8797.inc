@@ -85,7 +85,6 @@ MACHINE_FEATURES += "\
     qti-compute-platform \
 "
 MACHINE_FEATURES:remove = "\
-    qti-safety \
     early-ramdisk-init \
 "
 

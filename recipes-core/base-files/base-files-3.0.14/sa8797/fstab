@@ -42,11 +42,11 @@ PARTLABEL=userdata   /data           auto      defaults,noauto_da_alloc,discard,
 #PARTLABEL=bluetooth  /bluetooth      auto      defaults,ro,slotselect           0  0
 #PARTLABEL=dsp        /dsp            auto      defaults,ro,slotselect           0  0
 #PARTLABEL=modem      /firmware       auto      defaults,ro,slotselect           0  0
-PARTLABEL=persist    /var            auto      defaults                         0  0
+PARTLABEL=persist    /persist            auto      defaults                         0  0
 
 # Bind /home to /data
 /data                /home                auto       defaults,bind         0  0
-/var                 /persist             auto       defaults,bind         0  0
+overlay /var overlay x-systemd.requires=/data,x-systemd.requires=/persist,lowerdir=/persist,upperdir=/data/var_upper,workdir=/data/var_work 0 0
 
 # uncomment this if your device has a SD/MMC/Transflash slot
 #/dev/mmcblk0p1       /media/card          auto       defaults,sync,noauto  0  0

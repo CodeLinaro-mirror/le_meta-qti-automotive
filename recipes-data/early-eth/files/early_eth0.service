@@ -18,4 +18,4 @@ Restart=on-failure
 RestartSec=1ms
 
 [Install]
-WantedBy=sys-devices-platform-soc\x400-23000000.ethernet-net-eth0.device
+WantedBy=sys-devices-platform-1a00000.ethernet-net-eth0.device
