@@ -123,3 +123,8 @@ VBMETA_IMAGE_CMD = " \
 IMAGE_CMD:ext4:append:gh-gvm-lemans = "; \
   ${VBMETA_IMAGE_CMD} \
 "
+
+# compress the image to gh-gvm-lemans
+IMAGE_CMD:ext4:append:sa8797 = "; \
+  ${VBMETA_IMAGE_CMD} \
+"
