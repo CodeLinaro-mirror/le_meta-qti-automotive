@@ -46,6 +46,7 @@ fi
 --vhost-user-hab "/tmp/linux-vm2-aud-skt",label=3B,device-id=91,queue-num=8 \
 --vhost-user-hab "/tmp/linux-vm2-vid-skt",label=3D,device-id=95,queue-num=6 \
 --vhost-user-hab "/tmp/linux-vm2-cam-skt",label=3E,device-id=92,queue-num=4 \
+--vhost-user-gp /tmp/gp_hello,label=44 \
 --input=/dev/input/event0,label=3F \
 --console=stdio,label=41 \
 --vhost-user-scmi "/tmp/pt-dev-skt",label=42 \
