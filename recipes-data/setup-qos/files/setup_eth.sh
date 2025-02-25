@@ -44,7 +44,10 @@ then
 	tc qdisc add dev eth0 handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues 1@0 1@1 1@2 1@3 hw 0
 	tc qdisc add dev eth0 clsact
 	tc filter add dev eth0 egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
-	tc filter add dev eth0 egress prio 0 u32 match u16 0x22f0 0xffff at -2 action skbedit queue_mapping 2
+	tc filter add dev eth0 egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
+	tc filter add dev eth0 egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
+	tc filter add dev eth0 egress protocol 802.1q flower vlan_id $vlan0_id0 vlan_prio $pcp0_value0 action skbedit priority $skb0_priority0
+	tc filter add dev eth0 egress protocol 802.1q flower vlan_id $vlan1_id0 vlan_prio $pcp1_value0 action skbedit priority $skb1_priority0
 	if [ $q2_idle_slope0 -ne 0 ] && [ $q2_send_slope0 -ne 0 ];
 	then
 		tc qdisc replace dev eth0 handle $q2_cbs_handle0 parent $mqprio_handle0:3 cbs idleslope $q2_idle_slope0 sendslope $q2_send_slope0 hicredit $q2_hicredit0 locredit $q2_locredit0 offload 1
@@ -65,7 +68,10 @@ then
 	tc qdisc add dev eth1 handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues 1@0 1@1 1@2 1@3 hw 0
 	tc qdisc add dev eth1 clsact
 	tc filter add dev eth1 egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
-	tc filter add dev eth1 egress prio 0 u32 match u16 0x22f0 0xffff at -2 action skbedit queue_mapping 2
+	tc filter add dev eth1 egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
+	tc filter add dev eth1 egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
+	tc filter add dev eth1 egress protocol 802.1q flower vlan_id $vlan0_id1 vlan_prio $pcp0_value1 action skbedit priority $skb0_priority1
+	tc filter add dev eth1 egress protocol 802.1q flower vlan_id $vlan1_id1 vlan_prio $pcp1_value1 action skbedit priority $skb1_priority1
 	if [ $q2_idle_slope1 -ne 0 ] && [ $q2_send_slope1 -ne 0 ];
 	then
 		tc qdisc replace dev eth1 handle $q2_cbs_handle1 parent $mqprio_handle1:3 cbs idleslope $q2_idle_slope1 sendslope $q2_send_slope1 hicredit $q2_hicredit1 locredit $q2_locredit1 offload 1
