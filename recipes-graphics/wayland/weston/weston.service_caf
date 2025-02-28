@@ -1,14 +1,23 @@
 [Unit]
 Description=Weston reference Wayland compositor
-Conflicts=getty@tty7.service
-After=dbus.service rc.pvr.service
+Conflicts=getty@tty2.service shutdown.target
+Requires=dev-dri-card0.device systemd-user-sessions.service
+After=dbus.service rc.pvr.service dev-dri-card0.device systemd-user-sessions.service
+DefaultDependencies=no
+Before=shutdown.target
 
 [Service]
-ExecStart=/usr/bin/weston-launch -u root -t /dev/tty7 -- --idle-time=4294967 --log=/tmp/weston.log
-ExecStop=/usr/bin/killall -s KILL weston
-Type=simple
+User=root
+PAMName=weston-autologin
+Environment="XDG_RUNTIME_DIR=/run/user/0"
+ExecStart=weston --idle-time=0 --socket=wayland-0 --modules=systemd-notify.so --log=/tmp/weston.log
+Type=notify
 PIDFile=/run/early/weston.pid
 Restart=always
+RestartSec=2
+StartLimitInterval=100s
+StartLimitBurst=5
+TTYPath=/dev/tty2
 
 [Install]
 WantedBy=multi-user.target
