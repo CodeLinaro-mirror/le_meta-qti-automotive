@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 DEPENDS = "kmod util-linux"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/early-ramdisk-init/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/early-ramdisk-init;usehead=1"
+SRC_URI:append:sa8797 = "${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", " file://vfio_param.conf", "", d)}"
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/early-ramdisk-init"
@@ -15,10 +16,12 @@ EXTRA_OECONF += "--bindir=${base_sbindir} --sbindir=${base_sbindir}"
 
 CFLAGS += '-DLOG_DIR=\\"/boot/early-ramdisk\\"'
 CFLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'early_init', '-DEARLY_INIT', '', d)}"
+CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE', '', d)}"
 
 TARGET_PATH_NAME ?= "${MACHINE}"
 TARGET_PATH_NAME:sa8775 = "sa8775"
 TARGET_PATH_NAME:sa7255 = "sa7255"
+TARGET_PATH_NAME:sa8797 = "sa8797"
 
 do_install:append() {
     install -d ${D}/dev
@@ -32,6 +35,12 @@ do_install:append() {
     install -m 0755 ${S}/conf/${TARGET_PATH_NAME}/*.conf -D ${D}/etc/modules-load.f/
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-external-boot', 'true', 'false', d)}; then
         install -m 0755 ${S}/conf/${TARGET_PATH_NAME}/02-external-bootup.conf.in -D ${D}/etc/modules-load.f/02-external-bootup.conf
+    fi
+}
+
+do_install:append:sa8797() {
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
+        install -m 0755 ${WORKDIR}/vfio_param.conf -D ${D}${sysconfdir}/modprobe.d/vfio.conf
     fi
 }
 
