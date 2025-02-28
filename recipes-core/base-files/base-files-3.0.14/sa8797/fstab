@@ -38,7 +38,7 @@ tmpfs                /run            tmpfs     mode=0755,nodev,nosuid,strictatim
 tmpfs                /var/volatile   tmpfs     defaults              0  0
 tmpfs                /media/ram      tmpfs     defaults,noauto       0  0
 
-PARTLABEL=userdata   /data           auto      defaults,noauto_da_alloc,discard,nodev,nofail   0  2
+PARTLABEL=userdata   /data           auto      defaults,noauto_da_alloc,discard,nodev,nofail,x-systemd.growfs   0  2
 #PARTLABEL=bluetooth  /bluetooth      auto      defaults,ro,slotselect           0  0
 #PARTLABEL=dsp        /dsp            auto      defaults,ro,slotselect           0  0
 #PARTLABEL=modem      /firmware       auto      defaults,ro,slotselect           0  0
