@@ -81,9 +81,6 @@ MACHINE_FEATURES += "\
     qti-vmm \
     qti-compute-platform \
 "
-MACHINE_FEATURES:remove = "\
-    early-ramdisk-init \
-"
 
 SECTOOLS_VERSION = "sectools-v2"
 SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"
