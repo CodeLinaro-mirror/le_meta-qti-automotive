@@ -41,7 +41,7 @@ echo "script loaded for QoS STARTED" > $DUMP_TO_KMSG
 
 if [ "eth0" = "$interface" ];
 then
-	tc qdisc add dev eth0 handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues 1@0 1@1 1@2 1@3 hw 0
+	tc qdisc add dev eth0 handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues $queue_map0 hw 0
 	tc qdisc add dev eth0 clsact
 	tc filter add dev eth0 egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
 	tc filter add dev eth0 egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
@@ -65,7 +65,7 @@ fi
 
 if [ "eth1" = "$interface" ];
 then
-	tc qdisc add dev eth1 handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues 1@0 1@1 1@2 1@3 hw 0
+	tc qdisc add dev eth1 handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues $queue_map1 hw 0
 	tc qdisc add dev eth1 clsact
 	tc filter add dev eth1 egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
 	tc filter add dev eth1 egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
