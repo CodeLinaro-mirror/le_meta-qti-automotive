@@ -6,7 +6,7 @@ Subject: [PATCH] systemd: assign prime core to manager_dispatch_load_queue
 Assign prime core to manager_dispatch_load_queue to optimize bootkpi.
 It can save about 60ms.
 
-Upstream-Status:Inappropriate [configuration]
+Upstream-Status: Inappropriate [configuration]
 
 Signed-off-by: ziqic <quic_ziqic_01@quicinc.com>
 ---
