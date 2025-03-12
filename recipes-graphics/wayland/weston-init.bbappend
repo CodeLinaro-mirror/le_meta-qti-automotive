@@ -23,7 +23,7 @@ do_install() {
         fi
     fi
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
-        sed -i 's/dev-dri-card0.device/openwfd_server_@0.service kgsl.service/g' ${D}${systemd_system_unitdir}/weston.service
+        sed -i 's/dev-dri-card0.device/openwfd_server_@0.service kgsl@0.service/g' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/PAMName/d' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/TTYPath/d' ${D}${systemd_system_unitdir}/weston.service
         sed -i 's/weston --idle-time=0/weston --tty=2 --idle-time=0/' ${D}${systemd_system_unitdir}/weston.service
