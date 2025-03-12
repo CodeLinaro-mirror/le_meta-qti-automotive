@@ -49,6 +49,10 @@ do_install:append:sa8775() {
 
 do_install:append:sa8797() {
     install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'true', 'false', d)}; then
+        sed -i '/After=systemd-modules-load.service/d' ${D}${systemd_unitdir}/system/vfio-device-probe.service
+        sed -i 's#/usr/bin/vfio-device-bind.sh#echo "vfio already run in early-ramdisk"#g' ${D}${systemd_unitdir}/system/vfio-device-probe.service
+    fi
 }
 
 FILES:${PN} += "${libdir}/modules-load.d/*"
