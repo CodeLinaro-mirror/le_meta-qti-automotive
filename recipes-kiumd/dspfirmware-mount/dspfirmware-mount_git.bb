@@ -22,9 +22,9 @@ do_install:append() {
 
     install -d -p ${D}/vendor/dsp
 
-    install -m 0755 ${WORKDIR}/mnt_fs.conf -D ${D}${libdir}/modules-load.d/mnt_fs.conf
-    install -m 0777 ${S}/vendor-dsp.mount -D ${D}${systemd_unitdir}/system/vendor-dsp.mount
-    install -m 0777 ${S}/vendor-dsp.automount -D ${D}${systemd_unitdir}/system/vendor-dsp.automount
+    install -m 0644 ${WORKDIR}/mnt_fs.conf -D ${D}${libdir}/modules-load.d/mnt_fs.conf
+    install -m 0644 ${S}/vendor-dsp.mount -D ${D}${systemd_unitdir}/system/vendor-dsp.mount
+    install -m 0644 ${S}/vendor-dsp.automount -D ${D}${systemd_unitdir}/system/vendor-dsp.automount
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
         sed -i '/^Options=/s/defaults/&,context=system_u:object_r:dsp_file_t:s0/' ${D}${systemd_unitdir}/system/vendor-dsp.mount
@@ -39,10 +39,10 @@ do_install:append() {
         install -d -p ${D}/firmware/vm/boot
         install -d -p ${D}/firmware/lvgvm/boot
 
-        install -m 0777 ${S}/firmware-vm-boot.automount ${D}${systemd_unitdir}/system/firmware-vm-boot.automount
-        install -m 0777 ${S}/firmware-lvgvm-boot.automount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.automount
-        install -m 0777 ${S}/firmware-vm-boot.mount ${D}${systemd_unitdir}/system/firmware-vm-boot.mount
-        install -m 0777 ${S}/firmware-lvgvm-boot.mount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
+        install -m 0644 ${S}/firmware-vm-boot.automount ${D}${systemd_unitdir}/system/firmware-vm-boot.automount
+        install -m 0644 ${S}/firmware-lvgvm-boot.automount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.automount
+        install -m 0644 ${S}/firmware-vm-boot.mount ${D}${systemd_unitdir}/system/firmware-vm-boot.mount
+        install -m 0644 ${S}/firmware-lvgvm-boot.mount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
 
         if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
             sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot.mount
@@ -61,8 +61,8 @@ do_install:append() {
 
     if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
 
-        install -m 0777 ${S}/bluetooth.mount -D ${D}${systemd_unitdir}/system/bluetooth.mount
-        install -m 0777 ${S}/bluetooth.automount -D ${D}${systemd_unitdir}/system/bluetooth.automount
+        install -m 0755 ${S}/bluetooth.mount -D ${D}${systemd_unitdir}/system/bluetooth.mount
+        install -m 0755 ${S}/bluetooth.automount -D ${D}${systemd_unitdir}/system/bluetooth.automount
 
         ln -sf ${systemd_unitdir}/system/bluetooth.mount \
             ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.mount
@@ -78,8 +78,8 @@ do_install:append() {
 do_install:append:sa8775:sa7255() {
     install -d -p ${D}/firmware/qcom/sa8775p
 
-    install -m 0777 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.mount
-    install -m 0777 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.automount
+    install -m 0644 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.mount
+    install -m 0644 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.automount
 
     ln -sf ${systemd_unitdir}/system/firmware-qcom-sa8775p.mount \
         ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-qcom-sa8775p.mount
@@ -87,29 +87,29 @@ do_install:append:sa8775:sa7255() {
     ln -sf ${systemd_unitdir}/system/firmware-qcom-sa8775p.mount \
         ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-qcom-sa8775p.automount
     install -d ${D}${sysconfdir}/sysconfig/
-    install -m 0777 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
-    install -m 0777 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
-    install -m 0777 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
-    install -m 0777 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
-    install -m 0777 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
+    install -m 0755 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
+    install -m 0755 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
+    install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
+    install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
+    install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
 }
 
 do_install:append:sa8797() {
     install -d -p ${D}${systemd_unitdir}/system/multi-user.target.wants/
     install -d -p ${D}/firmware/qcom/sa8797p
 
-    install -m 0777 ${S}/firmware-qcom-sa8797p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.mount
-    install -m 0777 ${S}/firmware-qcom-sa8797p.automount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.automount
+    install -m 0644 ${S}/firmware-qcom-sa8797p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.mount
+    install -m 0644 ${S}/firmware-qcom-sa8797p.automount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.automount
 
     install -d ${D}${sysconfdir}/sysconfig/
-    install -m 0777 ${S}/sa8797_hpass0_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_cfg
-    install -m 0777 ${S}/sa8797_hpass1_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_cfg
-    install -m 0777 ${S}/sa8797_hpass2_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_cfg
-    install -m 0777 ${S}/sa8797_cdsp0_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp0_cfg
-    install -m 0777 ${S}/sa8797_cdsp1_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp1_cfg
-    install -m 0777 ${S}/sa8797_cdsp2_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp2_cfg
-    install -m 0777 ${S}/sa8797_cdsp3_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp3_cfg
-    install -m 0777 ${S}/sa8797_soccp_cfg ${D}${sysconfdir}/sysconfig/sa8797_soccp_cfg
+    install -m 0755 ${S}/sa8797_hpass0_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_cfg
+    install -m 0755 ${S}/sa8797_hpass1_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_cfg
+    install -m 0755 ${S}/sa8797_hpass2_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_cfg
+    install -m 0755 ${S}/sa8797_cdsp0_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp0_cfg
+    install -m 0755 ${S}/sa8797_cdsp1_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp1_cfg
+    install -m 0755 ${S}/sa8797_cdsp2_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp2_cfg
+    install -m 0755 ${S}/sa8797_cdsp3_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp3_cfg
+    install -m 0755 ${S}/sa8797_soccp_cfg ${D}${sysconfdir}/sysconfig/sa8797_soccp_cfg
 }
 
 FILES:${PN}:append:sa8797 = " \
