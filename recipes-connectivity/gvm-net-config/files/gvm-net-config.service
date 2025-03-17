@@ -1,0 +1,17 @@
+# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+[Unit]
+Description=Service to set up the network bridge for the Android GVM
+PartOf=qcrosvm.service
+After=setup-network-host.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/bin/gvm-net-config.sh
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy = multi-user.target

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 # parameters: 
@@ -28,13 +28,15 @@ setup_if()
 
 # parameters:
 # $1: iface name
-# $2: vlan id
-# $3: ip address for vlan interface
+# $2: bridge iface name
+# $3: vlan id
+# $4: ip address for vlan interface
 add_vlan_to_if()
 {
-  ip link add link $1 name $1.$2 type vlan id $2
-  ip addr add $3 dev $1.$2
-  ifconfig $1.$2 up
+  ip link add link $2 name $2.$3 type vlan id $3
+  bridge vlan add vid $3 dev $1
+  ip addr add $4 dev $2.$3
+  ifconfig $2.$3 up
 }
 
 # parameters:
@@ -55,7 +57,7 @@ setup_network()
   echo " setup-network-host add $4 into $2 successfully on soc: $1"
   
   echo " setup-network-host add vlan $2.$5"
-  add_vlan_to_if $2 $5 $6
+  add_vlan_to_if $4 $2 $5 $6
 }
 
 soc_num=`gpioget 0 29`
