@@ -1,8 +1,7 @@
-From e643a1ee7267dcb5ab46546e4c9a10a2a7926fd6 Mon Sep 17 00:00:00 2001
+From 00fdda9ae1cac3338bf62503e563a9b9a468b5f1 Mon Sep 17 00:00:00 2001
 From: Praveen Talari <quic_ptalari@quicinc.com>
 Date: Wed, 17 Jul 2024 19:28:51 +0530
-Subject: [PATCH 1/3] PENDING: serial: qcom-geni: Enable Serial on SA8255p
- platform
+Subject: [PATCH] PENDING: serial: qcom-geni: Enable Serial on SA8255p platform
 
 Enable or disable resources such as clocks, interconnect
 paths, and TLMM (GPIOs) via the logical power domain,
@@ -22,7 +21,7 @@ Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
  1 file changed, 238 insertions(+), 70 deletions(-)
 
 diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
-index 75824a1683db..10557571d48d 100644
+index c3b9bba54fec..f1ae78015228 100644
 --- a/drivers/tty/serial/qcom_geni_serial.c
 +++ b/drivers/tty/serial/qcom_geni_serial.c
 @@ -120,6 +120,9 @@ void serial_trace_log(struct device *dev, const char *fmt, ...)
@@ -35,7 +34,7 @@ index 75824a1683db..10557571d48d 100644
  };
  
  struct qcom_geni_private_data {
-@@ -1283,27 +1286,22 @@ static unsigned long get_clk_div_rate(struct clk *clk, unsigned int baud,
+@@ -1293,27 +1296,22 @@ static unsigned long get_clk_div_rate(struct clk *clk, unsigned int baud,
  	return ser_clk;
  }
  
@@ -76,7 +75,7 @@ index 75824a1683db..10557571d48d 100644
  
  	sampling_rate = UART_OVERSAMPLING;
  	/* Sampling rate is halved for IP versions >= 2.5 */
-@@ -1312,12 +1310,12 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+@@ -1322,12 +1320,12 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
  		sampling_rate /= 2;
  
  	clk_rate = get_clk_div_rate(port->se.clk, baud,
@@ -91,7 +90,7 @@ index 75824a1683db..10557571d48d 100644
  	}
  
  	serial_trace_log(port->se.dev, "baud: %u, desired_rate: %u, clk_rate: %lu, clk_div: %u\n",
-@@ -1339,6 +1337,64 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+@@ -1349,6 +1347,64 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
  	port->se.icc_paths[CPU_TO_GENI].avg_bw = Bps_to_icc(baud);
  	geni_icc_set_bw(&port->se);
  
@@ -156,7 +155,7 @@ index 75824a1683db..10557571d48d 100644
  	/* parity */
  	tx_trans_cfg = readl(uport->membase + SE_UART_TX_TRANS_CFG);
  	tx_parity_cfg = readl(uport->membase + SE_UART_TX_PARITY_CFG);
-@@ -1406,8 +1462,9 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+@@ -1416,8 +1472,9 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
  	writel(bits_per_char, uport->membase + SE_UART_TX_WORD_LEN);
  	writel(bits_per_char, uport->membase + SE_UART_RX_WORD_LEN);
  	writel(stop_bit_len, uport->membase + SE_UART_TX_STOP_BIT_LEN);
@@ -168,7 +167,7 @@ index 75824a1683db..10557571d48d 100644
  }
  
  #ifdef CONFIG_SERIAL_QCOM_GENI_CONSOLE
-@@ -1588,26 +1645,74 @@ static struct uart_driver qcom_geni_uart_driver = {
+@@ -1598,26 +1655,74 @@ static struct uart_driver qcom_geni_uart_driver = {
  	.nr =  GENI_UART_PORTS,
  };
  
@@ -253,8 +252,8 @@ index 75824a1683db..10557571d48d 100644
 +		port->dev_data->geni_se_switch_state(uport, state);
  }
  
- static const struct uart_ops qcom_geni_console_pops = {
-@@ -1689,16 +1794,54 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+ static int qcom_geni_rs485_config(struct uart_port *uport,
+@@ -1714,16 +1819,54 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  	port->dev_data = data;
  	port->se.dev = &pdev->dev;
  	port->se.wrapper = dev_get_drvdata(pdev->dev.parent);
@@ -315,8 +314,8 @@ index 75824a1683db..10557571d48d 100644
 +
  	uport->mapbase = res->start;
  
- 	port->tx_fifo_depth = DEF_FIFO_DEPTH_WORDS;
-@@ -1708,30 +1851,24 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+ 	uport->rs485_config = qcom_geni_rs485_config;
+@@ -1735,30 +1878,24 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  	if (!data->console) {
  		port->rx_buf = devm_kzalloc(uport->dev,
  					    DMA_RX_BUF_SIZE, GFP_KERNEL);
@@ -358,7 +357,7 @@ index 75824a1683db..10557571d48d 100644
  	uport->irq = irq;
  	uport->has_sysrq = IS_ENABLED(CONFIG_SERIAL_QCOM_GENI_CONSOLE);
  
-@@ -1744,16 +1881,6 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+@@ -1771,16 +1908,6 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  	if (of_property_read_bool(pdev->dev.of_node, "cts-rts-swap"))
  		port->cts_rts_swap = true;
  
@@ -375,13 +374,16 @@ index 75824a1683db..10557571d48d 100644
  	port->private_data.drv = drv;
  	uport->private_data = &port->private_data;
  	platform_set_drvdata(pdev, port);
-@@ -1763,12 +1890,12 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+@@ -1790,7 +1917,7 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  			IRQF_TRIGGER_HIGH, port->name, uport);
  	if (ret) {
  		dev_err(uport->dev, "Failed to get IRQ ret %d\n", ret);
 -		return ret;
 +		goto error;
  	}
+ 
+ 	ret = uart_get_rs485_mode(uport);
+@@ -1801,7 +1928,7 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  
  	ret = uart_add_one_port(drv, uport);
  	if (ret)
@@ -390,7 +392,7 @@ index 75824a1683db..10557571d48d 100644
  
  	if (port->wakeup_irq > 0) {
  		device_init_wakeup(&pdev->dev, true);
-@@ -1777,11 +1904,15 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
+@@ -1810,11 +1937,15 @@ static int qcom_geni_serial_probe(struct platform_device *pdev)
  		if (ret) {
  			device_init_wakeup(&pdev->dev, false);
  			uart_remove_one_port(drv, uport);
@@ -407,7 +409,7 @@ index 75824a1683db..10557571d48d 100644
  }
  
  static int qcom_geni_serial_remove(struct platform_device *pdev)
-@@ -1792,6 +1923,7 @@ static int qcom_geni_serial_remove(struct platform_device *pdev)
+@@ -1825,6 +1956,7 @@ static int qcom_geni_serial_remove(struct platform_device *pdev)
  	dev_pm_clear_wake_irq(&pdev->dev);
  	device_init_wakeup(&pdev->dev, false);
  	uart_remove_one_port(drv, &port->uport);
@@ -415,7 +417,7 @@ index 75824a1683db..10557571d48d 100644
  
  	return 0;
  }
-@@ -1833,11 +1965,39 @@ static int qcom_geni_serial_sys_resume(struct device *dev)
+@@ -1866,11 +1998,39 @@ static int qcom_geni_serial_sys_resume(struct device *dev)
  static const struct qcom_geni_device_data qcom_geni_console_data = {
  	.console = true,
  	.mode = GENI_SE_FIFO,
@@ -455,7 +457,7 @@ index 75824a1683db..10557571d48d 100644
  };
  
  static const struct dev_pm_ops qcom_geni_serial_pm_ops = {
-@@ -1850,10 +2010,18 @@ static const struct of_device_id qcom_geni_serial_match_table[] = {
+@@ -1883,10 +2043,18 @@ static const struct of_device_id qcom_geni_serial_match_table[] = {
  		.compatible = "qcom,geni-debug-uart",
  		.data = &qcom_geni_console_data,
  	},
