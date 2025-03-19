@@ -1,0 +1,188 @@
+This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From bd68956ffc7f5c1bac13f249922ddc48dd9d2987 Mon Sep 17 00:00:00 2001
+From: Debraj Mukhopadhyay <quic_dmukhopa@quicinc.com>
+Date: Tue, 21 Jan 2025 11:57:48 +0530
+Subject: [PATCH] securemsm-ship: Add support for HKDF_DERIVE mechanism in
+ PKCS11
+
+Add support for HKDF_DERIVE mechanism in PKCS11 client.
+
+Test: Used PKCS11 tool to generate and validate the derived key material.
+
+Change-Id: Ibd6542e00a92086b4ad1bea564ff355724d12c8d
+Signed-off-by: Debraj Mukhopadhyay <quic_dmukhopa@quicinc.com>
+---
+ libckteec/include/pkcs11.h    | 23 ++++++++++++++
+ libckteec/include/pkcs11_ta.h |  2 ++
+ libckteec/src/ck_debug.c      |  2 ++
+ libckteec/src/serialize_ck.c  | 56 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 83 insertions(+)
+
+diff --git a/libckteec/include/pkcs11.h b/libckteec/include/pkcs11.h
+index 6d7a0f77f..d140dd829 100644
+--- a/libckteec/include/pkcs11.h
++++ b/libckteec/include/pkcs11.h
+@@ -241,6 +241,7 @@ typedef CK_KEY_TYPE *CK_KEY_TYPE_PTR;
+ #define CKK_SHA512_HMAC			0x02d
+ #define CKK_SHA224_HMAC			0x02e
+ #define CKK_EC_EDWARDS			0x040 /* PKCS#11 v3.1-cs01 */
++#define CKK_HKDF			0x042
+ 
+ /*
+  * Certificates
+@@ -375,6 +376,7 @@ typedef CK_MECHANISM_TYPE *CK_MECHANISM_TYPE_PTR;
+ #define CKM_AES_CBC_ENCRYPT_DATA	0x01105
+ #define CKM_AES_KEY_WRAP		0x02109
+ #define CKM_AES_KEY_WRAP_PAD		0x0210a
++#define CKM_HKDF_DERIVE			0x0402a
+ 
+ typedef struct CK_MECHANISM_INFO CK_MECHANISM_INFO;
+ typedef struct CK_MECHANISM_INFO *CK_MECHANISM_INFO_PTR;
+@@ -462,6 +464,27 @@ struct CK_ECDH1_DERIVE_PARAMS {
+ 	CK_BYTE_PTR		pPublicData;
+ };
+ 
++/* Values for ulSaltType */
++#define CKF_HKDF_SALT_NULL	0x00000001UL
++#define CKF_HKDF_SALT_DATA	0x00000002UL
++#define CKF_HKDF_SALT_KEY	0x00000004UL
++
++/* HKDF derive parameters */
++typedef struct CK_HKDF_PARAMS CK_HKDF_PARAMS;
++typedef struct CK_HKDF_PARAMS *CK_HKDF_PARAMS_PTR;
++
++struct CK_HKDF_PARAMS {
++	CK_BBOOL		bExtract;
++	CK_BBOOL		bExpand;
++	CK_MECHANISM_TYPE	prfHashMechanism;
++	CK_ULONG		ulSaltType;
++	CK_BYTE_PTR		pSalt;
++	CK_ULONG		ulSaltLen;
++	CK_OBJECT_HANDLE	hSaltKey;
++	CK_BYTE_PTR		pInfo;
++	CK_ULONG		ulInfoLen;
++};
++
+ /* AES CBC encryption parameters */
+ typedef struct CK_AES_CBC_ENCRYPT_DATA_PARAMS CK_AES_CBC_ENCRYPT_DATA_PARAMS;
+ typedef struct CK_AES_CBC_ENCRYPT_DATA_PARAMS
+diff --git a/libckteec/include/pkcs11_ta.h b/libckteec/include/pkcs11_ta.h
+index 063198b94..864502f85 100644
+--- a/libckteec/include/pkcs11_ta.h
++++ b/libckteec/include/pkcs11_ta.h
+@@ -1177,6 +1177,7 @@ enum pkcs11_key_type {
+ 	PKCS11_CKK_SHA384_HMAC			= 0x02c,
+ 	PKCS11_CKK_SHA512_HMAC			= 0x02d,
+ 	PKCS11_CKK_SHA224_HMAC			= 0x02e,
++	PKCS11_CKK_HKDF				= 0x042,
+ 	/* Vendor extension: reserved for undefined ID (~0U) */
+ 	PKCS11_CKK_UNDEFINED_ID			= PKCS11_UNDEFINED_ID,
+ };
+@@ -1301,6 +1302,7 @@ enum pkcs11_mechanism_id {
+ 	PKCS11_CKM_AES_CBC_ENCRYPT_DATA		= 0x01105,
+ 	PKCS11_CKM_AES_KEY_WRAP			= 0x02109,
+ 	PKCS11_CKM_AES_KEY_WRAP_PAD		= 0x0210a,
++	PKCS11_CKM_HKDF_DERIVE			= 0x0402a,
+ 	/*
+ 	 * Vendor extensions below.
+ 	 * PKCS11 added IDs for operation not related to a CK mechanism ID
+diff --git a/libckteec/src/ck_debug.c b/libckteec/src/ck_debug.c
+index 49a50154f..16ef00eb7 100644
+--- a/libckteec/src/ck_debug.c
++++ b/libckteec/src/ck_debug.c
+@@ -205,6 +205,7 @@ const char *ckm2str(CK_MECHANISM_TYPE id)
+ 	CK2STR_ENTRY(CKM_AES_CBC_ENCRYPT_DATA);
+ 	CK2STR_ENTRY(CKM_AES_KEY_WRAP);
+ 	CK2STR_ENTRY(CKM_AES_KEY_WRAP_PAD);
++	CK2STR_ENTRY(CKM_HKDF_DERIVE);
+ 	default:
+ 		if (id & CKM_VENDOR_DEFINED)
+ 			return "Vendor defined";
+@@ -444,6 +445,7 @@ const char *ckk2str(CK_KEY_TYPE id)
+ 	CK2STR_ENTRY(CKK_DH);
+ 	CK2STR_ENTRY(CKK_ECDSA);
+ 	CK2STR_ENTRY(CKK_GENERIC_SECRET);
++	CK2STR_ENTRY(CKK_HKDF);
+ 	CK2STR_ENTRY(CKK_DES3);
+ 	CK2STR_ENTRY(CKK_AES);
+ 	CK2STR_ENTRY(CKK_HOTP);
+diff --git a/libckteec/src/serialize_ck.c b/libckteec/src/serialize_ck.c
+index 6fe9d1041..8ad7609eb 100644
+--- a/libckteec/src/serialize_ck.c
++++ b/libckteec/src/serialize_ck.c
+@@ -488,6 +488,59 @@ static CK_RV serialize_mecha_ecdh1_derive_param(struct serializer *obj,
+ 				params->ulPublicDataLen);
+ }
+ 
++static CK_RV serialize_mecha_hkdf_derive_param(struct serializer *obj,
++					       CK_MECHANISM_PTR mecha)
++{
++	CK_HKDF_PARAMS *params = mecha->pParameter;
++	CK_RV rv = CKR_GENERAL_ERROR;
++	size_t params_size = 7 * sizeof(uint32_t) + params->ulSaltLen +
++			     params->ulInfoLen;
++
++	rv = serialize_32b(obj, obj->type);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params_size);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->bExtract);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->bExpand);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->prfHashMechanism);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->ulSaltType);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->ulSaltLen);
++	if (rv)
++		return rv;
++
++	rv = serialize_buffer(obj, params->pSalt,
++			      params->ulSaltLen);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->hSaltKey);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params->ulInfoLen);
++	if (rv)
++		return rv;
++
++	return serialize_buffer(obj, params->pInfo,
++				params->ulInfoLen);
++}
++
+ static CK_RV serialize_mecha_aes_cbc_encrypt_data(struct serializer *obj,
+ 						  CK_MECHANISM_PTR mecha)
+ {
+@@ -763,6 +816,9 @@ CK_RV serialize_ck_mecha_params(struct serializer *obj,
+ 	case CKM_ECDH1_COFACTOR_DERIVE:
+ 		return serialize_mecha_ecdh1_derive_param(obj, &mecha);
+ 
++	case CKM_HKDF_DERIVE:
++		return serialize_mecha_hkdf_derive_param(obj, &mecha);
++
+ 	case CKM_RSA_PKCS_PSS:
+ 	case CKM_SHA1_RSA_PKCS_PSS:
+ 	case CKM_SHA256_RSA_PKCS_PSS:
+-- 
+2.17.1
+
