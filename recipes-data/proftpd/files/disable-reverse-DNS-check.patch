@@ -1,0 +1,33 @@
+From f8d91c98355fea9c66f1f36e0bf38fa4ae8ddddc Mon Sep 17 00:00:00 2001
+From: siniyan <quic_siniyan@quicinc.com>
+Date: Fri, 14 Jan 2022 17:39:18 +0800
+Subject: [PATCH] Disable reverse DNS check
+
+Disable reverse DNS check, then it spends less time to login ftp.
+
+Upstream-Status: Pending
+
+Signed-off-by: siniyan <quic_siniyan@quicinc.com>
+---
+ sample-configurations/basic.conf | 5 +++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sample-configurations/basic.conf b/sample-configurations/basic.conf
+index c25f1bc..2be6389 100644
+--- a/sample-configurations/basic.conf
++++ b/sample-configurations/basic.conf
+@@ -6,6 +6,11 @@
+ ServerName			"ProFTPD Default Installation"
+ ServerType			standalone
+ DefaultServer			on
++# disable reverse DNS check
++UseReverseDNS 			off
++<IfModule mod_ident.c>
++ IdentLookups			off
++</IfModule>
+
+ #By default we bind to all interfaces.
+ DefaultAddress      0.0.0.0
+--
+2.7.4
+

@@ -1,0 +1,31 @@
+From 130e5abe820d73f96a704cb3142a905b42c62d8f Mon Sep 17 00:00:00 2001
+From: siniyan <quic_siniyan@quicinc.com>
+Date: Wed, 29 Dec 2021 14:47:24 +0800
+Subject: [PATCH] enable-RootLogin
+
+enable-RootLogin, then ftp can login with system account.
+
+Upstream-Status: Pending
+
+Signed-off-by: siniyan <quic_siniyan@quicinc.com>
+---
+ sample-configurations/basic.conf | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sample-configurations/basic.conf b/sample-configurations/basic.conf
+index 314eb79..59bb7ca 100644
+--- a/sample-configurations/basic.conf
++++ b/sample-configurations/basic.conf
+@@ -39,6 +39,9 @@ Group				nogroup
+ # Normally, we want files to be overwriteable.
+ AllowOverwrite		on
+
++# Login as system account
++RootLogin               on
++
+ # Bar use of SITE CHMOD by default
+ <Limit SITE_CHMOD>
+   DenyAll
+--
+2.7.4
+
