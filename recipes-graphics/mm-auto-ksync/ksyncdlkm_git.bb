@@ -4,15 +4,15 @@ HOMEPAGE = "https://www.codelinaro.org"
 LICENSE = "GPLv2.0-with-linux-syscall-note"
 LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=8afb6abdac9a14cb18a0d6c9c151e9b4"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/graphics-hgsl/mm-ksync/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/graphics-hgsl/mm-ksync;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/mm-auto-ksync/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/mm-auto-ksync;usehead=1"
 
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/vendor/qcom/opensource/graphics-hgsl/mm-ksync"
+S = "${WORKDIR}/vendor/qcom/opensource/mm-auto-ksync"
 
 inherit qti-techpack
 
-TECHPACK_MODULE_OUT = "${WORKDIR}/mm-ksync"
+TECHPACK_MODULE_OUT = "${WORKDIR}/mm-auto-ksync"
 TECHPACK_MODULES = "qcom_ksync.ko"
 TECHPACK_HEADERS = "${S}/include/uapi"
 
