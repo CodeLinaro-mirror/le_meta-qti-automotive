@@ -33,6 +33,13 @@ EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
 "
 
+VM_CONFIG_XML ?= "vm_config_la.xml"
+
+do_install:append() {
+    install -d ${D}${sysconfdir}
+    install -m 0644 ${S}/vm_config_xml/${VM_CONFIG_XML} ${D}${sysconfdir}/vm_config.xml
+}
+
 do_install:append:sa8797() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
