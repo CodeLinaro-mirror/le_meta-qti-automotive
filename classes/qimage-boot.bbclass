@@ -1,4 +1,4 @@
-#Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+#Copyright (c) 2022-2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 
 DEPENDS += "\
@@ -168,11 +168,16 @@ do_sign_boot_img () {
 
 avb_sign_boot_image() {
     img="$1"
+    boot_partition_size=$(avbtool calc_min_partition_size \
+                          --image ${img} \
+                          --partition_name boot \
+                          --hash_algorithm sha256 \
+                          --no_hashtree)
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'true', 'false', d)}; then
         # For lvgvm avb2.0, add hash for boot image.
         avbtool add_hash_footer  \
             --image ${img}  \
-            --partition_size 0x04000000  \
+            --partition_size ${boot_partition_size}  \
             --partition_name boot \
             --algorithm SHA256_RSA4096 \
             --key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/vbgvm_private_key_4096.pem \
@@ -182,23 +187,33 @@ avb_sign_boot_image() {
         # For lv avb2.0, add hash for boot image, dtbo image and vendor-boot image.
         avbtool add_hash_footer  \
             --image ${img}  \
-            --partition_size 0x04000000  \
+            --partition_size ${boot_partition_size}  \
             --partition_name boot \
             --algorithm SHA256_RSA4096 \
             --key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem \
             --rollback_index 0
         if [ -f ${DEPLOY_DIR_IMAGE}/${PRODUCT}-vendor_boot.img ]; then
+            vendor_boot_partition_size=$(avbtool calc_min_partition_size \
+                                         --image ${DEPLOY_DIR_IMAGE}/${PRODUCT}-vendor_boot.img \
+                                         --partition_name vendor_boot \
+                                         --hash_algorithm sha256 \
+                                         --no_hashtree)
             avbtool add_hash_footer  \
                 --image ${DEPLOY_DIR_IMAGE}/${PRODUCT}-vendor_boot.img  \
-                --partition_size 0x04000000  \
+                --partition_size ${vendor_boot_partition_size}  \
                 --partition_name vendor_boot \
                 --algorithm SHA256_RSA4096 \
                 --key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem \
                 --rollback_index 0
         fi
+        dtbo_partition_size=$(avbtool calc_min_partition_size \
+                              --image ${DEPLOY_DIR_IMAGE}/${PRODUCT}-dtbo.img \
+                              --partition_name dtbo \
+                              --hash_algorithm sha256 \
+                              --no_hashtree)
         avbtool add_hash_footer  \
             --image ${DEPLOY_DIR_IMAGE}/${PRODUCT}-dtbo.img  \
-            --partition_size 0x00200000 \
+            --partition_size ${dtbo_partition_size} \
             --partition_name dtbo \
             --algorithm SHA256_RSA4096 \
             --key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem \
