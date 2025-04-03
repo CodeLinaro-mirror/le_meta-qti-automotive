@@ -91,9 +91,14 @@ do_sign_boot_img () {
 
 avb_sign_boot_image() {
     img="$1"
+    boot_partition_size=$(avbtool calc_min_partition_size \
+                              --image ${img} \
+                              --partition_name boot \
+                              --hash_algorithm sha256 \
+                              --no_hashtree)
     avbtool add_hash_footer  \
         --image ${img}  \
-        --partition_size 0x04000000  \
+        --partition_size ${boot_partition_size}  \
         --partition_name boot \
         --algorithm SHA256_RSA4096 \
         --key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem \
