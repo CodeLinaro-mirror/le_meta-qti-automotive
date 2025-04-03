@@ -26,11 +26,6 @@ S = "${WORKDIR}/${CODE_DIR}"
 
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
 
-# Enable support for the deprecated wl_shell interface
-# This is a workaround for outdated GFX Benchmark tool
-PACKAGECONFIG:append = " wl-shell"
-PACKAGECONFIG[wl-shell] = "-Ddeprecated-wl-shell=true,-Ddeprecated-wl-shell=false"
-
 RRECOMMENDS_${PN}:remove = "weston-init"
 
 do_install:append() {
@@ -41,8 +36,8 @@ do_install:append() {
 FILES:${PN}-dev = "${includedir} \
                 ${libdir}/pkgconfig ${datadir}/pkgconfig \
                 ${libdir}/${BPN}/libexec_weston.so \
-                ${libdir}/libweston-10.so \
-                ${libdir}/libweston-desktop-10.so"
+                ${libdir}/libweston-13.so \
+                "
 # Some libraries on which sdm-backend depends
 FILES:libweston-${WESTON_MAJOR_VERSION} += "${libdir}/libsession-helper.so \
                                             ${libdir}/liblibinput-backend.so \

@@ -26,7 +26,7 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
-# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2022, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 
@@ -37,8 +37,7 @@ DefaultDependencies=no
 
 [Service]
 Environment="XDG_RUNTIME_DIR=/run/user/0"
-ExecStart=/usr/bin/weston --tty=2 --log=/run/weston.log
-ExecStop=/usr/bin/killall -s KILL weston
+ExecStart=/usr/bin/weston --socket=wayland-0 --log=/run/weston.log
 Type=simple
 PIDFile=/run/early/weston.pid
 Restart=always
