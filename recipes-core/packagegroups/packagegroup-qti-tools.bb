@@ -16,6 +16,8 @@ RDEPENDS:${PN} += "\
     libgpiod-tools \
     exfat-utils \
     sysstat \
+    ebtables \
+    nftables \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd-analyze systemd-bootchart', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'asan', 'gcc-sanitizers', '', d)}  \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'lttng-modules lttng-tools lttng-ust', '', d)} \

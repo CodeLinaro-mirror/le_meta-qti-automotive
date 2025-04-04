@@ -14,6 +14,8 @@ PREFERRED_VERSION_wayland = "1.18.0"
 PREFERRED_VERSION_wayland-native = "1.18.0"
 PREFERRED_VERSION_wayland-protocols = "1.20"
 PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
+#grep use GPL-2.0-only version from meta-gplv2/recipes-extended/grep
+PREFERRED_VERSION_grep = "2.5%"
 preferred-kernel = "PREFERRED_VERSION_linux-qcom-custom-rt"
 kernel-version = "6.6"
 # Prefer gbm
@@ -83,9 +85,6 @@ MACHINE_FEATURES += "\
     qti-wlan-hsp \
     qti-wlan-hmt \
     qti-compute-platform \
-"
-MACHINE_FEATURES:remove = "\
-    early-ramdisk-init \
 "
 
 SECTOOLS_VERSION = "sectools-v2"

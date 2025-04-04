@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;beginline=7;endline=27;md5=f6c51da2169a596879
 DEPENDS = "securemsm-noship"
 
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;protocol=https;branch=master"
-SRC_URI:append = " file://0001-libckteec-Replace-libteec-library-with-libgptee.patch"
+SRC_URI:append = " file://0001-libckteec-Replace-libteec-library-with-libgptee.patch file://0001-securemsm-ship-Add-support-for-HKDF_DERIVE-mechanism.patch"
 
 SRCREV = "3eac340a781c00ccd61b151b0e9c22a8c6e9f9f0"
 

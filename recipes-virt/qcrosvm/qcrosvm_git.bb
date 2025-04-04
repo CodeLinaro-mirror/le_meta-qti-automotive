@@ -33,9 +33,6 @@ EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
 "
 
-# Conditional setting of SYSTEMD_AUTO_ENABLE
-SYSTEMD_AUTO_ENABLE = "${@ "disable" if d.getVar('BASEMACHINE') == 'sa8797' else "enable" }"
-
 do_install:append:sa8797() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service

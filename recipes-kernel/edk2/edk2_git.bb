@@ -44,6 +44,7 @@ EXTRA_OEMAKE = "'CLANG_BIN=${STAGING_BINDIR_NATIVE}/' \
                 'HIBERNATION_SUPPORT=${HIBERNATION}'\
                 'VERIFIED_BOOT_LE=0'\
                 'VERITY_LE=0'\
+                'FORCE_NO_PIE=1'\
                 'LOAD_KM_AND_SET_ROT=${LOAD_KM_SET_ROT}'\
                 'INIT_BIN_LE=\"/sbin/init\"'\
                 'EDK_TOOLS_PATH=${S}/BaseTools'\

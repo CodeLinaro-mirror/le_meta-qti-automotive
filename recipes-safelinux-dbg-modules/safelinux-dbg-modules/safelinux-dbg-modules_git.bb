@@ -11,6 +11,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/safelinux-dbg-modules"
 
 TECHPACK_MODULES = "minidump/minidump.ko \
                     kaslr_store/kaslr_store.ko \
+                    memory_dump_v21/memory_dump_v21.ko \
                     memory_dump_v2/memory_dump_v2.ko \
                     xbl_log/dump_boot_log.ko \
 "
@@ -25,6 +26,7 @@ do_install:append() {
 
 RPROVIDES:${PN} += "${@'kernel-module-minidump-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-kaslr_store-${KERNEL_VERSION}'.replace('_', '-')}"
+RPROVIDES:${PN} += "${@'kernel-module-memory_dump_v21-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-memory_dump_v2-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-dump_boot_log-${KERNEL_VERSION}'.replace('_', '-')}"
 
