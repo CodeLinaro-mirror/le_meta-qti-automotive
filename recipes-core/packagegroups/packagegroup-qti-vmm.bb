@@ -24,6 +24,7 @@ RDEPENDS:${PN} = "\
     hyp-udmabuf \
     hyp-udmabuf-test \
     virtiofsd \
+    vmm-boot-lcm \
 "
 RDEPENDS:${PN}:remove:sa8797 = "\
     gvm-net-config \
