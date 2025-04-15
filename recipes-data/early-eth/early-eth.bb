@@ -11,7 +11,11 @@ SRC_URI = "\
     file://early_eth1.service \
 "
 
-inherit systemd
+inherit systemd useradd
+
+USERADD_PACKAGES = "${PN}"
+GROUPADD_PARAM:${PN} = "early-eth"
+USERADD_PARAM:${PN} = "--no-create-home -g early-eth --shell /bin/false early-eth"
 
 do_install:append() {
     install -d ${D}${systemd_system_unitdir}

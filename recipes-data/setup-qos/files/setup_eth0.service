@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 # This service file is designed to route TX traffic on eth0 interface.
 # Customer needs to enable this service file based on the requirement.
@@ -8,6 +8,10 @@ Description=eth0 QOS installer
 After=early_eth0.service
 
 [Service]
+User=setup-qos
+Group=setup-qos
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini eth0
