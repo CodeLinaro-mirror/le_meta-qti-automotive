@@ -1,0 +1,41 @@
+From cfd6d7586de576e704339cd851da289a25d57816 Mon Sep 17 00:00:00 2001
+From: pengy <pengy@qti.qualcomm.com>
+Date: Fri, 18 Apr 2025 15:03:35 +0800
+Subject: [PATCH] [AArch64][gas] Add support for oryon-1
+
+Upstream-Status: Pending
+Signed-off-by: pengy <pengy@qti.qualcomm.com>
+---
+ gas/config/tc-aarch64.c | 3 +++
+ gas/doc/c-aarch64.texi  | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/gas/config/tc-aarch64.c b/gas/config/tc-aarch64.c
+index a7c29d2f..2756807d 100644
+--- a/gas/config/tc-aarch64.c
++++ b/gas/config/tc-aarch64.c
+@@ -10291,6 +10291,9 @@ static const struct aarch64_cpu_option_table aarch64_cpus[] = {
+ 			"Qualcomm QDF24XX"},
+   {"saphira",		AARCH64_CPU_FEATURES (V8_4A, 3, SHA2, AES, PROFILE),
+ 			"Qualcomm Saphira"},
++  {"oryon-1",           AARCH64_CPU_FEATURES (V8_6A, 6, SHA2, AES, SHA3, SM4,
++					      F16, PROFILE),
++			"Qualcomm oryon-1"},
+   {"thunderx",		AARCH64_CPU_FEATURES (V8A, 3, CRC, SHA2, AES),
+ 			"Cavium ThunderX"},
+   {"vulcan",		AARCH64_CPU_FEATURES (V8_1A, 2, SHA2, AES),
+diff --git a/gas/doc/c-aarch64.texi b/gas/doc/c-aarch64.texi
+index 77226a07..871fa0f4 100644
+--- a/gas/doc/c-aarch64.texi
++++ b/gas/doc/c-aarch64.texi
+@@ -84,6 +84,7 @@ on the target processor.  The following processor names are recognized:
+ @code{neoverse-v1},
+ @code{qdf24xx},
+ @code{saphira},
++@code{oryon-1},
+ @code{thunderx},
+ @code{vulcan},
+ @code{xgene1}
+-- 
+2.34.1
+
