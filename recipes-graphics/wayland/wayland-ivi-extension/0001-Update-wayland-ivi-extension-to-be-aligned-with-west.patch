@@ -1,0 +1,305 @@
+# This patch file is from Qualcomm Innovation Center, Inc. and is provided
+# under the following license:
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 76db1cb68d3da19f77d9dad874a6a034059aee1f Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <quic_xiahua@quicinc.com>
+Date: Wed, 27 Nov 2024 15:15:58 +0800
+Subject: [PATCH] Update wayland-ivi-extension to be aligned with weston-13
+
+Signed-off-by: Xiaoyu Huang <quic_xiahua@quicinc.com>
+---
+ CMakeLists.txt                                |  2 +-
+ .../ivi-id-agent/CMakeLists.txt               |  5 ++-
+ .../ivi-id-agent/src/ivi-id-agent.c           |  2 +-
+ .../src/ivi-input-controller.c                | 29 ++++++---------
+ weston-ivi-shell/CMakeLists.txt               |  4 +--
+ weston-ivi-shell/src/config.h.cmake           |  1 +
+ weston-ivi-shell/src/ivi-controller.c         | 35 ++++++-------------
+ 7 files changed, 29 insertions(+), 49 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 031d5c6..5917875 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -28,7 +28,7 @@ include(GNUInstallDirs)
+ SET(IVI_EXTENSION_VERSION 2.3.2)
+ SET(ILM_API_VERSION 2.3.2)
+ 
+-SET(LIBWESTON_VER 11)
++SET(LIBWESTON_VER 13)
+ 
+ SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter" )
+ SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter" )
+diff --git a/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt b/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
+index 7b90e39..0ad98b1 100644
+--- a/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
++++ b/ivi-id-agent-modules/ivi-id-agent/CMakeLists.txt
+@@ -26,7 +26,6 @@ pkg_check_modules(WAYLAND_SERVER wayland-server REQUIRED)
+ pkg_check_modules(WESTON weston>=6.0.0 REQUIRED)
+ pkg_check_modules(PIXMAN pixman-1 REQUIRED)
+ pkg_check_modules(LIBWESTON libweston-${LIBWESTON_VER} REQUIRED)
+-pkg_check_modules(LIBWESTON_DESKTOP libweston-desktop-${LIBWESTON_VER} REQUIRED)
+ 
+ GET_TARGET_PROPERTY(IVI_CONTROLLER_INCLUDE_DIRS ivi-controller INCLUDE_DIRECTORIES)
+ find_package(Threads REQUIRED)
+@@ -42,7 +41,7 @@ include_directories(
+ link_directories(
+     ${WAYLAND_SERVER_LIBRARY_DIRS}
+     ${PIXMAN_LIBRARY_DIRS}
+-    ${LIBWESTON_DESKTOP_LIBRARY_DIRS}
++    ${LIBWESTON_LIBRARY_DIRS}
+ )
+ 
+ 
+@@ -55,7 +54,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+ set(LIBS
+     ${LIBS}
+     ${WAYLAND_SERVER_LIBRARIES}
+-    ${LIBWESTON_DESKTOP_LIBRARIES}
++    ${LIBWESTON_LIBRARIES}
+ )
+ 
+ set(CMAKE_C_LDFLAGS "-module -avoid-version")
+diff --git a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+index 96d6ebb..00089c6 100644
+--- a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
++++ b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+@@ -26,7 +26,7 @@
+ #include <limits.h>
+ 
+ #include <weston.h>
+-#include <libweston-desktop/libweston-desktop.h>
++#include <libweston/desktop.h>
+ #include <libweston/config-parser.h>
+ #include <ivi-layout-export.h>
+ #include "ivi-controller.h"
+diff --git a/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c b/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
+index 14a7460..ebc1884 100644
+--- a/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
++++ b/ivi-input-modules/ivi-input-controller/src/ivi-input-controller.c
+@@ -538,16 +538,9 @@ input_ctrl_ptr_set_west_focus(struct seat_ctx *ctx_seat,
+     struct ivisurface *surf_ctx;
+     struct input_context *ctx = ctx_seat->input_ctx;
+     struct seat_focus *st_focus;
+-    wl_fixed_t sx, sy;
+ 
+-    if (NULL == view) {
+-        view = weston_compositor_pick_view(pointer->seat->compositor,
+-                       pointer->x, pointer->y,
+-                       &sx, &sy);
+-    } else {
+-        weston_view_from_global_fixed(view, pointer->x,
+-                        pointer->y, &sx, &sy);
+-    }
++    view = weston_compositor_pick_view(pointer->seat->compositor,
++                       pointer->pos);
+ 
+     if (pointer->focus != view) {
+ 
+@@ -569,13 +562,13 @@ input_ctrl_ptr_set_west_focus(struct seat_ctx *ctx_seat,
+                         ctx_seat, ILM_INPUT_DEVICE_POINTER, ILM_TRUE);
+ 
+                 if (st_focus != NULL) {
+-                    weston_pointer_set_focus(pointer, view, sx, sy);
++                    weston_pointer_set_focus(pointer, view);
+                 } else {
+                     if (NULL != pointer->focus)
+                         weston_pointer_clear_focus(pointer);
+                 }
+             } else {
+-                weston_pointer_set_focus(pointer, view, sx, sy);
++                weston_pointer_set_focus(pointer, view);
+             }
+         } else {
+             if (NULL != pointer->focus)
+@@ -728,7 +721,7 @@ static struct weston_pointer_grab_interface pointer_grab_interface = {
+ static void
+ input_ctrl_touch_set_west_focus(struct seat_ctx *ctx_seat,
+         struct weston_touch *touch, const struct timespec *time,
+-        int touch_id, wl_fixed_t x, wl_fixed_t y)
++        int touch_id, struct weston_coord_global pos)
+ {
+     /*Weston would have set the focus here*/
+     struct ivisurface *surf_ctx;
+@@ -749,14 +742,14 @@ input_ctrl_touch_set_west_focus(struct seat_ctx *ctx_seat,
+         }
+ 
+         if (st_focus != NULL) {
+-            weston_touch_send_down(touch, time, touch_id, x, y);
++            weston_touch_send_down(touch, time, touch_id, pos);
+ 
+         } else {
+             weston_touch_set_focus(touch, NULL);
+         }
+     } else {
+         /*Support non ivi-surfaces like input panel*/
+-        weston_touch_send_down(touch, time, touch_id, x, y);
++        weston_touch_send_down(touch, time, touch_id, pos);
+     }
+ }
+ 
+@@ -813,7 +806,7 @@ input_ctrl_touch_clear_focus(struct seat_ctx *ctx_seat)
+ 
+ static void
+ touch_grab_down(struct weston_touch_grab *grab, const struct timespec *time,
+-                int touch_id, wl_fixed_t x, wl_fixed_t y)
++                int touch_id, struct weston_coord_global pos)
+ {
+     struct seat_ctx *seat = wl_container_of(grab, seat, touch_grab);
+ 
+@@ -822,7 +815,7 @@ touch_grab_down(struct weston_touch_grab *grab, const struct timespec *time,
+         return;
+ 
+     input_ctrl_touch_set_west_focus(seat, grab->touch, time, touch_id,
+-                                    x, y);
++                                    pos);
+ }
+ 
+ static void
+@@ -848,9 +841,9 @@ touch_grab_up(struct weston_touch_grab *grab, const struct timespec *time,
+ 
+ static void
+ touch_grab_motion(struct weston_touch_grab *grab, const struct timespec *time, int touch_id,
+-                  wl_fixed_t x, wl_fixed_t y)
++                  struct weston_coord_global pos)
+ {
+-    weston_touch_send_motion(grab->touch, time, touch_id, x, y);
++    weston_touch_send_motion(grab->touch, time, touch_id, pos);
+ }
+ 
+ static void
+diff --git a/weston-ivi-shell/CMakeLists.txt b/weston-ivi-shell/CMakeLists.txt
+index ff78e7d..186c97f 100644
+--- a/weston-ivi-shell/CMakeLists.txt
++++ b/weston-ivi-shell/CMakeLists.txt
+@@ -63,7 +63,7 @@ include_directories(
+ link_directories(
+     ${WAYLAND_SERVER_LIBRARY_DIRS}
+     ${PIXMAN_LIBRARY_DIRS}
+-    ${LIBWESTON_DESKTOP_LIBRARY_DIRS}
++    ${LIBWESTON_LIBRARY_DIRS}
+ )
+ 
+ 
+@@ -78,7 +78,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+ set(LIBS
+     ${LIBS}
+     ${WAYLAND_SERVER_LIBRARIES}
+-    ${LIBWESTON_DESKTOP_LIBRARIES}
++    ${LIBWESTON_LIBRARIES}
+ )
+ 
+ set(CMAKE_C_LDFLAGS "-module -avoid-version")
+diff --git a/weston-ivi-shell/src/config.h.cmake b/weston-ivi-shell/src/config.h.cmake
+index 74846aa..b483bd4 100644
+--- a/weston-ivi-shell/src/config.h.cmake
++++ b/weston-ivi-shell/src/config.h.cmake
+@@ -1 +1,2 @@
+ #cmakedefine HAVE_POSIX_FALLOCATE 1
++#define MODULEDIR "/lib${LIB_SUFFIX}/weston"
+\ No newline at end of file
+diff --git a/weston-ivi-shell/src/ivi-controller.c b/weston-ivi-shell/src/ivi-controller.c
+index ae05e56..4c3f246 100644
+--- a/weston-ivi-shell/src/ivi-controller.c
++++ b/weston-ivi-shell/src/ivi-controller.c
+@@ -37,7 +37,7 @@
+ #include <sys/mman.h>
+ 
+ #include <weston.h>
+-#include <libweston-desktop/libweston-desktop.h>
++#include <libweston/desktop.h>
+ #include "ivi-wm-server-protocol.h"
+ #include "ivi-controller.h"
+ 
+@@ -470,12 +470,7 @@ controller_surface_screenshot(struct wl_client *client,
+         goto err;
+     }
+ 
+-    result = lyt->surface_get_size(layout_surface, &width, &height, &stride);
+-    if ((result != IVI_SUCCEEDED) || !width || !height || !stride) {
+-        ivi_screenshot_send_error(screenshot, IVI_SCREENSHOT_ERROR_NO_CONTENT, 
+-                "surface_screenshot: surface does not have content");
+-        goto err;
+-    }
++    lyt->surface_get_size(layout_surface, &width, &height, &stride);
+ 
+     /* get the weston buffer from buffer resource, then verify */
+     weston_buffer = weston_buffer_from_resource(compositor, buffer_resource);
+@@ -880,15 +875,15 @@ set_bkgnd_surface_prop(struct ivishell *shell)
+     wl_list_for_each(output, &compositor->output_list, link) {
+         if (!count)
+         {
+-            x = output->x;
+-            y = output->y;
++            x = output->pos.c.x;
++            y = output->pos.c.y;
+             count++;
+         }
+-        dest_width = output->x + output->width;
++        dest_width = output->pos.c.x + output->width;
+         if (output->height > dest_height)
+             dest_height = output->height;
+         weston_log("set_bkgnd_surface_prop: o_name:%s x:%d y:%d o_width:%d o_height:%d\n",
+-                   output->name, output->x, output->y, output->width, output->height);
++                   output->name, output->pos.c.x, output->pos.c.y, output->width, output->height);
+     }
+ 
+     w_surface = view->surface;
+@@ -1863,11 +1858,7 @@ check_layout_layers(struct ivishell *shell)
+     int32_t i = 0;
+     int32_t ret = 0;
+ 
+-    ret = lyt->get_layers(&length, &pArray);
+-    if(ret != 0) {
+-        weston_log("failed to get layers at check_layout_layers\n");
+-        return -1;
+-    }
++    lyt->get_layers(&length, &pArray);
+ 
+     if (length == 0) {
+         /* if length is 0, pArray doesn't need to free.*/
+@@ -1899,11 +1890,7 @@ check_layout_surfaces(struct ivishell *shell)
+     int32_t i = 0;
+     int32_t ret = 0;
+ 
+-    ret = lyt->get_surfaces(&length, &pArray);
+-    if(ret != 0) {
+-        weston_log("failed to get surfaces at check_layout_surfaces\n");
+-        return -1;
+-    }
++    lyt->get_surfaces(&length, &pArray);
+ 
+     if (length == 0) {
+         /* if length is 0, pArray doesn't need to free.*/
+@@ -2145,7 +2132,7 @@ load_input_module(struct ivishell *shell)
+         return 0;
+     }
+ 
+-    input_module_init = wet_load_module_entrypoint(input_module, "input_controller_module_init");
++    input_module_init = weston_load_module(input_module, "input_controller_module_init", MODULEDIR);
+     if (!input_module_init)
+         return -1;
+ 
+@@ -2192,7 +2179,7 @@ launch_client_process(void *data)
+       setenv(IVI_CLIENT_ENABLE_CURSOR_ENV_NAME, option, 0x1);
+     }
+ 
+-    shell->client = weston_client_start(shell->compositor,
++    shell->client = wet_client_start(shell->compositor,
+                                         shell->ivi_client_name);
+ 
+     shell->client_destroy_listener.notify = ivi_shell_client_destroy;
+@@ -2219,7 +2206,7 @@ static int load_id_agent_module(struct ivishell *shell)
+         return 0;
+     }
+ 
+-    id_agent_module_init = wet_load_module_entrypoint(id_agent_module, "id_agent_module_init");
++    id_agent_module_init = weston_load_module(id_agent_module, "id_agent_module_init", MODULEDIR);
+     if (!id_agent_module_init)
+         return -1;
+ 
+-- 
+2.17.1
+

@@ -67,6 +67,7 @@ python __anonymous(){
                           "SRCREV_devicetree",
                           "SRCREV_camx-common",
                           "SRCREV_camx-api",
+                          "SRCREV_camx-test",
                           "SRCREV_cdk-qcx",
                           "SRCREV_qcx",
                           "SRCREV_cdk-noship",

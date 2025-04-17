@@ -98,6 +98,12 @@ do_install:append () {
     # Use kernel rules for network iface name
     sed -i  's/^NamePolicy.*/NamePolicy=kernel/g' ${D}${systemd_unitdir}/network/99-default.link
 
+    # Create a symlink to the touchscreen input device via USB1
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
+        echo '# Create a symlink to the touchscreen input device via USB1' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+    fi
+
     #Remove privatetmp=true from hostname service
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'false', 'true', d)}; then
         sed -i  '/^PrivateTmp.*/d' ${D}${systemd_system_unitdir}/systemd-hostnamed.service
@@ -111,4 +117,3 @@ do_install:append () {
         install -m 0664 ${WORKDIR}/platform_load.conf ${D}${sysconfdir}/modules-load.d/
     fi
 }
-

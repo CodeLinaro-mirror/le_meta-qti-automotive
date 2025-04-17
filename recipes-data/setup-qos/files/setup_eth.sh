@@ -61,6 +61,10 @@ then
 		tc qdisc replace dev eth0 handle $q2_etf_handle0 parent $q2_cbs_handle0:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
 		tc qdisc replace dev eth0 handle $q3_etf_handle0 parent $q3_cbs_handle0:4 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
 	fi
+	if [ "$eavb_vlan_id0" -ne 0 ];
+	then
+		vconfig add eth0 $eavb_vlan_id0
+	fi
 fi
 
 if [ "eth1" = "$interface" ];
@@ -84,6 +88,10 @@ then
 	then
 		tc qdisc replace dev eth1 handle $q2_etf_handle1 parent $q2_cbs_handle1:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
 		tc qdisc replace dev eth1 handle $q3_etf_handle1 parent $q3_cbs_handle1:4 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
+        fi
+	if [ "$eavb_vlan_id1" -ne 0 ];
+        then
+                vconfig add eth1 $eavb_vlan_id1
         fi
 fi
 

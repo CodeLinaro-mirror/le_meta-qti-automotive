@@ -1,8 +1,6 @@
 FILESEXTRAPATHS:append := " :${THISDIR}/weston/"
 SRC_URI = "file://weston.service_caf \
-           file://weston.service_caf_10 \
            file://weston_early.service_caf \
-           file://weston_early.service_caf_10 \
            file://weston.ini_caf \
            file://weston-autologin \
            file://msm-display-node.rules \
@@ -16,17 +14,16 @@ REQUIRED_DISTRO_FEATURES:remove = "opengl"
 do_install() {
     # Install systemd unit files
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -m 644 -p -D ${WORKDIR}/weston.service_caf_10 ${D}${systemd_system_unitdir}/weston.service
+        install -m 644 -p -D ${WORKDIR}/weston.service_caf ${D}${systemd_system_unitdir}/weston.service
         install -m 644 -p -D ${WORKDIR}/weston.socket ${D}${systemd_system_unitdir}/weston.socket
         if ${@bb.utils.contains('DISTRO_FEATURES', 'early_init', 'true', 'false', d)}; then
-            install -m 644 -p -D ${WORKDIR}/weston_early.service_caf_10 ${D}${systemd_system_unitdir}/weston.service
+            install -m 644 -p -D ${WORKDIR}/weston_early.service_caf ${D}${systemd_system_unitdir}/weston.service
         fi
     fi
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
         sed -i 's/dev-dri-card0.device/openwfd_server_@0.service kgsl@0.service/g' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/PAMName/d' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/TTYPath/d' ${D}${systemd_system_unitdir}/weston.service
-        sed -i 's/weston --idle-time=0/weston --tty=2 --idle-time=0/' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service

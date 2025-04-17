@@ -21,29 +21,11 @@ do_image_ext4[postfuncs] += "${@bb.utils.contains('IMAGE_FEATURES', 'sparse-imag
 
 do_make_avb_image(){
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'true', 'false', d)}; then
-        # In qti-image-headless.bb, need to set IMAGE_ROOTFS_ZIZE to 700M, set the value of the judgment of 500M to skip redefinition.
-        if [[ "${IMAGE_ROOTFS_SIZE}" -lt "524288" ]]; then
-            # core minimal image define the IMAGE_ROOTFS_SIZE to 8192, no way to calculate
-            # an appropriate partition size for hashtree footer on top of rootfs image.
-            rootfs_size_kb=1572864
-        else
-            rootfs_size_kb=${IMAGE_ROOTFS_SIZE}
-        fi
-
-        rootfs_size=$(expr $rootfs_size_kb \* 1024)
-
-        if ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark linux-qcom-custom linux-qcom-custom-rt', 'true', 'false', d)}; then
-           overhead_size_kb=$(expr $rootfs_size_kb / 3)
-        else
-           overhead_size_kb=$(expr $rootfs_size_kb / 5)
-        fi
-
-        overhead_size=$(expr $overhead_size_kb \* 1024)
-
-        if [ "$(expr $overhead_size % 4096)" != "0" ]; then
-            overhead_size=$(expr $(expr 4096 - $(expr $overhead_size % 4096)) + $overhead_size)
-        fi
-        rootfs_partition_size=$(expr $rootfs_size + $overhead_size)
+        rootfs_partition_size=$(avbtool calc_min_partition_size \
+                                    --image ${DEPLOY_DIR_IMAGE}/${IMAGE_LINK_NAME}.${IMAGE_FSTYPES} \
+                                    --partition_name system \
+                                    --hash_algorithm sha256 \
+                                    --do_not_generate_fec)
 
         if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'true', 'false', d)}; then
             #For lvgvm avb2.0, add hashtree for system image and generate vbmeta.img.
@@ -115,16 +97,3 @@ IMAGE_CMD:ext4:append:gh-gvm-lemans = "; \
   ${VM_BOOTLOAD_IMG_CMD} \
 "
 
-# create dummy vbmeta image
-VBMETA_IMAGE_CMD = " \
-    dd if=/dev/zero of=${DEPLOY_DIR_IMAGE}/${VBMETAIMAGE_TARGET} bs=1K count=4 \
-"
-# compress the image to gh-gvm-lemans
-IMAGE_CMD:ext4:append:gh-gvm-lemans = "; \
-  ${VBMETA_IMAGE_CMD} \
-"
-
-# compress the image to gh-gvm-lemans
-IMAGE_CMD:ext4:append:sa8797 = "; \
-  ${VBMETA_IMAGE_CMD} \
-"

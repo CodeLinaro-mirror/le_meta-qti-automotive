@@ -34,7 +34,7 @@ AUDIOLITE_RDEPENDS = "\
 "
 
 RDEPENDS:${PN} += "\
-    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', '${AUDIOLITE_RDEPENDS}', \
+    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', '${AUDIOLITE_RDEPENDS} alsa-utils', \
         bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', '${AUDIOLITE_RDEPENDS} alsa-utils', '${KMD_RDEPENDS}', d), \
     d)} \
 "

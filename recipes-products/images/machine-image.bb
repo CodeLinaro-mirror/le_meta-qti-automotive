@@ -29,6 +29,9 @@ IMAGE_FEATURES:append = " package-management"
 
 INCOMPATIBLE_LICENSE:sa8797 = "GPL-3.0-only LGPL-3.0-only AGPL-3.0-only"
 
+# License issue introduced by selinux, temporarily skip
+INCOMPATIBLE_LICENSE_EXCEPTIONS:append:sa8797 = " binutils:GPL-3.0-only grep:GPL-3.0-only libbfd:GPL-3.0-only libopcodes:GPL-3.0-only"
+
 # Add libgomp support
 IMAGE_INSTALL += "libgomp"
 

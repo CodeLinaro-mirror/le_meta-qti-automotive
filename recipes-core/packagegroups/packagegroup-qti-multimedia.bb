@@ -18,7 +18,6 @@ RDEPENDS:${PN} = "\
         gstreamer1.0-plugins-bad \
         gstreamer1.0-plugins-ugly \
         gstreamer1.0-libav \
-        gdk-pixbuf-loader-bmp \
         gdk-pixbuf-loader-gif \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqeavb', 'gstreamer1.0-plugins-qeavb', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-omx', 'gstreamer1.0-omx mm-vdec-omx-test-lite mm-venc-omx-test-lite', '', d)} \

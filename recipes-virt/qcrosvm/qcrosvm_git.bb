@@ -7,8 +7,6 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause-C
                     file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10 \
                     file://${COREBASE}/meta/files/common-licenses/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
-
 DEPENDS += "cargo-native libcap rust-native rust-llvm-native pkgconfig-native"
 
 SRC_URI = "\
@@ -25,13 +23,28 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/crosvm-gunyah"
 
-inherit ${@bb.utils.contains("BBFILE_COLLECTIONS", "rust-layer", "cargo", "", d)} systemd
+inherit cargo systemd cargo-update-recipe-crates
+
+require ${BPN}-crates.inc
+
+CARGO_BUILD_FLAGS:remove = "--frozen"
+
+CFLAGS:append = " -Wno-error=stringop-overflow="
+
+SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
 
 CARGO_DISABLE_BITBAKE_VENDORING = "1"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
 "
+
+VM_CONFIG_XML ?= "vm_config_la.xml"
+
+do_install:append() {
+    install -d ${D}${sysconfdir}
+    install -m 0644 ${S}/vm_config_xml/${VM_CONFIG_XML} ${D}${sysconfdir}/vm_config.xml
+}
 
 do_install:append:sa8797() {
     install -d ${D}${systemd_unitdir}/system/
@@ -51,5 +64,3 @@ do_install:append:sa7255() {
     install -m 0644 ${S}/qcrosvm_sa7255.service ${D}/${systemd_unitdir}/system/qcrosvm.service
 }
 
-# Once upgrade Yocto to 4.2 and upgrade Python to 3.11 in the future, we can inherit cargo-update-recipe-crates and delete this line
-do_compile[network] = "1"
