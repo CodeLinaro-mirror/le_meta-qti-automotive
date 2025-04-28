@@ -14,7 +14,11 @@ SRC_URI = "\
     file://setup_eth.sh \
 "
 
-inherit systemd
+inherit systemd useradd
+
+USERADD_PACKAGES = "${PN}"
+GROUPADD_PARAM:${PN} = "setup-qos"
+USERADD_PARAM:${PN} = "--no-create-home -g setup-qos --shell /bin/false setup-qos"
 
 do_install() {
   if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then

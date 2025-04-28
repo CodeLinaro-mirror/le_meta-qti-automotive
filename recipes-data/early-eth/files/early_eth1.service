@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 # This service file is designed to route TX traffic on eth0 interface.
 # Customer needs to enable this service file based on the requirement.
@@ -8,6 +8,10 @@ Description=eth1 installer
 DefaultDependencies=no
 
 [Service]
+User=early-eth
+Group=early-eth
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
 Type=oneshot
 RemainAfterExit=yes
 #ExecStart=ifconfig eth1 hw ether 32:ff:2f:16:85:51
