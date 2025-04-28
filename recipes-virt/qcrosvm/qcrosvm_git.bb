@@ -16,7 +16,6 @@ SRC_URI = "\
     ${PATH_TO_REPO}/external/rust/crates/android_logger/.git;protocol=${PROTO};destsuffix=external/rust/crates/android_logger;usehead=1 \
     ${PATH_TO_REPO}/external/rust/crates/simplelog/.git;protocol=${PROTO};destsuffix=external/rust/crates/simplelog;usehead=1 \
     ${PATH_TO_REPO}/external/rust/crates/vmm_vhost/.git;protocol=${PROTO};destsuffix=external/rust/crates/vmm_vhost;usehead=1 \
-    file://qcrosvm_run.sh \
 "
 
 SRCREV = "${AUTOREV}"
@@ -49,9 +48,6 @@ do_install:append() {
 do_install:append:sa8797() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
-
-    install -d ${D}${bindir}
-    install -m 0755 ${WORKDIR}/qcrosvm_run.sh -D ${D}${bindir}/qcrosvm_run.sh
 }
 
 do_install:append:sa8775() {
