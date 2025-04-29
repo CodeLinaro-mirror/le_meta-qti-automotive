@@ -74,7 +74,10 @@ python __anonymous(){
                           "SRCREV_audio-kernel-ar",
                           "SRCREV_audio-kernel",
                           "SRCREV_dspkernel",
-                          "SRCREV_platformkernel"]
+                          "SRCREV_platformkernel",
+                          "SRCREV_qadlibs-x",
+                          "SRCREV_qadlibs-x-internal",
+                          "SRCREV_qadlibs-x-noship"]
 
     if need_change:
         d.prependVar("FILESPATH", "${SRC_DIR_ROOT}/:")
