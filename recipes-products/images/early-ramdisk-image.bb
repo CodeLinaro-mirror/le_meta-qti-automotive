@@ -42,6 +42,16 @@ python do_rootfs:prepend() {
             bb.debug(1, "add install module: %s" % (kpack))
 }
 
+# Kernel images are installed as kernel module packages depenedencies
+# Remove them from the initrd image
+do_rootfs:append() {
+    bb.build.exec_func('do_image_clean', d)
+}
+
+fakeroot do_image_clean() {
+   rm -rf ${IMAGE_ROOTFS}/boot/*
+}
+
 # Do not pollute the initrd image with rootfs features
 IMAGE_FEATURES = ""
 
