@@ -76,7 +76,6 @@ python __anonymous(){
                           "SRCREV_dspkernel",
                           "SRCREV_platformkernel",
                           "SRCREV_qadlibs-x",
-                          "SRCREV_qadlibs-x-internal",
                           "SRCREV_qadlibs-x-noship"]
 
     if need_change:
