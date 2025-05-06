@@ -20,3 +20,4 @@ echo "gvm_net_config: configure vmtap1"
 
 # set vmtap1 ip to 192.168.7.1, do not add to any bridge
 ifconfig vmtap1 192.168.7.1
+
