@@ -5,11 +5,16 @@ HOMEPAGE = "https://git.codelinaro.org"
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
+DEPENDS += "gunyah-drivers"
+
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/mmhab-drv/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/mmhab-drv;usehead=1"
 
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/mmhab-drv"
+
+TECHPACK_MAKE_ARGS = "KBUILD_EXTRA_SYMBOLS=${STAGING_INCDIR}/Module.symvers"
+EXTRA_OEMAKE:append = " GUNYAH_DRIVERS_SYSROOT_INCDIR=${STAGING_INCDIR}"
 
 TECHPACK_MODULE_OUT = "${WORKDIR}/vendor/qcom/opensource/mmhab-drv"
 TECHPACK_MODULES = "msm_hab.ko"
