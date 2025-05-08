@@ -11,7 +11,6 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause;m
 WESTON_MAJOR_VERSION = "13"
 
 DEPENDS += "cairo \
-            dbus \
             display-hal-headers display-hal-linux display-noship-linux \
             ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'display-intf-headers', 'display-ship-linux', d)} \
             gbm gbm-headers \
@@ -22,7 +21,7 @@ DEPENDS += "cairo \
             systemd \
             wayland wayland-native wayland-protocols \
             weston \
-            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging', '', d)} \
+            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging power-utils', '', d)} \
 "
 
 CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston-sdm-extension", "graphics/weston-sdm-extension", d)}"
@@ -33,6 +32,9 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/${CODE_DIR}"
 
 inherit meson pkgconfig
+#Introducing sleep-notify-service.bbclass for sleep-notify service
+inherit ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd sleep-notify-service', '', d)}
+
 
 TARGET_CPPFLAGS += "-I${STAGING_INCDIR}/libdrm \
                     -I${STAGING_INCDIR}/qcom/display \
@@ -46,11 +48,27 @@ TARGET_CPPFLAGS += "-I${STAGING_INCDIR}/libdrm \
 # fix for uapi msm_drm.h header file related compilation issue
 TARGET_CPPFLAGS += "-fno-operator-names"
 
-PACKAGECONFIG ??= "${@bb.utils.contains('DISTRO_FEATURES', 'early_init', 'early', '', d)}"
+PACKAGECONFIG ??= "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'pmsnservice', '', d)} \
+                   ${@bb.utils.contains('DISTRO_FEATURES', 'early_init', 'early', '', d)} \
+"
+
 # early-init
 PACKAGECONFIG[early] = "-Denable-early-boot=true,-Denable-early-boot=false"
+# pm
+PACKAGECONFIG[pmsnservice] = "-Denable-pm-snservice=true,-Denable-pm-snservice=false"
+PACKAGECONFIG[pmdbus] = "-Denable-pm-dbus=true,-Denable-pm-dbus=false"
+
+do_install:append() {
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
+        install -d ${D}${systemd_system_unitdir}/
+        install -m 0644 ${S}/sdm-backend/snservice_conf/sleep-notify@weston.service.d/weston.conf -D ${D}${systemd_system_unitdir}/sleep-notify@weston.service.d/weston.conf
+    fi
+}
+
+SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'sleep-notify@weston.service', '', d)}"
 
 FILES:${PN} += "\
     ${libdir}/libweston-${WESTON_MAJOR_VERSION}/* \
     ${libdir}/weston/* \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '${systemd_system_unitdir}/*', '', d)} \
 "
