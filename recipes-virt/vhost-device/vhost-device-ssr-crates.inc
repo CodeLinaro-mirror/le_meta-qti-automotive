@@ -32,6 +32,7 @@ SRC_URI:append = " \
     crate://crates.io/regex-automata/0.4.7 \
     crate://crates.io/regex-syntax/0.8.4 \
     crate://crates.io/regex/1.10.6 \
+    crate://crates.io/sd-notify/0.4.5 \
     crate://crates.io/strsim/0.11.1 \
     crate://crates.io/syn/2.0.46 \
     crate://crates.io/thiserror-impl/1.0.63 \
@@ -88,6 +89,7 @@ SRC_URI[quote-1.0.37.sha256sum] = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139
 SRC_URI[regex-1.10.6.sha256sum] = "4219d74c6b67a3654a9fbebc4b419e22126d13d2f3c4a07ee0cb61ff79a79619"
 SRC_URI[regex-automata-0.4.7.sha256sum] = "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
 SRC_URI[regex-syntax-0.8.4.sha256sum] = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
+SRC_URI[sd-notify-0.4.5.sha256sum] = "b943eadf71d8b69e661330cb0e2656e31040acf21ee7708e2c238a0ec6af2bf4"
 SRC_URI[strsim-0.11.1.sha256sum] = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 SRC_URI[syn-2.0.46.sha256sum] = "89456b690ff72fddcecf231caedbe615c59480c93358a93dfae7fc29e3ebbf0e"
 SRC_URI[thiserror-1.0.63.sha256sum] = "c0342370b38b6a11b6cc11d6a805569958d54cfa061a29969c3b5ce2ea405724"
