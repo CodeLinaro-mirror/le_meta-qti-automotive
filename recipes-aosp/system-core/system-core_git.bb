@@ -37,6 +37,9 @@ EXTRA_OECONF = "\
     --disable-libsync \
 "
 
+POST_BOOT_SCRIPT ?= "init.qcom.post_boot.sh"
+POST_BOOT_SCRIPT:sa8797 = "sa8797/init.qcom.post_boot.sh"
+
 do_install:append() {
     install -d ${D}${sysconfdir}/usb/
     install -b -m 0644 /dev/null ${D}${sysconfdir}/usb/boot_hsusb_comp
@@ -60,8 +63,8 @@ do_install:append() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -m 0755 ${S}/usb/start_usb -D ${D}${sysconfdir}/initscripts/usb
         install -m 0750 ${S}/rootdir/etc/dlkm.sh -D ${D}${sysconfdir}/initscripts/dlkm
-        install -m 0750 ${S}/rootdir/etc/init.qcom.post_boot.sh -D ${D}${sysconfdir}/initscripts/init_post_boot
-        install -m 0750 ${S}/rootdir/etc/init.qti.early_boot.sh -D ${D}${sysconfdir}/initscripts/init_early_boot
+        install -m 0750 ${S}/rootdir/etc/init.qcom.post_boot.common.sh -D ${D}${sysconfdir}/initscripts/init.qcom.post_boot.common.sh
+        install -m 0750 ${S}/rootdir/etc/${POST_BOOT_SCRIPT} -D ${D}${sysconfdir}/initscripts/init_post_boot
 
         install -d ${D}${systemd_unitdir}/system/
         install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
@@ -125,6 +128,7 @@ FILES:${PN}-post-boot += "\
     ${systemd_unitdir}/system/init_post_boot.service \
     ${systemd_unitdir}/system/multi-user.target.wants/init_post_boot.service \
     ${sysconfdir}/initscripts/init_post_boot \
+    ${sysconfdir}/initscripts/init.qcom.post_boot.common.sh \
 "
 
 FILES:${PN}-early-boot += "\
