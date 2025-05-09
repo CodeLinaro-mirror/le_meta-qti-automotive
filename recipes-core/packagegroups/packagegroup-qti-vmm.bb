@@ -15,6 +15,7 @@ RDEPENDS:${PN} = "\
     qcrosvm \
     gunyah-drivers \
     msmhab \
+    android-tools \
     vhost-user-q \
     vhost-user-lib \
     vhost-user-scmi \
