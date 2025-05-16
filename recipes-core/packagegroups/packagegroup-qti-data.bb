@@ -14,7 +14,7 @@ RDEPENDS:${PN} += "\
     bridge-utils \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'setup-network', '', d)} \
     setup-network-host \
-    gvm-net-config \
+    gvm-net-configure \
     net-tools \
     ethtool \
     iperf2 \
