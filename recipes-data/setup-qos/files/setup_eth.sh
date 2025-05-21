@@ -56,6 +56,14 @@ then
 	then
 		tc qdisc replace dev eth0 handle $q3_cbs_handle0 parent $mqprio_handle0:4 cbs idleslope $q3_idle_slope0 sendslope $q3_send_slope0 hicredit $q3_hicredit0 locredit $q3_locredit0 offload 1
 	fi
+        if [ $q4_idle_slope0 -ne 0 ] && [ $q4_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev eth0 handle $q4_cbs_handle0 parent $mqprio_handle0:5 cbs idleslope $q4_idle_slope0 sendslope $q4_send_slope0 hicredit $q4_hicredit0 locredit $q4_locredit0 offload 1
+	fi
+	if [ $q5_idle_slope0 -ne 0 ] && [ $q5_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev eth0 handle $q5_cbs_handle0 parent $mqprio_handle0:6 cbs idleslope $q5_idle_slope0 sendslope $q5_send_slope0 hicredit $q5_hicredit0 locredit $q5_locredit0 offload 1
+	fi
 	if [ "$tbs_enabled0" -eq 1 ];
 	then
 		tc qdisc replace dev eth0 handle $q2_etf_handle0 parent $q2_cbs_handle0:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
@@ -83,6 +91,14 @@ then
 	if [ $q3_idle_slope1 -ne 0 ] && [ $q3_send_slope1 -ne 0 ];
 	then
 		tc qdisc replace dev eth1 handle $q3_cbs_handle1 parent $mqprio_handle1:4 cbs idleslope $q3_idle_slope1 sendslope $q3_send_slope1 hicredit $q3_hicredit1 locredit $q3_locredit1 offload 1
+	fi
+        if [ $q4_idle_slope1 -ne 0 ] && [ $q4_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev eth1 handle $q4_cbs_handle1 parent $mqprio_handle1:5 cbs idleslope $q4_idle_slope1 sendslope $q4_send_slope1 hicredit $q4_hicredit1 locredit $q4_locredit1 offload 1
+	fi
+	if [ $q5_idle_slope1 -ne 0 ] && [ $q5_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev eth1 handle $q5_cbs_handle1 parent $mqprio_handle1:6 cbs idleslope $q5_idle_slope1 sendslope $q5_send_slope1 hicredit $q5_hicredit1 locredit $q5_locredit1 offload 1
 	fi
 	if [ "$tbs_enabled1" -eq 1 ];
 	then
