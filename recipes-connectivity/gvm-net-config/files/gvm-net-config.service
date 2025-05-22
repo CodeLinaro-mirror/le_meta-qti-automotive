@@ -3,7 +3,6 @@
 [Unit]
 Description=Service to set up the network bridge for the Android GVM
 PartOf=qcrosvm.service
-After=setup-network-host.service
 
 [Service]
 Type=oneshot

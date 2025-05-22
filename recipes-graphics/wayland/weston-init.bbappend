@@ -46,6 +46,11 @@ do_install() {
     # Install display udev rule
     install -d ${D}${sysconfdir}/udev/rules.d/
     install -m 0644 ${WORKDIR}/msm-display-node.rules ${D}${sysconfdir}/udev/rules.d/msm-display-node.rules
+
+    # Install pm module for umd
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
+        sed -i 's/systemd-notify.so/systemd-notify.so,compositor-pm-ds-snservice.so/g' ${D}${systemd_system_unitdir}/weston.service
+    fi
 }
 
 do_install:append:monaco() {

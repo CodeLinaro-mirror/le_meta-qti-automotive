@@ -26,6 +26,9 @@ do_install:append() {
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -d ${D}${libdir}/modules-load.d/
     install -m 0755 ${WORKDIR}/vendor/qcom/opensource/gunyah-drivers/gunyah-drivers.conf -D ${D}${libdir}/modules-load.d/gunyah-drivers.conf
+    install -d ${D}${includedir}/linux/gunyah
+    install -m 0644 ${WORKDIR}/vendor/qcom/opensource/gunyah-drivers/include/linux/gunyah/* ${D}${includedir}/linux/gunyah/
+    install -m 0644 ${S}/Module.symvers ${D}${includedir}/
 }
 
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/*"
