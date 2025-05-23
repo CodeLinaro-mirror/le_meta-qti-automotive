@@ -1,3 +1,5 @@
+EXTRA_OECONF:append = " --with-selinux=no"
+
 FILESEXTRAPATHS:append := "${THISDIR}:${THISDIR}/files:"
 
 # Disable x11 dependency
