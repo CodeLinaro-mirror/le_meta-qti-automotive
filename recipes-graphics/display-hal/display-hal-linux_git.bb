@@ -17,6 +17,7 @@ DEPENDS += "display-commonsys-intf-linux \
             system-core \
             ${@bb.utils.contains_any("PREFERRED_VERSION_linux-msm", '5.15 6.1', 'displaydlkm', '', d)} \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'display-kernel-headers', '', d)} \
+            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'compute-resmgr', '', d)} \
 "
 
 DEPENDS:append:sa8797 = "display-kernel-headers display-intf-headers"
@@ -33,6 +34,7 @@ inherit autotools-brokensep pkgconfig
 
 EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
 EXTRA_OECONF += "--enable-sdmhaldrm"
+EXTRA_OECMAKE += "-DRT_SCHEDULE:BOOL=${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'ON', 'OFF', d)}"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
