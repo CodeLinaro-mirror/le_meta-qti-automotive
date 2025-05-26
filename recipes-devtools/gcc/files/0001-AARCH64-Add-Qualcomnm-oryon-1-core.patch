@@ -1,0 +1,69 @@
+From a9301d10875f6ca1523559fc3ab1552145b07ed0 Mon Sep 17 00:00:00 2001
+From: pengy <pengy@qti.qualcomm.com>
+Date: Tue, 15 Apr 2025 13:48:45 +0800
+Subject: [PATCH] AARCH64: Add Qualcomnm oryon-1 core
+
+This patch adds Qualcomm's new oryon-1 core; this is enough
+to recongize the core and later on will add the tuning structure.
+
+gcc/ChangeLog:
+
+	* config/aarch64/aarch64-cores.def (oryon-1): New entry.
+	* config/aarch64/aarch64-tune.md: Regenerate.
+	* doc/invoke.texi  (AArch64 Options): Document oryon-1.
+
+Signed-off-by: Andrew Pinski <apinski@qti.qualcomm.com>
+Co-authored-by: Joel Jones <joeljone@qti.qualcomm.com>
+Co-authored-by: Wei Zhao <wezhao@qti.qualcomm.com>
+
+Upstream-Status: Backport [01cfd6018250141a262219c5803c3f2a278d909d]
+Change-Id: Iba1f69842a2ba11ca31ad9d6ab6c3422761bd0e5
+Signed-off-by: pengy <pengy@qti.qualcomm.com>
+---
+ gcc/config/aarch64/aarch64-cores.def | 5 +++++
+ gcc/config/aarch64/aarch64-tune.md   | 2 +-
+ gcc/doc/invoke.texi                  | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/config/aarch64/aarch64-cores.def b/gcc/config/aarch64/aarch64-cores.def
+index fdda0697b..91e62285e 100644
+--- a/gcc/config/aarch64/aarch64-cores.def
++++ b/gcc/config/aarch64/aarch64-cores.def
+@@ -150,6 +150,11 @@ AARCH64_CORE("neoverse-512tvb", neoverse512tvb, cortexa57, V8_4A,  (SVE, I8MM, B
+ /* Qualcomm ('Q') cores. */
+ AARCH64_CORE("saphira",     saphira,    saphira,    V8_4A,  (CRYPTO), saphira,   0x51, 0xC01, -1)
+ 
++/* ARMv8.6-A Architecture Processors.  */
++
++/* Qualcomm ('Q') cores. */
++AARCH64_CORE("oryon-1", oryon1, cortexa57, V8_6A, (CRYPTO, SM4, SHA3, F16), cortexa72,   0x51, 0x001, -1)
++
+ /* ARMv8-A big.LITTLE implementations.  */
+ 
+ AARCH64_CORE("cortex-a57.cortex-a53",  cortexa57cortexa53, cortexa53, V8A,  (CRC), cortexa57, 0x41, AARCH64_BIG_LITTLE (0xd07, 0xd03), -1)
+diff --git a/gcc/config/aarch64/aarch64-tune.md b/gcc/config/aarch64/aarch64-tune.md
+index 9d46d38a2..5a3c9934b 100644
+--- a/gcc/config/aarch64/aarch64-tune.md
++++ b/gcc/config/aarch64/aarch64-tune.md
+@@ -1,5 +1,5 @@
+ ;; -*- buffer-read-only: t -*-
+ ;; Generated automatically by gentune.sh from aarch64-cores.def
+ (define_attr "tune"
+-	"cortexa34,cortexa35,cortexa53,cortexa57,cortexa72,cortexa73,thunderx,thunderxt88p1,thunderxt88,octeontx,octeontxt81,octeontxt83,thunderxt81,thunderxt83,ampere1,ampere1a,emag,xgene1,falkor,qdf24xx,exynosm1,phecda,thunderx2t99p1,vulcan,thunderx2t99,cortexa55,cortexa75,cortexa76,cortexa76ae,cortexa77,cortexa78,cortexa78ae,cortexa78c,cortexa65,cortexa65ae,cortexx1,cortexx1c,neoversen1,ares,neoversee1,octeontx2,octeontx2t98,octeontx2t96,octeontx2t93,octeontx2f95,octeontx2f95n,octeontx2f95mm,a64fx,tsv110,thunderx3t110,neoversev1,zeus,neoverse512tvb,saphira,cortexa57cortexa53,cortexa72cortexa53,cortexa73cortexa35,cortexa73cortexa53,cortexa75cortexa55,cortexa76cortexa55,cortexr82,cortexa510,cortexa710,cortexa715,cortexx2,cortexx3,neoversen2,cobalt100,neoversev2,demeter"
++	"cortexa34,cortexa35,cortexa53,cortexa57,cortexa72,cortexa73,thunderx,thunderxt88p1,thunderxt88,octeontx,octeontxt81,octeontxt83,thunderxt81,thunderxt83,ampere1,ampere1a,emag,xgene1,falkor,qdf24xx,exynosm1,phecda,thunderx2t99p1,vulcan,thunderx2t99,cortexa55,cortexa75,cortexa76,cortexa76ae,cortexa77,cortexa78,cortexa78ae,cortexa78c,cortexa65,cortexa65ae,cortexx1,cortexx1c,neoversen1,ares,neoversee1,octeontx2,octeontx2t98,octeontx2t96,octeontx2t93,octeontx2f95,octeontx2f95n,octeontx2f95mm,a64fx,tsv110,thunderx3t110,neoversev1,zeus,neoverse512tvb,saphira,oryon1,cortexa57cortexa53,cortexa72cortexa53,cortexa73cortexa35,cortexa73cortexa53,cortexa75cortexa55,cortexa76cortexa55,cortexr82,cortexa510,cortexa710,cortexa715,cortexx2,cortexx3,neoversen2,cobalt100,neoversev2,demeter"
+ 	(const (symbol_ref "((enum attr_tune) aarch64_tune)")))
+diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
+index 72b544b0b..4be525f77 100644
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -20323,6 +20323,7 @@ performance of the code.  Permissible values for this option are:
+ @samp{cortex-a65}, @samp{cortex-a65ae}, @samp{cortex-a34},
+ @samp{cortex-a78}, @samp{cortex-a78ae}, @samp{cortex-a78c},
+ @samp{ares}, @samp{exynos-m1}, @samp{emag}, @samp{falkor},
++@samp{oryon-1},
+ @samp{neoverse-512tvb}, @samp{neoverse-e1}, @samp{neoverse-n1},
+ @samp{neoverse-n2}, @samp{neoverse-v1}, @samp{neoverse-v2}, @samp{qdf24xx},
+ @samp{saphira}, @samp{phecda}, @samp{xgene1}, @samp{vulcan},
+-- 
+2.34.1
+
