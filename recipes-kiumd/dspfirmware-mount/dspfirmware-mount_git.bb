@@ -110,6 +110,9 @@ do_install:append:sa8797() {
     install -m 0755 ${S}/sa8797_cdsp2_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp2_cfg
     install -m 0755 ${S}/sa8797_cdsp3_cfg ${D}${sysconfdir}/sysconfig/sa8797_cdsp3_cfg
     install -m 0755 ${S}/sa8797_soccp_cfg ${D}${sysconfdir}/sysconfig/sa8797_soccp_cfg
+    install -m 0755 ${S}/sa8797_hpass0_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_compute_cfg
+    install -m 0755 ${S}/sa8797_hpass1_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_compute_cfg
+    install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
 }
 
 FILES:${PN}:append:sa8797 = " \
