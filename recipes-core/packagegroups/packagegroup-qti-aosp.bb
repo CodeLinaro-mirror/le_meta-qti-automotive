@@ -13,6 +13,5 @@ RDEPENDS:${PN} += "\
     system-core-leprop \
     system-core-post-boot \
     system-core-usb \
-    ${@bb.utils.contains("MACHINE_FEATURES", "qti-hypervisor", "", "system-core-early-boot", d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "qti-dlkm", "system-core-dlkm", "", d)} \
     "
