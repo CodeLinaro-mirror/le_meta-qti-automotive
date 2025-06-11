@@ -14,6 +14,6 @@ S = "${WORKDIR}/external/vhost-device"
 CARGO_SRC_DIR = "vhost-device-i2c"
 
 inherit cargo
-include vhost-device-i2c-crates.inc
+include vhost-device-crates.inc
 
 CARGO_BUILD_FLAGS:remove = "--frozen"

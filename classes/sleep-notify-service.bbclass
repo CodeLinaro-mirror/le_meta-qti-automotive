@@ -33,6 +33,13 @@
 
 DEPENDS:append:class-target = " power-utils"
 
+python __anonymous() {
+    # ensure packaging starts after sysroot gets populated, so sleep-notifiy@.service will not be included in the sysroot.
+    # It is to avoid the following error:
+    #     do_prepare_recipe_sysroot: The file /usr/lib/systemd/system/sleep-notify@.service is installed by both power-utils and xxxx, aborting
+    d.appendVarFlag('do_package', 'depends', " %s:do_populate_sysroot" %  d.getVar('PN', True))
+}
+
 add_sleep_notify_template_hack() {
     cp ${RECIPE_SYSROOT}/${systemd_system_unitdir}/sleep-notify@.service ${D}${systemd_system_unitdir}/sleep-notify@.service
 }

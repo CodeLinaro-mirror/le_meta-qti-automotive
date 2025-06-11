@@ -22,6 +22,7 @@ DEPENDS += "cairo \
             wayland wayland-native wayland-protocols \
             weston \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging power-utils', '', d)} \
+            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'compute-resmgr', '', d)} \
 "
 
 CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston-sdm-extension", "graphics/weston-sdm-extension", d)}"
@@ -50,6 +51,7 @@ TARGET_CPPFLAGS += "-fno-operator-names"
 
 PACKAGECONFIG ??= "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'pmsnservice', '', d)} \
                    ${@bb.utils.contains('DISTRO_FEATURES', 'early_init', 'early', '', d)} \
+                   ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'rt_schedule', '', d)} \
 "
 
 # early-init
@@ -66,6 +68,9 @@ do_install:append() {
 }
 
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'sleep-notify@weston.service', '', d)}"
+
+# rt_schedule
+PACKAGECONFIG[rt_schedule] = "-Denable-rt_schedule=true,-Denable-rt_schedule=false"
 
 FILES:${PN} += "\
     ${libdir}/libweston-${WESTON_MAJOR_VERSION}/* \

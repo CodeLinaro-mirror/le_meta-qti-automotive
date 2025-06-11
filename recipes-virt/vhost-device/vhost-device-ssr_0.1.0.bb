@@ -23,6 +23,6 @@ do_install:append() {
     install -m 0644 ${S}/vhost-device-ssr/vhost-device-ssr.service ${D}/${systemd_unitdir}/system/vhost-device-ssr.service
 }
 
-include vhost-device-ssr-crates.inc
+include vhost-device-crates.inc
 
 RUSTFLAGS += "-L${STAGING_LIBDIR} -l ssr-client"
