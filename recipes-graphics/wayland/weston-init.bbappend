@@ -29,6 +29,7 @@ do_install() {
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service
+        sed -i '/Environment/a\Slice=pvm.slice' ${D}${systemd_system_unitdir}/weston.service
     fi
     if [ "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}" ]; then
         install -D -p -m0644 ${WORKDIR}/weston-autologin ${D}${sysconfdir}/pam.d/weston-autologin
