@@ -26,13 +26,9 @@ inherit cargo systemd cargo-update-recipe-crates
 
 require ${BPN}-crates.inc
 
-CARGO_BUILD_FLAGS:remove = "--frozen"
-
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
-
-CARGO_DISABLE_BITBAKE_VENDORING = "1"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
