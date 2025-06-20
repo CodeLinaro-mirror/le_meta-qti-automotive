@@ -13,7 +13,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
-SYSTEMD_SERVICE:${PN}:gen5 = "firmware-qcom-sa8797p.automount firmware-qcom-sa8797p.mount"
+SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
 
 do_compile[noexec] = "1"
 
@@ -65,13 +65,14 @@ do_install:append() {
     if [ -f ${S}/99-persist-storage-ab.rules ]; then
         install -m 0644 ${S}/99-persist-storage-ab.rules -D ${D}${sysconfdir}/udev/rules.d/99-persist-storage-ab.rules
     fi
+
+    install -d -p ${D}${nonarch_base_libdir}/firmware/qcom
+
+    install -m 0644 ${S}/usr-lib-firmware-qcom.mount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.mount
+    install -m 0644 ${S}/usr-lib-firmware-qcom.automount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.automount
 }
 
 do_install:append:sa8775() {
-    install -d -p ${D}/firmware/qcom/sa8775p
-    install -m 0644 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.mount
-    ln -sf ${systemd_unitdir}/system/firmware-qcom-sa8775p.mount \
-        ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-qcom-sa8775p.mount
     install -d ${D}${sysconfdir}/sysconfig/
     install -m 0755 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
     install -m 0755 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
@@ -101,9 +102,6 @@ do_install:append:gen5() {
     install -d -p ${D}${systemd_unitdir}/system/multi-user.target.wants/
     install -d -p ${D}/firmware/qcom/sa8797p
 
-    install -m 0644 ${S}/firmware-qcom-sa8797p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.mount
-    install -m 0644 ${S}/firmware-qcom-sa8797p.automount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8797p.automount
-
     install -d ${D}${sysconfdir}/sysconfig/
     install -m 0755 ${S}/sa8797_hpass0_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_cfg
     install -m 0755 ${S}/sa8797_hpass1_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_cfg
@@ -118,13 +116,9 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
 }
 
-FILES:${PN}:append:gen5 = " \
-     ${systemd_unitdir}/system/firmware-qcom-sa8797p.mount \
-     ${systemd_unitdir}/system/firmware-qcom-sa8797p.automount \
-"
-
 FILES:${PN} += "${systemd_unitdir}/*"
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${libdir}/modules-load.d/*"
 FILES:${PN} += "/firmware/*"
 FILES:${PN} += "/vendor/*"
+FILES:${PN} += "${nonarch_base_libdir}/firmware/qcom"
