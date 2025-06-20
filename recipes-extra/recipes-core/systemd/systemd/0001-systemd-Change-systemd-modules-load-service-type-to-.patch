@@ -1,0 +1,31 @@
+From a4c958fe3f85d90511455e5e8d43c000785864c9 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Wed, 25 Jun 2025 17:14:33 +0800
+Subject: [PATCH] systemd: Change systemd-modules-load service type to simple
+
+To optimize boot time, modules loaded by systemd-modules-load are now loaded in early-ramdisk-init and
+modules-load-late service, change systemd-modules-load type to simple to avoid blocking other services.
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ units/systemd-modules-load.service.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/systemd-modules-load.service.in b/units/systemd-modules-load.service.in
+index ad262fa13a..ee4fd1aaeb 100644
+--- a/units/systemd-modules-load.service.in
++++ b/units/systemd-modules-load.service.in
+@@ -25,7 +25,7 @@ ConditionKernelCommandLine=|rd.modules-load
+ ConditionKernelCommandLine=|rd.modules_load
+ 
+ [Service]
+-Type=oneshot
++Type=simple
+ RemainAfterExit=yes
+ ExecStart={{LIBEXECDIR}}/systemd-modules-load
+ TimeoutSec=90s
+-- 
+2.34.1
+
