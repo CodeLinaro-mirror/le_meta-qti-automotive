@@ -33,6 +33,7 @@
 [Unit]
 Description=Memory Hotplug
 After=sysinit.target
+Before=usb.service
 
 [Service]
 Type=oneshot
