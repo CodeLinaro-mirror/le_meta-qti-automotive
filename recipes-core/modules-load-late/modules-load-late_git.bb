@@ -15,7 +15,11 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}"
 
-inherit systemd
+inherit systemd useradd
+
+USERADD_PACKAGES = "${PN}"
+GROUPADD_PARAM:${PN} = "modules-load"
+USERADD_PARAM:${PN} = "--no-create-home -g modules-load --shell /bin/false modules-load"
 
 do_install:append() {
     install -d ${D}${systemd_unitdir}
