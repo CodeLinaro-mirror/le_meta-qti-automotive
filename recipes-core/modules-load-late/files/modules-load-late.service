@@ -9,9 +9,13 @@ Conflicts=shutdown.target
 Before=shutdown.target
 
 [Service]
+User=modules-load
+Group=modules-load
+CapabilityBoundingSet=CAP_SYS_MODULE
+AmbientCapabilities=CAP_SYS_MODULE
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=modprobe tz_log
+ExecStart=modprobe -a tz_log aquantia marvell qcom_geni_serial
 
 [Install]
 WantedBy=multi-user.target
