@@ -37,26 +37,18 @@ do_install:append() {
 
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
         install -d -p ${D}/firmware/vm/boot
-        install -d -p ${D}/firmware/lvgvm/boot
 
         install -m 0644 ${S}/firmware-vm-boot.automount ${D}${systemd_unitdir}/system/firmware-vm-boot.automount
-        install -m 0644 ${S}/firmware-lvgvm-boot.automount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.automount
         install -m 0644 ${S}/firmware-vm-boot.mount ${D}${systemd_unitdir}/system/firmware-vm-boot.mount
-        install -m 0644 ${S}/firmware-lvgvm-boot.mount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
 
         if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
             sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot.mount
-            sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
         fi
 
         ln -sf ${systemd_unitdir}/system/firmware-vm-boot.automount \
             ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot.automount
-        ln -sf ${systemd_unitdir}/system/firmware-lvgvm-boot.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-lvgvm-boot.automount
         ln -sf ${systemd_unitdir}/system/firmware-vm-boot.mount \
             ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot.mount
-        ln -sf ${systemd_unitdir}/system/firmware-lvgvm-boot.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-lvgvm-boot.mount
     fi
 
     if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
@@ -75,23 +67,34 @@ do_install:append() {
     fi
 }
 
-do_install:append:sa8775:sa7255() {
+do_install:append:sa8775() {
     install -d -p ${D}/firmware/qcom/sa8775p
-
     install -m 0644 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.mount
-    install -m 0644 ${S}/firmware-qcom-sa8775p.mount -D ${D}${systemd_unitdir}/system/firmware-qcom-sa8775p.automount
-
     ln -sf ${systemd_unitdir}/system/firmware-qcom-sa8775p.mount \
         ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-qcom-sa8775p.mount
-
-    ln -sf ${systemd_unitdir}/system/firmware-qcom-sa8775p.mount \
-        ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-qcom-sa8775p.automount
     install -d ${D}${sysconfdir}/sysconfig/
     install -m 0755 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
     install -m 0755 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
     install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
     install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
     install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
+}
+
+do_install:append:sa8255-ivi() {
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
+        install -d -p ${D}/firmware/lvgvm/boot
+        install -m 0777 ${S}/firmware-lvgvm-boot.automount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.automount
+        install -m 0777 ${S}/firmware-lvgvm-boot.mount ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
+
+        if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+            sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-lvgvm-boot.mount
+        fi
+
+        ln -sf ${systemd_unitdir}/system/firmware-lvgvm-boot.automount \
+            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-lvgvm-boot.automount
+        ln -sf ${systemd_unitdir}/system/firmware-lvgvm-boot.mount \
+            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-lvgvm-boot.mount
+    fi
 }
 
 do_install:append:sa8797() {
