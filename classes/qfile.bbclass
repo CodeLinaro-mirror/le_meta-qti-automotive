@@ -76,7 +76,9 @@ python __anonymous(){
                           "SRCREV_dspkernel",
                           "SRCREV_platformkernel",
                           "SRCREV_qadlibs-x",
-                          "SRCREV_qadlibs-x-noship"]
+                          "SRCREV_qadlibs-x-noship",
+                          "SRCREV_sm",
+                          "SRCREV_sm-compresmgr-client"]
 
     if need_change:
         d.prependVar("FILESPATH", "${SRC_DIR_ROOT}/:")
