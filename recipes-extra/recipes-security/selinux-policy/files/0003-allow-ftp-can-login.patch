@@ -1,0 +1,60 @@
+This patch file is from  Qualcomm Technologies, Inc. and is provided
+under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 96bd85ed4e773c26e8039dfd6d8971e78341687f Mon Sep 17 00:00:00 2001
+From: Kai Meng <kmeng@qti.qualcomm.com>
+Date: Tue, 1 Jul 2025 16:16:57 +0800
+Subject: [PATCH] allow ftp can login
+
+ftp can't login under enforcing caused by below denials:
+type=AVC msg=audit(1728487216.835:297): avc:  denied  { getattr } for
+pid=7939 comm="proftpd" path="/home" dev="sda12" ino=2
+scontext=system_u:system_r:ftpd_t:s0
+tcontext=system_u:object_r:default_t:s0 tclass=dir permissive=0
+type=AVC msg=audit(1728487236.771:305): avc:  denied  { getattr } for
+pid=8718 comm="proftpd" path="/var/volatile/log/xferlog" dev="tmpfs"
+ino=64 scontext=system_u:system_r:ftpd_t:s0
+tcontext=system_u:object_r:var_t:s0 tclass=file permissive=1
+type=AVC msg=audit(1728487236.771:304): avc:  denied  { write } for
+pid=8718 comm="proftpd" name="log" dev="tmpfs" ino=2
+scontext=system_u:system_r:ftpd_t:s0 tcontext=system_u:object_r:var_t:s0
+tclass=dir permissive=1
+type=AVC msg=audit(1728487236.771:304): avc:  denied  { add_name } for
+pid=8718 comm="proftpd" name="xferlog"
+scontext=system_u:system_r:ftpd_t:s0 tcontext=system_u:object_r:var_t:s0
+tclass=dir permissive=1
+type=AVC msg=audit(1728487236.771:304): avc:  denied  { create } for
+pid=8718 comm="proftpd" name="xferlog"
+scontext=system_u:system_r:ftpd_t:s0 tcontext=system_u:object_r:var_t:s0
+tclass=file permissive=1
+type=AVC msg=audit(1728487236.771:304): avc:  denied  { append open }
+for  pid=8718 comm="proftpd" path="/var/volatile/log/xferlog"
+dev="tmpfs" ino=64 scontext=system_u:system_r:ftpd_t:s0
+tcontext=system_u:object_r:var_t:s0 tclass=file permissive=1
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Kai Meng <kmeng@qti.qualcomm.com>
+---
+ policy/modules/services/ftp.te | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/policy/modules/services/ftp.te b/policy/modules/services/ftp.te
+index 510532d04..918681563 100644
+--- a/policy/modules/services/ftp.te
++++ b/policy/modules/services/ftp.te
+@@ -22,7 +22,7 @@ gen_tunable(allow_ftpd_anon_write, false)
+ ##	all files on the system, governed by DAC.
+ ##	</p>
+ ## </desc>
+-gen_tunable(allow_ftpd_full_access, false)
++gen_tunable(allow_ftpd_full_access, true)
+ 
+ ## <desc>
+ ##	<p>
+-- 
+2.34.1
+

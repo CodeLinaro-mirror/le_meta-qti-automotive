@@ -15,6 +15,7 @@ SRC_URI += "file://customizable_types  \
             file://setrans-mcs.conf  \
             file://0001-Make-unconfined_u-the-default-selinux-user.patch \
             file://0002-policy-modules-roles-sysadm-allow-sysadm-to-use-init.patch \
+            file://0003-allow-ftp-can-login.patch \
 "
 
 SRCREV_refpolicy = "429b26878be53e0b3537771a98e240e6e383ee73"
