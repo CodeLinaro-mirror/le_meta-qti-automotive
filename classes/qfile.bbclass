@@ -92,3 +92,7 @@ python __anonymous(){
         for rev in extra_srcrev_lists:
             d.setVar(rev, "")
 }
+
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/vendor/qcom/proprietary"
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/vendor/qcom/opensource"
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/system/core"
