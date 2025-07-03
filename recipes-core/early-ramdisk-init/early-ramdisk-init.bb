@@ -18,6 +18,9 @@ CFLAGS += '-DLOG_DIR=\\"/boot/early-ramdisk\\"'
 CFLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'early_init', '-DEARLY_INIT', '', d)}"
 CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE', '', d)}"
 CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DMM_VFIO_BIND_DEVICE', '', d)}"
+CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVENDOR_DSP_MOUNT', '', d)}"
+CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DFIRMWARE_MOUNT', '', d)}"
+CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DPRELOAD_UNIT', '', d)}"
 
 TARGET_PATH_NAME ?= "${MACHINE}"
 TARGET_PATH_NAME:sa8775 = "sa8775"
