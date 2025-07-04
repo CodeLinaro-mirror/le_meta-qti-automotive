@@ -15,7 +15,7 @@ S = "${WORKDIR}/git/cntvct-log"
 
 inherit meson systemd
 
-SYSTEMD_SERVICE:${PN} = "cntvct@local-fs.service"
+SYSTEMD_SERVICE:${PN} = "cntvct@multi-user.service"
 
 do_install:append() {
     install -D -m 0644 ${S}/usr/lib/systemd/system/cntvct@.service ${D}${systemd_system_unitdir}/cntvct@.service
