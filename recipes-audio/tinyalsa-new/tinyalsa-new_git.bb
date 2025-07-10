@@ -11,6 +11,8 @@ SRC_URI = "\
     file://0001-Enable-TinyAlsa-plugin-support.patch \
     file://0001-Call-pcm_start-for-capture-case-in-NON-MMAP-mode.patch \
     file://0001-add-tinyhostless-for-tinyalsa-new.patch \
+    file://0001-utils-tinycap-support-8bits-record.patch \
+    file://0001-utils-tinyplay-check-fopen-return-value-to-prevent-s.patch \
 "
 
 SRCREV = "f78ed25aced2dfea743867b8205a787bfb091340"
