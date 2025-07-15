@@ -1,0 +1,9 @@
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+proc                 /proc           proc      defaults              0  0
+devpts               /dev/pts        devpts    mode=0620,gid=5       0  0
+usbdevfs             /proc/bus/usb   usbdevfs  noauto                0  0
+tmpfs                /run            tmpfs     mode=0755,nodev,nosuid,strictatime  0  0
+tmpfs                /var/volatile   tmpfs     defaults              0  0
+tmpfs                /media/ram      tmpfs     defaults,noauto       0  0
