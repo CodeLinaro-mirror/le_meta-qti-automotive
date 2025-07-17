@@ -50,7 +50,7 @@ do_rootfs:append() {
 }
 
 fakeroot do_image_clean() {
-   rm -rf ${IMAGE_ROOTFS}/boot/*
+   rm -rf ${IMAGE_ROOTFS}/boot/Image*
 }
 
 # Do not pollute the initrd image with rootfs features
