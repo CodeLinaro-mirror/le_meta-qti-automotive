@@ -1,0 +1,52 @@
+From b720dd1d1f4a14b12f3fff4517e189a9a891b760 Mon Sep 17 00:00:00 2001
+From: pengy <pengy@qti.qualcomm.com>
+Date: Thu, 17 Jul 2025 14:05:29 +0800
+Subject: [PATCH] systemd: Remove systemd watchdog ping condition
+
+In high IO case, systemd dispatch work may not be done in
+watchdog_timeout * 3/4, always ping watchdog unconditionally
+
+Upstream-Status: Inappropriate [Qcom default wdt is 10s]
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+---
+ src/shared/watchdog.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/shared/watchdog.c b/src/shared/watchdog.c
+index 99ccefb227..6938fb848c 100644
+--- a/src/shared/watchdog.c
++++ b/src/shared/watchdog.c
+@@ -451,7 +451,9 @@ usec_t watchdog_runtime_wait(void) {
+ }
+ 
+ int watchdog_ping(void) {
++#if 0
+         usec_t ntime, timeout;
++#endif
+ 
+         if (watchdog_timeout == 0)
+                 return 0;
+@@ -460,16 +462,20 @@ int watchdog_ping(void) {
+                 /* open_watchdog() will automatically ping the device for us if necessary */
+                 return open_watchdog();
+ 
++#if 0
+         ntime = now(CLOCK_BOOTTIME);
+         timeout = calc_timeout();
+ 
+         /* Never ping earlier than watchdog_timeout/4 and try to ping
+          * by watchdog_timeout/2 plus scheduling latencies at the latest */
++        /* In high IO case, systemd dispatch work may not be done in
++         * watchdog_timeout * 3/4, always ping watchdog unconditionally */
+         if (timestamp_is_set(watchdog_last_ping)) {
+                 assert(ntime >= watchdog_last_ping);
+                 if ((ntime - watchdog_last_ping) < (timeout / 4))
+                         return 0;
+         }
++#endif
+ 
+         return watchdog_ping_now();
+ }
+-- 
+2.34.1
+

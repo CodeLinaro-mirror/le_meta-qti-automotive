@@ -1,0 +1,31 @@
+From 0ec6a16c63f41253d7a90414736963668d341f4a Mon Sep 17 00:00:00 2001
+From: Lei wang <leiwan@qti.qualcomm.com>
+Date: Tue, 8 Apr 2025 13:22:43 +0800
+Subject: [PATCH] systemd: shutdown: shorten file-sync timeout
+
+Qcom wdt max timeout is 30sec, Need to shorten file-sync timeout
+to 15sec
+
+Upstream-Status: Inappropriate [Qcom wdt timeout limitation]
+
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+---
+ src/shutdown/shutdown.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shutdown/shutdown.c b/src/shutdown/shutdown.c
+index 7ad9930677..eeb1c81491 100644
+--- a/src/shutdown/shutdown.c
++++ b/src/shutdown/shutdown.c
+@@ -40,7 +40,7 @@
+ #include "watchdog.h"
+ 
+ #define SYNC_PROGRESS_ATTEMPTS 3
+-#define SYNC_TIMEOUT_USEC (10*USEC_PER_SEC)
++#define SYNC_TIMEOUT_USEC (5*USEC_PER_SEC)
+ 
+ static char* arg_verb;
+ static uint8_t arg_exit_code;
+-- 
+2.34.1
+
