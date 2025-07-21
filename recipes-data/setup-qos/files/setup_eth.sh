@@ -48,6 +48,7 @@ then
 	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
 	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id0 vlan_prio $pcp0_value0 action skbedit priority $skb0_priority0
 	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id0 vlan_prio $pcp1_value0 action skbedit priority $skb1_priority0
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id0 vlan_prio $pcp2_value0 action skbedit priority $skb2_priority0
 	if [ $q2_idle_slope0 -ne 0 ] && [ $q2_send_slope0 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q2_cbs_handle0 parent $mqprio_handle0:3 cbs idleslope $q2_idle_slope0 sendslope $q2_send_slope0 hicredit $q2_hicredit0 locredit $q2_locredit0 offload 1
@@ -63,6 +64,10 @@ then
 	if [ $q5_idle_slope0 -ne 0 ] && [ $q5_send_slope0 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q5_cbs_handle0 parent $mqprio_handle0:6 cbs idleslope $q5_idle_slope0 sendslope $q5_send_slope0 hicredit $q5_hicredit0 locredit $q5_locredit0 offload 1
+	fi
+	if [ $q6_idle_slope0 -ne 0 ] && [ $q6_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $q6_cbs_handle0 parent $mqprio_handle0:7 cbs idleslope $q6_idle_slope0 sendslope $q6_send_slope0 hicredit $q6_hicredit0 locredit $q6_locredit0 offload 1
 	fi
 	if [ "$tbs_enabled0" -eq 1 ];
 	then
@@ -102,6 +107,7 @@ then
 	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
 	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id1 vlan_prio $pcp0_value1 action skbedit priority $skb0_priority1
 	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id1 vlan_prio $pcp1_value1 action skbedit priority $skb1_priority1
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id1 vlan_prio $pcp2_value1 action skbedit priority $skb2_priority1
 	if [ $q2_idle_slope1 -ne 0 ] && [ $q2_send_slope1 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q2_cbs_handle1 parent $mqprio_handle1:3 cbs idleslope $q2_idle_slope1 sendslope $q2_send_slope1 hicredit $q2_hicredit1 locredit $q2_locredit1 offload 1
@@ -117,6 +123,10 @@ then
 	if [ $q5_idle_slope1 -ne 0 ] && [ $q5_send_slope1 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q5_cbs_handle1 parent $mqprio_handle1:6 cbs idleslope $q5_idle_slope1 sendslope $q5_send_slope1 hicredit $q5_hicredit1 locredit $q5_locredit1 offload 1
+	fi
+	if [ $q6_idle_slope1 -ne 0 ] && [ $q6_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $q6_cbs_handle1 parent $mqprio_handle1:7 cbs idleslope $q6_idle_slope1 sendslope $q6_send_slope1 hicredit $q6_hicredit1 locredit $q6_locredit1 offload 1
 	fi
 	if [ "$tbs_enabled1" -eq 1 ];
 	then
