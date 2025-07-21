@@ -22,13 +22,12 @@ do_install() {
     fi
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
         sed -i 's/dev-dri-card0.device/openwfd_server_@0.service kgsl@0.service/g' ${D}${systemd_system_unitdir}/weston.service
-        sed -i '/PAMName/d' ${D}${systemd_system_unitdir}/weston.service
-        sed -i '/TTYPath/d' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service
+        sed -i '/Environment/a\Slice=pvm.slice' ${D}${systemd_system_unitdir}/weston.service
     fi
     if [ "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}" ]; then
         install -D -p -m0644 ${WORKDIR}/weston-autologin ${D}${sysconfdir}/pam.d/weston-autologin

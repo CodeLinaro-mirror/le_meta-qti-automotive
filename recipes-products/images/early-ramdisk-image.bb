@@ -23,6 +23,7 @@ IMAGE_INSTALL = "\
     early-ramdisk-init libgcc kmod util-linux-libblkid \
     ${EARLY_RAMDISK_KERNEL_MODULES} \
 "
+do_rootfs[depends] += "virtual/kernel:do_shared_workdir"
 
 python do_rootfs:prepend() {
     import re
@@ -49,7 +50,7 @@ do_rootfs:append() {
 }
 
 fakeroot do_image_clean() {
-   rm -rf ${IMAGE_ROOTFS}/boot/*
+   rm -rf ${IMAGE_ROOTFS}/boot/Image*
 }
 
 # Do not pollute the initrd image with rootfs features

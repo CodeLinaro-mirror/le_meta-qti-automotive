@@ -14,6 +14,13 @@ SYSTEMD_SERVICE:${PN} = "\
     vhost-user-vnw.service \
     vhost-user-ext.service \
     vhost-user-gpce.service \
+    vhost-user-soccp.service \
+    vhost-user-dprx.service \
+    vhost-user-eva.service \
+"
+
+# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
+SYSTEMD_SERVICE:${PN}:append:sa8797-multi = "\
     vhost-user-disp-vm3.service \
     vhost-user-gpu-vm3.service \
     vhost-user-misc-vm3.service \
@@ -23,6 +30,9 @@ SYSTEMD_SERVICE:${PN} = "\
     vhost-user-vnw-vm3.service \
     vhost-user-ext-vm3.service \
     vhost-user-gpce-vm3.service \
+    vhost-user-soccp-vm3.service \
+    vhost-user-dprx-vm3.service \
+    vhost-user-eva-vm3.service \
 "
 
 DEPENDS += "virtual/kernel-headers"
@@ -54,6 +64,13 @@ do_install:append() {
     install -m 0644 ${S}/vhost-user-vnw.service -D ${D}${systemd_unitdir}/system/vhost-user-vnw.service
     install -m 0644 ${S}/vhost-user-ext.service -D ${D}${systemd_unitdir}/system/vhost-user-ext.service
     install -m 0644 ${S}/vhost-user-gpce.service -D ${D}${systemd_unitdir}/system/vhost-user-gpce.service
+    install -m 0644 ${S}/vhost-user-soccp.service -D ${D}${systemd_unitdir}/system/vhost-user-soccp.service
+    install -m 0644 ${S}/vhost-user-dprx.service -D ${D}${systemd_unitdir}/system/vhost-user-dprx.service
+    install -m 0644 ${S}/vhost-user-eva.service -D ${D}${systemd_unitdir}/system/vhost-user-eva.service
+}
+
+# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
+do_install:append:sa8797-multi() {
     install -m 0644 ${S}/vhost-user-disp-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-disp-vm3.service
     install -m 0644 ${S}/vhost-user-gpu-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-gpu-vm3.service
     install -m 0644 ${S}/vhost-user-misc-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-misc-vm3.service
@@ -63,4 +80,7 @@ do_install:append() {
     install -m 0644 ${S}/vhost-user-vnw-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-vnw-vm3.service
     install -m 0644 ${S}/vhost-user-ext-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-ext-vm3.service
     install -m 0644 ${S}/vhost-user-gpce-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-gpce-vm3.service
+    install -m 0644 ${S}/vhost-user-soccp-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-soccp-vm3.service
+    install -m 0644 ${S}/vhost-user-dprx-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-dprx-vm3.service
+    install -m 0644 ${S}/vhost-user-eva-vm3.service -D ${D}${systemd_unitdir}/system/vhost-user-eva-vm3.service
 }

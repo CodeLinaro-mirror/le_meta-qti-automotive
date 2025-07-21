@@ -76,7 +76,9 @@ python __anonymous(){
                           "SRCREV_dspkernel",
                           "SRCREV_platformkernel",
                           "SRCREV_qadlibs-x",
-                          "SRCREV_qadlibs-x-noship"]
+                          "SRCREV_qadlibs-x-noship",
+                          "SRCREV_sm",
+                          "SRCREV_sm-compresmgr-client"]
 
     if need_change:
         d.prependVar("FILESPATH", "${SRC_DIR_ROOT}/:")
@@ -90,3 +92,7 @@ python __anonymous(){
         for rev in extra_srcrev_lists:
             d.setVar(rev, "")
 }
+
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/vendor/qcom/proprietary"
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/vendor/qcom/opensource"
+PSEUDO_IGNORE_PATHS .= ",${WORKDIR}/system/core"
