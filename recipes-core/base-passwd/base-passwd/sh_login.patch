@@ -1,0 +1,27 @@
+From a28038b971f921150903e89c037fc0a1eb5f2af2 Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Wed, 2 Jul 2025 11:32:45 +0800
+Subject: [PATCH] base-passwd: Add sh_login as the default shell for root
+
+sh in busybox not support login shell, use wrapper script instead.
+
+Upstream-Status: Inappropriate
+Change-Id: a28038b971f921150903e89c037fc0a1eb5f2af2
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+---
+ passwd.master | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/passwd.master b/passwd.master
+index 66e9033..02a8930 100644
+--- a/passwd.master
++++ b/passwd.master
+@@ -1,4 +1,4 @@
+-root::0:0:root:/root:/bin/sh
++root::0:0:root:/root:/bin/sh_login
+ daemon:*:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+ bin:*:2:2:bin:/bin:/usr/sbin/nologin
+ sys:*:3:3:sys:/dev:/usr/sbin/nologin
+-- 
+2.34.1
+

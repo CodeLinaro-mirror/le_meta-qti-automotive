@@ -3,6 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}-${PV}:"
 DEPENDS += "base-passwd"
 
 SRC_URI:append = " file://fstab"
+SRC_URI:append = " file://sh_login"
 
 dirs755:append = " \
     /media/cf /media/net /media/ram \
@@ -34,4 +35,6 @@ do_install:append(){
         sed -i "/^\${localstatedir}/d" ${D}${sysconfdir}/fstab
     fi
 
+    # Install login wrapper to enable user login for busybox sh
+    install -m 0755 ${WORKDIR}/sh_login ${D}${base_bindir}/sh_login
 }
