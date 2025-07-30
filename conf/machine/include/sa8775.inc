@@ -78,6 +78,23 @@ MACHINE_FEATURES += "\
     qti-compute-platform \
 "
 
+MACHINE_FEATURES:remove = "\
+    qti-multimedia \
+    qti-display \
+    qti-graphics \
+    qti-audio \
+    qti-vmm \
+    qti-camera \
+    qti-safety \
+    qti-data \
+    qti-vnw \
+    early-ramdisk-init \
+    qti-security \
+    qti-umd \
+    qti-gunyah \
+    qti-compute-platform \
+"
+
 MACHINE_FEATURES:append = "\
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-bluetooth', '', d)} \
 "

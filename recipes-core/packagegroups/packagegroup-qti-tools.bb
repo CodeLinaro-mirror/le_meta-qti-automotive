@@ -25,6 +25,8 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'cntvct-log', '', d)} \
     "
 
+RDEPENDS:${PN}:remove:sa8775 = "lttng-modules lttng-tools lttng-ust"
+
 # systemd-analyze is included in ubuntu's systemd package
 # systemd-bootchart does not build properly for ubuntu yet
 RDEPENDS:${PN}:remove = "${@bb.utils.contains('TCMODE', 'external-ubuntu', 'systemd-analyze systemd-bootchart', '', d)}"
