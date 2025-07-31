@@ -115,3 +115,87 @@ merge_dtbos_single () {
         fi
     done
 }
+
+merge_ddr_dtbos_single () {
+    dtb_dir=$1
+    dtbo_dir=$2
+    out_dir=$3
+    declare -a ddr_sizes=("64gb" "48gb" "36gb" "32gb" "24gb" "16gb" "12gb" "8gb")
+    declare -a ddr_type=("0x700" "0x600" "0x500" "0x500" "0x400" "0x300" "0x200" "0x100")
+
+    dtb_files=$(find $dtb_dir -name "*.dtb")
+    dtbo_files=$(find $dtbo_dir -name "*.dtbo")
+    if [ -z "$dtb_files" ]; then
+        echo "ERR : Base DTB files NOT found"
+        exit 1
+    fi
+
+    if [ -z "$dtbo_files" ]; then
+        echo "WARN: Overlay DTB files not found"
+        cp $dtb_dir/* $out_dir
+        return 0
+    fi
+
+    for dtb_file in $dtb_files; do
+        for dtbo_file in $dtbo_files; do
+            dtbo_string=$(basename $dtbo_file)
+            prefix2=$(echo "$dtbo_string" | sed -e 's/-.*//')
+            dtbo_string=$(echo "$dtbo_string" | sed -e 's/\.[^.]*$//')
+            input_dtb=$(basename "$dtb_file")
+            prefix1=$(echo "$input_dtb" | sed -e 's/-.*//')
+
+            if [ "$prefix1" != "$prefix2" ]; then
+                cp $dtb_file $out_dir
+                continue
+            fi
+
+            # Extract a suffix from the input DTB filename by:
+            # 1. Removing the base name up to the first '-' or '_' character.
+            # 2. Removing any 'overlay' tokens surrounded by '-', '_', or nothing.
+            # 3. Stripping the file extension.
+            # Example:
+            #   input_dtb="sa8775p-sw-eth-phy_overlay-overlay.dtb"
+            #   Resulting suffix="sw-eth-phy"
+
+            suffix=$(echo $input_dtb | sed -n 's/^[^\(-\|_\)]*[\(-\|_\)]\(.*\)/\1/p' \
+                     | sed 's/\(-\|_\|\)overlay\(-\|_\|\)//g' | sed 's/\..*//')
+            if [ -z "$suffix" ]; then
+                out_dtb=${dtbo_string}.dtb
+            else
+                out_dtb=${dtbo_string}-${suffix}.dtb
+            fi
+
+            for i in "${!ddr_sizes[@]}"; do
+               if [[ "$dtbo_file" == *"${ddr_sizes[$i]}"* ]]; then
+                  subtype="${ddr_type[$i]}"
+                  break
+               fi
+            done
+
+            fdtoverlay -i $dtb_file -o ${out_dir}/${out_dtb} -v $dtbo_file
+            #get board-id from dtb files and replace with updated value
+            #OR operation of board id subtype and ddr type is performed.
+            board_id=$(fdtget -t x ${out_dir}/${out_dtb} / qcom,board-id )
+            updated_bid=$(echo "$board_id" | awk -v mask_hex="$subtype" '
+            BEGIN {
+                mask = strtonum(mask_hex)
+            }
+            {
+                for (i = 1; i <= NF; i++) {
+                    val = strtonum("0x" $i)
+                    if (i % 2 == 0) {
+                        val = or(val, mask)
+                    }
+                    printf "0x%X ", val
+                }
+            }')
+
+            # execute the command in verbose mode(-v)
+            fdtput -t x  ${out_dir}/${out_dtb} / qcom,board-id $updated_bid
+            #exit in case of failure
+            if [ $? -ne 0 ]; then
+                exit 1
+            fi
+        done
+    done
+}
