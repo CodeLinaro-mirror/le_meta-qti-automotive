@@ -1,7 +1,4 @@
-SRC_URI:remove = "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-${PV}.tar.xz"
-SRC_URI:append = " ${PATH_TO_REPO}/gstreamer/gstreamer/.git;protocol=${PROTO};destsuffix=gstreamer/gstreamer;usehead=1"
-
-SRCREV = "${AUTOREV}"
-
-S = "${WORKDIR}/gstreamer/gstreamer/subprojects/gst-plugins-bad"
-
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/1.22.12:"
+SRC_URI:append = " file://0001-gstwaylandsink-add-P010_10LE-support-statement.patch \
+                   file://0002-waylandsink-add-ubwc-modifier-and-zwp_linux_dmabuf_v.patch \
+                 "

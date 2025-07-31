@@ -1,0 +1,273 @@
+From 38d3f634f1efa6791739daf43a900cbd7f7151c6 Mon Sep 17 00:00:00 2001
+From: Lily Li <lali@qti.qualcomm.com>
+Date: Mon, 15 Jul 2024 15:28:17 +0800
+Subject: [PATCH 2/2] waylandsink: add ubwc modifier and zwp_linux_dmabuf_v1
+ version3 support
+
+To support UBWC, must upgrade zwp_linux_dmabuf_v1 from ver1 to ver3.
+Then, dmabuf protocol could contain modifier information. UBWC and
+other information, like security, could be transmitted from wayland
+client to wayland server through this modifier channel.
+
+To interact with upstream plugin, introduced "compression" field in
+caps. This "compression" could be "linear" or "ubwc", based on
+wayland server reported modifier capability.
+
+Added NV12_10LE32 UBWC format support, it also named as Q12A or TP10.
+HW decoder won't output NV12_10LE32 linear.
+
+Upstream-Status: Pending
+
+Signed-off-by: Lily Li <lali@qti.qualcomm.com>
+Change-Id: Iaca2151570c57bf1c1118fee6b56c48e559005f6
+(cherry picked from commit 0a8b6364b7ab4d59bed42c441c499a134ebbdd7c)
+---
+ .../ext/wayland/gstwaylandsink.c              | 32 +++++++++++++++++-
+ .../ext/wayland/gstwaylandsink.h              |  1 +
+ .../gst-libs/gst/wayland/gstwldisplay.c       | 33 ++++++++++++++++++-
+ .../gst-libs/gst/wayland/gstwldisplay.h       |  3 ++
+ .../gst-libs/gst/wayland/gstwllinuxdmabuf.c   | 10 +++++-
+ .../gst-libs/gst/wayland/gstwlvideoformat.c   |  1 +
+ 6 files changed, 77 insertions(+), 3 deletions(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index de970dc922..915ba669c6 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -58,6 +58,7 @@ enum
+ enum
+ {
+   PROP_0,
++  PROP_DISABLE_UBWC,
+   PROP_DISPLAY,
+   PROP_FULLSCREEN,
+   PROP_ROTATE_METHOD,
+@@ -70,7 +71,7 @@ GST_DEBUG_CATEGORY (gstwayland_debug);
+ #define WL_VIDEO_FORMATS \
+     "{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, " \
+     "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, NV61, " \
+-    "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308, P010_10LE }"
++    "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308, P010_10LE, NV12_10LE32 }"
+ 
+ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+     GST_PAD_SINK,
+@@ -160,6 +161,11 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
+           "display name to connect to, if not supplied via the GstContext",
+           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+ 
++  g_object_class_install_property (gobject_class, PROP_DISABLE_UBWC,
++      g_param_spec_boolean ("disable-ubwc", "Disable UBWC",
++          "Disable UBWC in the video sink", FALSE,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++
+   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+       g_param_spec_boolean ("fullscreen", "Fullscreen",
+           "Whether the surface should be made fullscreen ", FALSE,
+@@ -256,6 +262,11 @@ gst_wayland_sink_get_property (GObject * object,
+       g_value_set_string (value, self->display_name);
+       GST_OBJECT_UNLOCK (self);
+       break;
++    case PROP_DISABLE_UBWC:
++      GST_OBJECT_LOCK (self);
++      g_value_set_boolean (value, self->disable_ubwc);
++      GST_OBJECT_UNLOCK (self);
++      break;
+     case PROP_FULLSCREEN:
+       GST_OBJECT_LOCK (self);
+       g_value_set_boolean (value, self->fullscreen);
+@@ -284,6 +295,11 @@ gst_wayland_sink_set_property (GObject * object,
+       self->display_name = g_value_dup_string (value);
+       GST_OBJECT_UNLOCK (self);
+       break;
++    case PROP_DISABLE_UBWC:
++      GST_OBJECT_LOCK (self);
++      self->disable_ubwc = g_value_get_boolean (value);
++      GST_OBJECT_UNLOCK (self);
++      break;
+     case PROP_FULLSCREEN:
+       GST_OBJECT_LOCK (self);
+       gst_wayland_sink_set_fullscreen (self, g_value_get_boolean (value));
+@@ -527,6 +543,8 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+     gint i;
+     guint fmt;
+     GstVideoFormat gfmt;
++    GValue compression_list = G_VALUE_INIT;
++    g_value_init (&compression_list, GST_TYPE_LIST);
+ 
+     g_value_init (&shm_list, GST_TYPE_LIST);
+     g_value_init (&dmabuf_list, GST_TYPE_LIST);
+@@ -561,6 +579,18 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
+     gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
+         &dmabuf_list);
+ 
++    /* Add compression in caps */
++    g_value_init (&value, G_TYPE_STRING);
++    g_value_set_static_string (&value, "linear");
++    gst_value_list_append_and_take_value (&compression_list, &value);
++    if (!self->disable_ubwc && (gst_wl_display_get_server_modifier_caps(self->display) & 0x3))  {
++      g_value_init (&value, G_TYPE_STRING);
++      g_value_set_static_string (&value, "ubwc");
++      gst_value_list_append_and_take_value (&compression_list, &value);
++    }
++
++    gst_structure_take_value (gst_caps_get_structure (caps, 1), "compression", &compression_list);
++
+     GST_DEBUG_OBJECT (self, "display caps: %" GST_PTR_FORMAT, caps);
+   }
+ 
+diff --git a/ext/wayland/gstwaylandsink.h b/ext/wayland/gstwaylandsink.h
+index 3243d8cd8f..39304d04df 100644
+--- a/ext/wayland/gstwaylandsink.h
++++ b/ext/wayland/gstwaylandsink.h
+@@ -58,6 +58,7 @@ struct _GstWaylandSink
+   gboolean fullscreen;
+ 
+   gchar *display_name;
++  gboolean disable_ubwc;
+ 
+   gboolean redraw_pending;
+   GMutex render_lock;
+diff --git a/gst-libs/gst/wayland/gstwldisplay.c b/gst-libs/gst/wayland/gstwldisplay.c
+index 1f83cb24b7..c7d8e477aa 100644
+--- a/gst-libs/gst/wayland/gstwldisplay.c
++++ b/gst-libs/gst/wayland/gstwldisplay.c
+@@ -30,6 +30,7 @@
+ #include "xdg-shell-client-protocol.h"
+ 
+ #include <errno.h>
++#include <drm_fourcc.h>
+ 
+ #define GST_CAT_DEFAULT gst_wl_display_debug
+ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+@@ -52,6 +53,7 @@ typedef struct _GstWlDisplayPrivate
+   struct zwp_linux_dmabuf_v1 *dmabuf;
+   GArray *shm_formats;
+   GArray *dmabuf_formats;
++  guint64 server_modifier_caps;
+ 
+   /* private */
+   gboolean own_display;
+@@ -189,8 +191,30 @@ dmabuf_format (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+     g_array_append_val (priv->dmabuf_formats, format);
+ }
+ 
++static void
++dmabuf_modifier(void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf_v1, uint32_t format, uint32_t modifier_hi, uint32_t modifier_lo)
++{
++  GstWlDisplay *self = data;
++  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
++  guint64 modifier = ((uint64_t) modifier_hi << 32) | modifier_lo;
++  if (modifier == DRM_FORMAT_MOD_QCOM_COMPRESSED) {
++    if (format == DRM_FORMAT_NV12) {
++      priv->server_modifier_caps |= 1;
++    }else if (format == GST_MAKE_FOURCC('Q','1','2','A')) {
++      priv->server_modifier_caps |= 2;
++    }
++  }
++  GST_INFO("wayland server report fmt 0x%x(%"GST_FOURCC_FORMAT") modifier 0x%llx, s-m-caps set to 0x%llx", format, GST_FOURCC_ARGS(format), (unsigned long long)modifier, (unsigned long long)priv->server_modifier_caps);
++
++  if (gst_wl_dmabuf_format_to_video_format (format) != GST_VIDEO_FORMAT_UNKNOWN) {
++    //As same format probably has multiple modifiers and server probably report duplicated fmt+modifier, there are repeated formats added into dmabuf_formats. It seems no problem, as gst caps negotiation could handle such repeated caps.
++    g_array_append_val (priv->dmabuf_formats, format);
++  }
++}
++
+ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+   dmabuf_format,
++  dmabuf_modifier,
+ };
+ 
+ gboolean
+@@ -277,7 +301,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
+         wl_registry_bind (registry, id, &wp_viewporter_interface, 1);
+   } else if (g_strcmp0 (interface, "zwp_linux_dmabuf_v1") == 0) {
+     priv->dmabuf =
+-        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 1);
++        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, version >= 3 ? 3 : 1);
+     zwp_linux_dmabuf_v1_add_listener (priv->dmabuf, &dmabuf_listener, self);
+   }
+ }
+@@ -565,3 +589,10 @@ gst_wl_display_has_own_display (GstWlDisplay * self)
+ 
+   return priv->own_display;
+ }
++
++guint64 gst_wl_display_get_server_modifier_caps (GstWlDisplay * self)
++{
++  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
++
++  return priv->server_modifier_caps;
++}
+diff --git a/gst-libs/gst/wayland/gstwldisplay.h b/gst-libs/gst/wayland/gstwldisplay.h
+index eb07e4f875..46600126c7 100644
+--- a/gst-libs/gst/wayland/gstwldisplay.h
++++ b/gst-libs/gst/wayland/gstwldisplay.h
+@@ -97,4 +97,7 @@ struct zwp_linux_dmabuf_v1 *gst_wl_display_get_dmabuf_v1 (GstWlDisplay * self);
+ GST_WL_API
+ gboolean gst_wl_display_has_own_display (GstWlDisplay * self);
+ 
++GST_WL_API
++guint64 gst_wl_display_get_server_modifier_caps (GstWlDisplay * self);
++
+ G_END_DECLS
+diff --git a/gst-libs/gst/wayland/gstwllinuxdmabuf.c b/gst-libs/gst/wayland/gstwllinuxdmabuf.c
+index d6ee6ec371..dde56fd367 100644
+--- a/gst-libs/gst/wayland/gstwllinuxdmabuf.c
++++ b/gst-libs/gst/wayland/gstwllinuxdmabuf.c
+@@ -24,6 +24,7 @@
+ #include <config.h>
+ #endif
+ 
++#include <drm_fourcc.h>
+ #include "gstwllinuxdmabuf.h"
+ 
+ #include "linux-dmabuf-unstable-v1-client-protocol.h"
+@@ -31,6 +32,8 @@
+ GST_DEBUG_CATEGORY (gst_wl_dmabuf_debug);
+ #define GST_CAT_DEFAULT gst_wl_dmabuf_debug
+ 
++static G_DEFINE_QUARK (FBufModifierQuark, gst_fbuf_modifier_qdata);
++
+ void
+ gst_wl_linux_dmabuf_init_once (void)
+ {
+@@ -92,10 +95,15 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
+   struct zwp_linux_buffer_params_v1 *params;
+   gint64 timeout;
+   ConstructBufferData data;
++  guint64 modifier, *p_modifier;
+ 
+   g_return_val_if_fail (gst_wl_display_check_format_for_dmabuf (display,
+           GST_VIDEO_INFO_FORMAT (info)), NULL);
+ 
++  p_modifier = buf ? gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (buf), gst_fbuf_modifier_qdata_quark()) : NULL;
++  modifier = p_modifier ? *p_modifier : DRM_FORMAT_MOD_INVALID;
++  GST_INFO_OBJECT(display, "Found modifier: gstbuf %p, %p, modifier val 0x%llx", buf, p_modifier, (unsigned long long)modifier);
++
+   mem = gst_buffer_peek_memory (buf, 0);
+   format = gst_video_format_to_wl_dmabuf_format (GST_VIDEO_INFO_FORMAT (info));
+ 
+@@ -125,7 +133,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
+       GstMemory *m = gst_buffer_peek_memory (buf, mem_idx);
+       gint fd = gst_dmabuf_memory_get_fd (m);
+       zwp_linux_buffer_params_v1_add (params, fd, i, m->offset + skip,
+-          stride, 0, 0);
++          stride, modifier >> 32, modifier & 0xffffffff);
+     } else {
+       GST_ERROR_OBJECT (mem->allocator, "memory does not seem to contain "
+           "enough data for the specified format");
+diff --git a/gst-libs/gst/wayland/gstwlvideoformat.c b/gst-libs/gst/wayland/gstwlvideoformat.c
+index 91e4b1427e..b3deb32ad8 100644
+--- a/gst-libs/gst/wayland/gstwlvideoformat.c
++++ b/gst-libs/gst/wayland/gstwlvideoformat.c
+@@ -82,6 +82,7 @@ static const wl_VideoFormat wl_formats[] = {
+   {WL_SHM_FORMAT_YUV422, DRM_FORMAT_YUV422, GST_VIDEO_FORMAT_Y42B},
+   {WL_SHM_FORMAT_YUV444, DRM_FORMAT_YUV444, GST_VIDEO_FORMAT_v308},
+   {WL_SHM_FORMAT_P010, DRM_FORMAT_P010, GST_VIDEO_FORMAT_P010_10LE},
++  {0xffffffff, GST_MAKE_FOURCC('Q','1','2','A'), GST_VIDEO_FORMAT_NV12_10LE32},
+ };
+ 
+ enum wl_shm_format
+-- 
+2.34.1
+
