@@ -33,7 +33,7 @@ python __anonymous() {
     if "native" in recipe_name or "linux" in recipe_name or "packagegroup" in recipe_name or "kernel" in recipe_name:
         return
 
-    if recipe_name in ['cntvct-log', 'system-core-adbd']:
+    if recipe_name in ['cntvct-log', 'system-core-adbd', 'wayland-ivi-extension']:
         return
 
     d.appendVar('DEPENDS', ' gcc-sanitizers')
@@ -53,7 +53,7 @@ python __anonymous() {
 
 
     # Using CMakefile.txt, needs add link library additionally
-    if recipe_name in ['wayland-ivi-extension', 'safetylibs', 'camera-qcx', 'safetymonitor', 'compute-resmon', 'fadas', 'sv-auto-noship', 'apss-stl']:
+    if recipe_name in ['safetylibs', 'camera-qcx', 'safetymonitor', 'compute-resmon', 'fadas', 'sv-auto-noship', 'apss-stl']:
         d.appendVar('EXTRA_OECMAKE', ' -DASAN=ON')
 }
 
