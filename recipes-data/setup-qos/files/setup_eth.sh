@@ -39,8 +39,30 @@ interface="$2"
 
 echo "script loaded for QoS STARTED" > $DUMP_TO_KMSG
 
+check_interface_status() {
+	local iface="$1"
+	local max_attempts=25
+	local attempt=0
+
+	while [ $attempt -lt $max_attempts ]; do
+		if ifconfig "$iface" | grep -q "UP"; then
+			return 0
+		else
+			ifconfig "$iface" up
+		fi
+		sleep 2
+		attempt=$((attempt+1))
+	done
+	echo "Failed to bring up interface $iface after $max_attempts attempts" > $DUMP_TO_KMSG
+	return 1
+}
+
 if [ "eth0" = "$interface" ];
 then
+	if ! check_interface_status $interface; then
+		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
+		exit 1
+	fi
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues $queue_map0 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
@@ -57,7 +79,7 @@ then
 	then
 		tc qdisc replace dev $interface handle $q3_cbs_handle0 parent $mqprio_handle0:4 cbs idleslope $q3_idle_slope0 sendslope $q3_send_slope0 hicredit $q3_hicredit0 locredit $q3_locredit0 offload 1
 	fi
-        if [ $q4_idle_slope0 -ne 0 ] && [ $q4_send_slope0 -ne 0 ];
+	if [ $q4_idle_slope0 -ne 0 ] && [ $q4_send_slope0 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q4_cbs_handle0 parent $mqprio_handle0:5 cbs idleslope $q4_idle_slope0 sendslope $q4_send_slope0 hicredit $q4_hicredit0 locredit $q4_locredit0 offload 1
 	fi
@@ -100,6 +122,10 @@ fi
 
 if [ "eth1" = "$interface" ];
 then
+	if ! check_interface_status $interface; then
+		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
+		exit 1
+	fi
 	tc qdisc add dev $interface handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues $queue_map1 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
@@ -116,7 +142,7 @@ then
 	then
 		tc qdisc replace dev $interface handle $q3_cbs_handle1 parent $mqprio_handle1:4 cbs idleslope $q3_idle_slope1 sendslope $q3_send_slope1 hicredit $q3_hicredit1 locredit $q3_locredit1 offload 1
 	fi
-        if [ $q4_idle_slope1 -ne 0 ] && [ $q4_send_slope1 -ne 0 ];
+	if [ $q4_idle_slope1 -ne 0 ] && [ $q4_send_slope1 -ne 0 ];
 	then
 		tc qdisc replace dev $interface handle $q4_cbs_handle1 parent $mqprio_handle1:5 cbs idleslope $q4_idle_slope1 sendslope $q4_send_slope1 hicredit $q4_hicredit1 locredit $q4_locredit1 offload 1
 	fi
@@ -132,11 +158,11 @@ then
 	then
 		tc qdisc replace dev $interface handle $q2_etf_handle1 parent $q2_cbs_handle1:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
 		tc qdisc replace dev $interface handle $q3_etf_handle1 parent $q3_cbs_handle1:4 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
-        fi
+	fi
 	if [ "$eavb_vlan_id1" -ne 0 ];
-        then
-                vconfig add $interface $eavb_vlan_id1
-        fi
+	then
+		vconfig add $interface $eavb_vlan_id1
+	fi
 	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
 	then
 		if [ $is_src1 -eq 1 ];
