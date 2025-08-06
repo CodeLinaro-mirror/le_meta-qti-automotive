@@ -23,12 +23,17 @@ do_make_dtb() {
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb
     install -d ${DEPLOY_DIR_IMAGE}/dtbs
+    install -d ${DEPLOY_DIR_IMAGE}/interout
+    install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
 
     dtb_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/dtb
     dtbo_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
-    out_dir=${DEPLOY_DIR_IMAGE}/dtbs
+    out_directory=${DEPLOY_DIR_IMAGE}/dtbs
+    inter_out_dir=${DEPLOY_DIR_IMAGE}/interout
+    ddrdtbos_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
 
-    merge_dtbos $dtb_dir $dtbo_dir $out_dir
+    merge_dtbos $dtb_dir $dtbo_dir $inter_out_dir
+    merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
 
     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
 }
