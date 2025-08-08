@@ -46,7 +46,7 @@ PARTLABEL=persist    /persist            auto      defaults                     
 
 # Bind /home to /data
 /data                /home                auto       defaults,bind         0  0
-overlay /var overlay x-systemd.requires=/data,x-systemd.requires=/persist,lowerdir=/persist,upperdir=/data/var_upper,workdir=/data/var_work 0 0
+overlay /var overlay x-systemd.requires=systemd-modules-load.service,x-systemd.requires=/data,x-systemd.requires=/persist,lowerdir=/persist,upperdir=/data/var_upper,workdir=/data/var_work 0 0
 
 # uncomment this if your device has a SD/MMC/Transflash slot
 #/dev/mmcblk0p1       /media/card          auto       defaults,sync,noauto  0  0
