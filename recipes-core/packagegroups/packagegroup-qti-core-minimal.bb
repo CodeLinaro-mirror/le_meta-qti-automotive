@@ -31,3 +31,4 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "early-service-infra power-utils", "", d)} \
     "
 RDEPENDS:${PN}:append:monaco = " reboot-daemon"
+RDEPENDS:${PN}:append:gen5 = " unify-target"
