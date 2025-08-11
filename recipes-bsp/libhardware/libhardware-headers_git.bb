@@ -23,3 +23,5 @@ do_install() {
     install -m 0644 ${WORKDIR}/gralloc1.h ${D}${includedir}/hardware/
     install -m 0644 ${S}/include/hardware/*.h ${D}${includedir}/hardware/
 }
+
+BBCLASSEXTEND = "native"
