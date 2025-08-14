@@ -37,6 +37,7 @@ SYSTEMD_SERVICE:${PN}:append:sa8797-multi = "\
 
 DEPENDS += "virtual/kernel-headers"
 DEPENDS += "${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "msmhab", "", d)}"
+DEPENDS += "systemd"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/vhost-user/.git;protocol=${PROTO};destsuffix=vhost-user-q;usehead=1"
 SRCREV = "${AUTOREV}"
