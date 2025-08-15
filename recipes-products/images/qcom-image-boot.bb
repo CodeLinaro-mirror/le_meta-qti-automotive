@@ -13,7 +13,7 @@ DEPENDS:append:sa8775 = " audiolite-devicetree"
 IMAGE_CLASSES:remove = "qimage"
 IMAGE_FEATURES:remove = "ssh-server-openssh"
 
-inherit image ark-dtb-merge
+inherit image qcom-dtb-merge
 
 EXTRA_IMAGE_FEATURES = ""
 
