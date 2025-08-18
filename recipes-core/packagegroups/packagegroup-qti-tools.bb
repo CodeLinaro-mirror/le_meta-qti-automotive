@@ -23,7 +23,8 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'asan', 'gcc-sanitizers', '', d)}  \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'lttng-modules lttng-tools lttng-ust', '', d)} \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'devmem2', d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'cntvct-log', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'cntvct-log rtla', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'evtest lsof', '', d), d)} \
     "
 
 RDEPENDS:${PN}:remove:sa8775 = "lttng-modules lttng-tools lttng-ust"
