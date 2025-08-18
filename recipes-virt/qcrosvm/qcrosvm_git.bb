@@ -29,6 +29,8 @@ require ${BPN}-crates.inc
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
+SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " qcrosvm_lv.service"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
@@ -54,5 +56,15 @@ do_install:append:sa8775() {
 do_install:append:sa7255() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa7255.service ${D}/${systemd_unitdir}/system/qcrosvm.service
+}
+
+do_install:append:sa8255-ivi() {
+    install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+}
+
+do_install:append:sa8775-flex() {
+    install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
 }
 
