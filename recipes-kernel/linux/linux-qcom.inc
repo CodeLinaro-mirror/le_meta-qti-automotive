@@ -18,7 +18,7 @@ do_generate_base_defconfig() {
     export KCONFIG_CONFIG="${S}/arch/arm64/configs/${KBUILD_DEFCONFIG}"
     base_defconfig="${S}/arch/arm64/configs/qcom_defconfig"
     kernel_arch_config="${S}/arch/arm64/configs/qcom_${KERNEL_ARCH}.config ${@bb.utils.contains_any('VARIANT', 'debug user', ' ${S}/arch/arm64/configs/qcom_${KERNEL_ARCH}_debug.config', '', d)} ${KERNEL_CONFIG_FRAGMENTS}"
-    ${S}/scripts/kconfig/merge_config.sh -m -r -y ${base_defconfig} ${kernel_arch_config} 1>&2
+    ${S}/scripts/kconfig/merge_config.sh -m -r ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', '', '-y', d)} ${base_defconfig} ${kernel_arch_config} 1>&2
 }
 addtask do_generate_base_defconfig after do_patch before do_configure
 

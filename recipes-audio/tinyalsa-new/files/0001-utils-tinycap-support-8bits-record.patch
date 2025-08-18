@@ -1,0 +1,33 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+Copyright (c) 2025 Qualcomm Technologies, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 30c79c97f85a8530bb3e36abe71b5c9ed5348bf9 Mon Sep 17 00:00:00 2001
+From: Jing Wang <jingwa@qti.qualcomm.com>
+Date: Fri, 6 Dec 2024 14:31:03 +0800
+Subject: [PATCH] utils: tinycap: support 8bits record
+
+Upstream-Status: Pending
+Signed-off-by: Jing Wang <jingwa@qti.qualcomm.com>
+---
+ utils/tinycap.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/utils/tinycap.c b/utils/tinycap.c
+index 617d16a..b3cb0e7 100644
+--- a/utils/tinycap.c
++++ b/utils/tinycap.c
+@@ -169,6 +169,9 @@ int main(int argc, char **argv)
+     case 16:
+         format = PCM_FORMAT_S16_LE;
+         break;
++    case 8:
++        format = PCM_FORMAT_S8;
++        break;
+     default:
+         fprintf(stderr, "%u bits is not supported.\n", bits);
+         fclose(file);
+-- 
+2.17.1
+

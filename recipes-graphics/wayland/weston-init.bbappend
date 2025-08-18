@@ -21,7 +21,7 @@ do_install() {
         fi
     fi
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
-        sed -i 's/dev-dri-card0.device/openwfd_server_@0.service kgsl@0.service/g' ${D}${systemd_system_unitdir}/weston.service
+        sed -i 's/dev-dri-card0.device/openwfd_server_@0.service/g' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/early' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service

@@ -1,11 +1,12 @@
 include conf/machine/include/basemachine.inc
+include conf/machine/include/qclinux-bbmask.inc
 
 SOC_FAMILY = "sa8775"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
 
-# Gen4(sa8775/sa8255/sa8650) board chip belongs to Cortex-A78C(CPU part: 0xd4b).
-include ${@bb.utils.contains('BBFILE_COLLECTIONS', 'ubuntu', 'conf/machine/include/arm/armv8-2a/tune-cortexa76.inc', 'conf/machine/include/arm/armv8-2a/tune-cortexa78c.inc', d)}
+include conf/machine/include/arm/armv8-2a/tune-cortexa78c.inc
+TUNE_FEATURES:tune-cortexa78c = "${TUNE_FEATURES:tune-armv8-2a-crypto} cortexa78c"
 
 # Prefer Wayland/Weston version
 PREFERRED_VERSION_weston = "8.0.0"
@@ -62,6 +63,23 @@ IMAGE_FEATURES:append = " read-only-rootfs"
 MACHINE_FEATURES += "\
     qti-core \
     qti-tools \
+    qti-multimedia \
+    qti-display \
+    qti-graphics \
+    qti-audio \
+    qti-vmm \
+    qti-camera \
+    qti-safety \
+    qti-data \
+    qti-vnw \
+    early-ramdisk-init \
+    qti-security \
+    qti-umd \
+    qti-gunyah \
+    qti-compute-platform \
+"
+
+MACHINE_FEATURES:remove = "\
     qti-multimedia \
     qti-display \
     qti-graphics \
