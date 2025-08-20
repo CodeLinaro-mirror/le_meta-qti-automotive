@@ -24,9 +24,10 @@ RDEPENDS:${PN} = "\
     vhost-device-ssr \
     hyp-udmabuf \
     hyp-udmabuf-test \
-    virtiofsd \
     vmm-boot-lcm \
 "
+
+RDEPENDS:${PN}:append:sa8797 = " virtiofsd"
 RDEPENDS:${PN}:remove:sa8797 = "\
     gvm-net-config \
 "
