@@ -12,7 +12,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-system-cfg/devicetree"
 OVERLAYED_OOT_DTBS_OUT = "${S}/out"
 
-inherit ark-dtb-merge deploy kernel-arch qti-techpack
+inherit qcom-dtb-merge deploy kernel-arch qti-techpack
 
 EXTRA_OEMAKE += "KDIR=${STAGING_KERNEL_DIR}"
 CONFIG_ARCH ?= ""
