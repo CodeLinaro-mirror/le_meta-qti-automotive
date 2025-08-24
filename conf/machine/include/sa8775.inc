@@ -29,6 +29,9 @@ BBMASK += "meta-qti-bsp/meta-qti-base/recipes-wlan"
 
 RUSTVERSION = "1.75%"
 
+# Keep use nsp-drv under recipes-mproc-umd
+BBMASK:append = " recipes-compute-platform/nsp-drv/nsp-drv_git.bb"
+
 # Enables timestamping functionality during building the kernel
 KERNEL_DEBUG_TIMESTAMPS = "1"
 # mesa provides these packags and others like virtual/libgl.
@@ -91,7 +94,6 @@ MACHINE_FEATURES:remove = "\
     qti-vnw \
     early-ramdisk-init \
     qti-security \
-    qti-umd \
     qti-gunyah \
     qti-compute-platform \
 "
