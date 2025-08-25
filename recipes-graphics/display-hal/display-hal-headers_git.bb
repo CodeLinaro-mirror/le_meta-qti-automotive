@@ -6,6 +6,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "display/display-hal", d)}"
+DISPLAY_DIR:sa8775 = "display/display-hal"
 
 SRC_URI = "${PATH_TO_REPO}/${DISPLAY_DIR}/.git;protocol=${PROTO};destsuffix=${DISPLAY_DIR};usehead=1"
 SRCREV = "${AUTOREV}"

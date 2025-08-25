@@ -21,11 +21,14 @@ DEPENDS += "cairo \
             systemd \
             wayland wayland-native wayland-protocols \
             weston \
-            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging power-utils', '', d)} \
+            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'bootkpi-logging power-utils powercyclemgr', '', d)} \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'compute-resmgr', '', d)} \
 "
 
+DEPENDS:remove:sa8775 = "display-intf-headers"
+DEPENDS:append:sa8775 = " display-ship-linux"
 CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston-sdm-extension", "graphics/weston-sdm-extension", d)}"
+CODE_DIR:sa8775 = "graphics/weston-sdm-extension"
 
 SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
@@ -35,7 +38,6 @@ S = "${WORKDIR}/${CODE_DIR}"
 inherit meson pkgconfig
 #Introducing sleep-notify-service.bbclass for sleep-notify service
 inherit ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd sleep-notify-service', '', d)}
-
 
 TARGET_CPPFLAGS += "-I${STAGING_INCDIR}/libdrm \
                     -I${STAGING_INCDIR}/qcom/display \
