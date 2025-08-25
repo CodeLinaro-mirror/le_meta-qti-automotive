@@ -90,7 +90,12 @@ do_install:append() {
         if ${@bb.utils.contains('TCMODE', 'external-ubuntu', 'false', 'true', d)}; then
             sed -i -e '/^Descr/a\Requires=var-usb.service' ${D}${systemd_unitdir}/system/usb.service
         fi
-        sed -i -e '/^Descr/a\After=var-volatile.mount leprop.service systemd-modules-load.service' ${D}${systemd_unitdir}/system/usb.service
+        if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'true', 'false', d)}; then
+            sed -i -e '/^Descr/a\After=var-volatile.mount leprop.service systemd-modules-load.service' ${D}${systemd_unitdir}/system/usb.service
+        else
+            sed -i -e '/^Descr/a\After=var-volatile.mount leprop.service systemd-modules-load.service usb-gadget.target' ${D}${systemd_unitdir}/system/usb.service
+            sed -i -e '/^Descr/a\Wants=usb-gadget.target' ${D}${systemd_unitdir}/system/usb.service
+        fi
         sed -i -e '/^ExecStartPre/d' ${D}${systemd_unitdir}/system/usb.service
         sed -i -e '/^Descr/a\ConditionVirtualization=!container' ${D}${systemd_unitdir}/system/usb.service
     fi
