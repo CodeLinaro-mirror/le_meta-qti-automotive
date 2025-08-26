@@ -14,6 +14,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-system-cfg/platform-config"
 
 EXTRA_OECMAKE:append:sa8775-flex = " -D PVM_CPUS:STRING=0-3 -D GVM_CPUS:STRING=4-7"
+EXTRA_OECMAKE:append:sa8797 = " -D PVM_CPUS:STRING=0-5 -D GVM_CPUS:STRING=6-17"
 
 inherit systemd cmake pkgconfig
 
