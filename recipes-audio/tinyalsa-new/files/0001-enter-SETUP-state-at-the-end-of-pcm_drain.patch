@@ -1,0 +1,36 @@
+From e4001cebcf477306ce6c4ff9bcf4f7fce032ee04 Mon Sep 17 00:00:00 2001
+From: Jiazai Wu <jiazwu@qti.qualcomm.com>
+Date: Thu, 28 Aug 2025 14:58:53 +0530
+Subject: [PATCH] enter SETUP state at the end of pcm_drain
+
+pcm_drain stops the pcm like pcm_drop.
+it should also set plugin state SETUP.
+---
+ src/pcm_plugin.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/pcm_plugin.c b/src/pcm_plugin.c
+index 4d2651c..6ca46c2 100644
+--- a/src/pcm_plugin.c
++++ b/src/pcm_plugin.c
+@@ -625,11 +625,16 @@ static int pcm_plug_drop(struct pcm_plug_data *plug_data)
+ static int pcm_plug_drain(struct pcm_plug_data *plug_data)
+ {
+     struct pcm_plugin *plugin = plug_data->plugin;
++    int rc;
+ 
+     if (plugin->state != PCM_PLUG_STATE_RUNNING)
+         return -EBADFD;
+ 
+-    return plug_data->ops->drain(plugin);
++    rc = plug_data->ops->drain(plugin);
++    if (!rc)
++        plugin->state = PCM_PLUG_STATE_SETUP;
++
++    return rc;
+ }
+ 
+ static int pcm_plug_ioctl(void *data, unsigned int cmd, ...)
+-- 
+2.34.1
+
