@@ -93,8 +93,8 @@ then
 	fi
 	if [ "$tbs_enabled0" -eq 1 ];
 	then
-		tc qdisc replace dev $interface handle $q2_etf_handle0 parent $q2_cbs_handle0:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q3_etf_handle0 parent $q3_cbs_handle0:4 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $q2_etf_handle0 parent $q2_cbs_handle0:3 etf clockid CLOCK_TAI delta $q2_delta0 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $q3_etf_handle0 parent $q3_cbs_handle0:4 etf clockid CLOCK_TAI delta $q3_delta0 offload skip_sock_check deadline_mode
 	fi
 	if [ "$eavb_vlan_id0" -ne 0 ];
 	then
@@ -156,8 +156,8 @@ then
 	fi
 	if [ "$tbs_enabled1" -eq 1 ];
 	then
-		tc qdisc replace dev $interface handle $q2_etf_handle1 parent $q2_cbs_handle1:3 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q3_etf_handle1 parent $q3_cbs_handle1:4 etf clockid CLOCK_TAI delta 300000 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $q2_etf_handle1 parent $q2_cbs_handle1:3 etf clockid CLOCK_TAI delta $q2_delta1 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $q3_etf_handle1 parent $q3_cbs_handle1:4 etf clockid CLOCK_TAI delta $q3_delta1 offload skip_sock_check deadline_mode
 	fi
 	if [ "$eavb_vlan_id1" -ne 0 ];
 	then
