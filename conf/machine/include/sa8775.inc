@@ -85,16 +85,12 @@ MACHINE_FEATURES += "\
 
 MACHINE_FEATURES:remove = "\
     qti-multimedia \
-    qti-display \
     qti-graphics \
     qti-audio \
-    qti-camera \
     qti-safety \
     qti-data \
     qti-vnw \
     qti-security \
-    qti-gunyah \
-    qti-compute-platform \
 "
 
 MACHINE_FEATURES:append = "\
