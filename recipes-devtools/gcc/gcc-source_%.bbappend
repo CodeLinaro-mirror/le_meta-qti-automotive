@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:${THISDIR}/${BPN}-${PV}:"
 
 SRC_URI:append = " file://0001-AARCH64-Add-Qualcomnm-oryon-1-core.patch \
                    file://0001-Fix-sanitizer-compile-error.patch \
