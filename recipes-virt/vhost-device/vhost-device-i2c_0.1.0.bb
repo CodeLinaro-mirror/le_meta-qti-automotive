@@ -14,7 +14,7 @@ S = "${WORKDIR}/external/vhost-device"
 CARGO_SRC_DIR = "vhost-device-i2c"
 
 inherit cargo systemd
-SYSTEMD_SERVICE:${PN} = "vhost-device-i2c.service"
+SYSTEMD_SERVICE:${PN}:gen5 = "vhost-device-i2c.service"
 
 do_install:append:gen5() {
     install -d ${D}${systemd_system_unitdir}
