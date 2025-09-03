@@ -13,7 +13,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
-SYSTEMD_SERVICE:${PN}:sa8797 = "firmware-qcom-sa8797p.automount firmware-qcom-sa8797p.mount"
+SYSTEMD_SERVICE:${PN}:gen5 = "firmware-qcom-sa8797p.automount firmware-qcom-sa8797p.mount"
 
 do_compile[noexec] = "1"
 
@@ -97,7 +97,7 @@ do_install:append:sa8255-ivi() {
     fi
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     install -d -p ${D}${systemd_unitdir}/system/multi-user.target.wants/
     install -d -p ${D}/firmware/qcom/sa8797p
 
@@ -118,7 +118,7 @@ do_install:append:sa8797() {
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
 }
 
-FILES:${PN}:append:sa8797 = " \
+FILES:${PN}:append:gen5 = " \
      ${systemd_unitdir}/system/firmware-qcom-sa8797p.mount \
      ${systemd_unitdir}/system/firmware-qcom-sa8797p.automount \
 "

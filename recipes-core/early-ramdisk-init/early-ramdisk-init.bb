@@ -16,13 +16,13 @@ EXTRA_OECONF += "--bindir=${base_sbindir} --sbindir=${base_sbindir}"
 
 CFLAGS += '-DLOG_DIR=\\"/boot/early-ramdisk\\"'
 CFLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'early_init', '-DEARLY_INIT', '', d)}"
-CFLAGS:append:sa8797 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DMM_VFIO_BIND_DEVICE', '', d)}"
+CFLAGS:append:gen5 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DMM_VFIO_BIND_DEVICE', '', d)}"
 CFLAGS:append:sa8775 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DVENDOR_DSP_MOUNT -DFIRMWARE_MOUNT -DPRELOAD_UNIT', '', d)}"
 
 TARGET_PATH_NAME ?= "${MACHINE}"
 TARGET_PATH_NAME:sa8775 = "sa8775-qclinux"
 TARGET_PATH_NAME:sa7255 = "sa7255"
-TARGET_PATH_NAME:sa8797 = "sa8797"
+TARGET_PATH_NAME:gen5 = "sa8797"
 
 do_install:append() {
     install -d ${D}/dev

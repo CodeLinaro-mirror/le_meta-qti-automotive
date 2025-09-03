@@ -6,7 +6,7 @@ DEPENDS += "mkbootimg-native mkdtimg-native openssl-native  python3-native virtu
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'oot-dtbo', '', d)}"
 DEPENDS += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', 'audiolite-devicetree', '', d)}"
 DEPENDS += "${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar', bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', 'audiolite-devicetree', '', d), '', d)}"
-DEPENDS:append:sa8797 = "${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-multimedia qti-display qti-audio qti-graphics qti-camera', ' mm-vfio-devicetree', '', d)}"
+DEPENDS:append:gen5 = "${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-multimedia qti-display qti-audio qti-graphics qti-camera', ' mm-vfio-devicetree', '', d)}"
 
 DEPENDS:append:sa8775 = " audiolite-devicetree"
 

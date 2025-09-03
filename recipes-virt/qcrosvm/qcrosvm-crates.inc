@@ -3,7 +3,7 @@
 LICENSE += "(Unlicense| MIT) & MIT & (Apache-2.0 | MIT) & (Apache-2.0 | BSD-3-Clause) & (( MIT | Apache-2.0 ) & Unicode-DFS-2016) & BSD-3-Clause"
 
 # from Cargo.lock
-SRC_URI += " \
+SRC_URI:append = " \
     crate://crates.io/aho-corasick/0.7.20 \
     crate://crates.io/android-tzdata/0.1.1 \
     crate://crates.io/android_log-sys/0.2.0 \

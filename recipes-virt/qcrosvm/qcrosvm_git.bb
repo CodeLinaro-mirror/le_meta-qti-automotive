@@ -41,7 +41,7 @@ do_install:append() {
     install -m 0644 ${S}/vm_config_xml/${VM_CONFIG_XML} ${D}${sysconfdir}/vm_config.xml
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
 }

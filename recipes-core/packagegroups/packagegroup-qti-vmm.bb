@@ -27,7 +27,7 @@ RDEPENDS:${PN} = "\
     vmm-boot-lcm \
 "
 
-RDEPENDS:${PN}:append:sa8797 = " virtiofsd"
-RDEPENDS:${PN}:remove:sa8797 = "\
+RDEPENDS:${PN}:append:gen5 = " virtiofsd"
+RDEPENDS:${PN}:remove:gen5 = "\
     gvm-net-config \
 "

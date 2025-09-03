@@ -17,7 +17,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display"
 inherit autotools pkgconfig
 
 EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
-EXTRA_OECONF:remove:sa8797 = "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
+EXTRA_OECONF:remove:gen5 = "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
@@ -34,7 +34,7 @@ do_install:append() {
     install -m 644 ${S}/include/*.h ${D}${includedir}
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     rm -f ${D}${includedir}/color_extensions.h
 }
 

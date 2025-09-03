@@ -27,7 +27,7 @@ RDEPENDS:${PN} = "\
         ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'gstreamer1.0-plugins-qcarcamsrc gstreamer1.0-plugins-vidc gstreamer1.0-plugins-extpoolsink', '', d)} \
 "
 
-RDEPENDS:${PN}:remove:sa8797 = "\
+RDEPENDS:${PN}:remove:gen5 = "\
         videodlkm \
 "
 

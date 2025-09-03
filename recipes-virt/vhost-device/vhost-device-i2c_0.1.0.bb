@@ -16,7 +16,7 @@ CARGO_SRC_DIR = "vhost-device-i2c"
 inherit cargo systemd
 SYSTEMD_SERVICE:${PN} = "vhost-device-i2c.service"
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${S}/vhost-device-i2c/vhost-device-i2c_sa8797.service ${D}${systemd_system_unitdir}/vhost-device-i2c.service
 }
