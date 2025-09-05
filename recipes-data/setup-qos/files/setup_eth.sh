@@ -41,7 +41,7 @@ echo "script loaded for QoS STARTED" > $DUMP_TO_KMSG
 
 check_interface_status() {
 	local iface="$1"
-	local max_attempts=25
+	local max_attempts=5
 	local attempt=0
 
 	while [ $attempt -lt $max_attempts ]; do
@@ -50,7 +50,7 @@ check_interface_status() {
 		else
 			ifconfig "$iface" up
 		fi
-		sleep 2
+		sleep 1
 		attempt=$((attempt+1))
 	done
 	echo "Failed to bring up interface $iface after $max_attempts attempts" > $DUMP_TO_KMSG
@@ -61,7 +61,7 @@ if [ "eth0" = "$interface" ];
 then
 	if ! check_interface_status $interface; then
 		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
-		exit 1
+		exit 0
 	fi
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues $queue_map0 hw 0
 	tc qdisc add dev $interface clsact
@@ -124,7 +124,7 @@ if [ "eth1" = "$interface" ];
 then
 	if ! check_interface_status $interface; then
 		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
-		exit 1
+		exit 0
 	fi
 	tc qdisc add dev $interface handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues $queue_map1 hw 0
 	tc qdisc add dev $interface clsact
