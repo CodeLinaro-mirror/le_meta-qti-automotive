@@ -38,9 +38,6 @@ do_install:append() {
         # External hdd root device node is detected by 00-external-bootup.conf load done.
         install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/02-external-bootup.conf.in -D ${D}/etc/modules-load.f/00-external-bootup.conf
     fi
-}
-
-do_install:append:sa8797() {
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
         install -m 0755 ${WORKDIR}/vfio_param.conf -D ${D}${sysconfdir}/modprobe.d/vfio.conf
     fi
