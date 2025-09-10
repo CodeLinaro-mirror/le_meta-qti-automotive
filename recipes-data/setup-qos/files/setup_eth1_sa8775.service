@@ -1,0 +1,20 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+# This service file is designed to route TX traffic on eth1 interface.
+# Customer needs to enable this service file based on the requirement.
+# Flexibility is provided for the customers to modify QoS using TC.
+[Unit]
+Description=eth1 QOS installer
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=ifconfig eth1 up
+ExecStart=/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini eth1
+ExecStop=tc qdisc del dev eth1 root
+Nice=-20
+Restart=on-failure
+RestartSec=1ms
+
+[Install]
+WantedBy=multi-user.target
