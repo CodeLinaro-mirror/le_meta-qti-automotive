@@ -33,7 +33,10 @@ python __anonymous() {
     if "native" in recipe_name or "linux" in recipe_name or "packagegroup" in recipe_name or "kernel" in recipe_name:
         return
 
-    if recipe_name in ['cntvct-log', 'system-core-adbd', 'wayland-ivi-extension']:
+    if recipe_name in ['camera-qcx', 'qcrosvm', 'cntvct-log', 'system-core-adbd', 'wayland-ivi-extension']:
+        return
+
+    if recipe_name in ['libkiumd', 'libsoftsku', 'libtpp', 'compute-resmgr', 'compute-osal']:
         return
 
     d.appendVar('DEPENDS', ' gcc-sanitizers')
@@ -74,6 +77,9 @@ service_lib_list="\
  gsl_hab_server.service \
  qcx_server.service \
  vhost-device-ssr.service \
+ ana-syslog-mgr.service \
+ compute-resmgr.service \
+ sv_hyp.service \
 "
 
     for service_etc in $service_etc_list; do
