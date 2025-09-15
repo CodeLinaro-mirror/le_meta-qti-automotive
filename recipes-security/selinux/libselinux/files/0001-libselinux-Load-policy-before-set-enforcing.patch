@@ -1,0 +1,53 @@
+This patch file is from Qualcomm Innovation Center, Inc. and is provided
+under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From be208adda008188eb7a1e5d081c381df7d9ca062 Mon Sep 17 00:00:00 2001
+From: Kai Meng <kmeng@qti.qualcomm.com>
+Date: Tue, 1 Jul 2025 20:48:10 +0800
+Subject: [PATCH] libselinux: Load policy before set enforcing
+
+Upstream-Status: Inappropriate
+Signed-off-by: Kai Meng <kmeng@qti.qualcomm.com>
+---
+ src/load_policy.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/load_policy.c b/src/load_policy.c
+index d8c715e..4da6ffc 100644
+--- a/src/load_policy.c
++++ b/src/load_policy.c
+@@ -223,7 +223,7 @@ int selinux_mkload_policy(int preservebools __attribute__((unused)))
+  */
+ int selinux_init_load_policy(int *enforce)
+ {
+-	int rc = 0, orig_enforce = 0, seconfig = -2, secmdline = -1;
++	int rc = 0, orig_enforce = 0, seconfig = -2, secmdline = -1, result = 0;
+ 	FILE *cfg;
+ 	char *buf;
+ 
+@@ -342,6 +342,9 @@ int selinux_init_load_policy(int *enforce)
+ 		}
+ 	}
+ 
++	/* Load the policy. */
++    result = selinux_mkload_policy(0);
++
+ 	/*
+ 	 * If necessary, change the kernel enforcing status to match 
+ 	 * the desired mode. 
+@@ -364,8 +367,7 @@ int selinux_init_load_policy(int *enforce)
+ 		goto noload;
+ 	}
+ 
+-	/* Load the policy. */
+-	return selinux_mkload_policy(0);
++	return result;
+ 
+       noload:
+ 	/*
+-- 
+2.34.1
+
