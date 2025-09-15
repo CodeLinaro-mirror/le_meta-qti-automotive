@@ -99,6 +99,7 @@ then
 	if [ "$eavb_vlan_id0" -ne 0 ];
 	then
 		vconfig add $interface $eavb_vlan_id0
+		ifconfig $interface.$eavb_vlan_id0 up
 	fi
 	if [ $l4_port0 -ne 0 ] && [ -n "$protocol0" ];
 	then
@@ -162,6 +163,7 @@ then
 	if [ "$eavb_vlan_id1" -ne 0 ];
 	then
 		vconfig add $interface $eavb_vlan_id1
+		ifconfig $interface.$eavb_vlan_id1 up
 	fi
 	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
 	then
