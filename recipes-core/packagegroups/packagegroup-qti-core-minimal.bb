@@ -30,4 +30,6 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark linux-qcom-custom linux-qcom-custom-rt', 'irqbalance', '', d), d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "early-service-infra power-utils", "", d)} \
     "
+RDEPENDS:${PN}:append:sa8775 = " ${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "notify-aop", "", d)}"
 RDEPENDS:${PN}:append:monaco = " reboot-daemon"
+RDEPENDS:${PN}:append:gen5 = " unify-target"

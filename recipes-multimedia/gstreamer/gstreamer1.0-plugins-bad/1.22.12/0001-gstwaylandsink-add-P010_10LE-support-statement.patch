@@ -1,0 +1,46 @@
+From 2f60d026317d59ce94e8084e8d4c826f4c3563d2 Mon Sep 17 00:00:00 2001
+From: Lily Li <lali@qti.qualcomm.com>
+Date: Mon, 15 Jul 2024 15:07:50 +0800
+Subject: [PATCH 1/2] gstwaylandsink: add P010_10LE support statement
+
+Whether really support P010_10LE is decided by whether wayland server reported
+format list contain this format during runtime.
+
+Upstream-Status: Pending
+
+Signed-off-by: Lily Li <lali@qti.qualcomm.com>
+Change-Id: I6ad0e1570922627b69cf9976306a0daf20ba015f
+(cherry picked from commit 918505430b78ebcf3fe732c7562f487cbc17caba)
+---
+ ext/wayland/gstwaylandsink.c        | 2 +-
+ gst-libs/gst/wayland/gstwlvideoformat.c     | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ext/wayland/gstwaylandsink.c b/ext/wayland/gstwaylandsink.c
+index 2f116bf5a1..de970dc922 100644
+--- a/ext/wayland/gstwaylandsink.c
++++ b/ext/wayland/gstwaylandsink.c
+@@ -70,7 +70,7 @@ GST_DEBUG_CATEGORY (gstwayland_debug);
+ #define WL_VIDEO_FORMATS \
+     "{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, " \
+     "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, NV61, " \
+-    "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }"
++    "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308, P010_10LE }"
+ 
+ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+     GST_PAD_SINK,
+diff --git a/gst-libs/gst/wayland/gstwlvideoformat.c b/gst-libs/gst/wayland/gstwlvideoformat.c
+index 73455bd1ed..91e4b1427e 100644
+--- a/gst-libs/gst/wayland/gstwlvideoformat.c
++++ b/gst-libs/gst/wayland/gstwlvideoformat.c
+@@ -81,6 +81,7 @@ static const wl_VideoFormat wl_formats[] = {
+   {WL_SHM_FORMAT_YVU420, DRM_FORMAT_YVU420, GST_VIDEO_FORMAT_YV12},
+   {WL_SHM_FORMAT_YUV422, DRM_FORMAT_YUV422, GST_VIDEO_FORMAT_Y42B},
+   {WL_SHM_FORMAT_YUV444, DRM_FORMAT_YUV444, GST_VIDEO_FORMAT_v308},
++  {WL_SHM_FORMAT_P010, DRM_FORMAT_P010, GST_VIDEO_FORMAT_P010_10LE},
+ };
+ 
+ enum wl_shm_format
+-- 
+2.34.1
+

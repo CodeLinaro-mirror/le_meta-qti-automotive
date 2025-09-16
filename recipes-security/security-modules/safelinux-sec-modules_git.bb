@@ -11,7 +11,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-sec-modules/security-modules"
 
 TECHPACK_MODULES = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', '', 'tz_log.ko qtee_shmbridge.ko qcom_scm_oot.ko', d)}"
-TECHPACK_MODULES:append = " scm_user_intf_sec.ko"
+TECHPACK_MODULES:append = " scm_user_intf_sec.ko tz_ffi.ko"
 inherit qti-techpack
 
 EXTRA_OEMAKE:append = " SECURITY_MODULES_SYSROOT_INC=${STAGING_DIR_TARGET}/usr/include"
@@ -21,6 +21,7 @@ do_install:append() {
     install -d ${D}${includedir}/safelinux-sec-modules
 
     install -m 0755 ${S}/modules-load/scm_user_intf_sec.conf -D ${D}${sysconfdir}/modules-load.d/scm_user_intf_sec.conf
+    install -m 0755 ${S}/modules-load/tz_ffi.conf -D ${D}${sysconfdir}/modules-load.d/tz_ffi.conf
 
     if ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'false', 'true', d)}; then
         install -m 0755 ${S}/modules-load/qtee_shmbridge.conf -D ${D}${sysconfdir}/modules-load.d/qtee_shmbridge.conf
@@ -38,6 +39,7 @@ RPROVIDES:${PN} += "kernel-module-tz-log-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qtee-shmbridge-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-scm-oot-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-scm-user-intf-sec-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-tz-ffi-${KERNEL_VERSION}"
 
 RPROVIDES:${PN}:remove = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'kernel-module-tz-log-${KERNEL_VERSION}', '', d)}"
 

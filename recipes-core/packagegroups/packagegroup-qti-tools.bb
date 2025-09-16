@@ -18,6 +18,7 @@ RDEPENDS:${PN} += "\
     sysstat \
     ebtables \
     nftables \
+    atrace \
     sos \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd-analyze systemd-bootchart', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'asan', 'gcc-sanitizers', '', d)}  \
