@@ -15,6 +15,7 @@ REQUIRED_DISTRO_FEATURES:remove = "opengl"
 
 FILESEXTRAPATHS:append := " :${THISDIR}/weston/"
 CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston", "graphics/weston", d)}"
+CODE_DIR:sa8775 = "graphics/weston"
 SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1 \
            file://weston.png \
            file://weston.desktop \
