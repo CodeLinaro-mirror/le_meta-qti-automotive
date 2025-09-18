@@ -1,0 +1,35 @@
+From d336391b82d969e74c95e0345175adc849723c7e Mon Sep 17 00:00:00 2001
+From: Ya Tang <yatang@qti.qualcomm.com>
+Date: Thu, 18 Sep 2025 11:58:20 +0800
+Subject: [PATCH] Update device sorting order
+
+Changed compare_devices to use descending order for
+vendorID ^ deviceID comparison.
+
+Upstream-Status: Inappropriate [oe specific]
+Change-Id: I2e092aed8cb1e433442a02bf7af050e4fbbec78b
+Signed-off-by: Ya Tang <yatang@qti.qualcomm.com>
+---
+ loader/loader_linux.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/loader/loader_linux.c b/loader/loader_linux.c
+index e0b3db81b..053fa0620 100644
+--- a/loader/loader_linux.c
++++ b/loader/loader_linux.c
+@@ -124,9 +124,9 @@ int32_t compare_devices(const void *a, const void *b) {
+     // Somehow we have a tie above, so XOR vendorID and deviceID and compare
+     uint32_t left_xord_dev_vend = left->device_id ^ left->vendor_id;
+     uint32_t right_xord_dev_vend = right->device_id ^ right->vendor_id;
+-    if (left_xord_dev_vend < right_xord_dev_vend) {
++    if (left_xord_dev_vend > right_xord_dev_vend) {
+         return -1;
+-    } else if (right_xord_dev_vend < left_xord_dev_vend) {
++    } else if (right_xord_dev_vend > left_xord_dev_vend) {
+         return 1;
+     }
+     return 0;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
