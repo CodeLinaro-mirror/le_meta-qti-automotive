@@ -20,7 +20,7 @@ DEPENDS += "display-commonsys-intf-linux \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'compute-resmgr', '', d)} \
 "
 
-DEPENDS:append:sa8797 = " display-kernel-headers display-intf-headers"
+DEPENDS:append:gen5 = " display-kernel-headers display-intf-headers"
 
 PR = "r8"
 
@@ -51,7 +51,7 @@ CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqdutils"
 CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqservice"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 
-CPPFLAGS:append:sa8797 = " -DDEMURA_STAND_ALONE"
+CPPFLAGS:append:gen5 = " -DDEMURA_STAND_ALONE"
 CPPFLAGS:append:sa8775 = " -DTARGET_HEADLESS"
 
 # fix for uapi msm_drm.h header file related compilation issue

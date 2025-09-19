@@ -23,7 +23,7 @@ do_install:append() {
     install -m 0644 ${S}/vhost-device-ssr/vhost-device-ssr.service ${D}/${systemd_unitdir}/system/vhost-device-ssr.service
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     install -d ${D}/${systemd_unitdir}/system/
     install -m 0644 ${S}/vhost-device-ssr/vhost-device-ssr_sa8797.service ${D}/${systemd_unitdir}/system/vhost-device-ssr.service
 }

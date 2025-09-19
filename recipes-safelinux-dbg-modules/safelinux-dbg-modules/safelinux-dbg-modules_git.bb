@@ -21,8 +21,7 @@ TECHPACK_MODULES = "minidump/minidump.ko \
 inherit qti-techpack systemd
 EXTRA_OEMAKE += "KDIR=${STAGING_KERNEL_DIR}"
 
-
-EXTRA_OEMAKE:sa8797:append = "CONFIG_QCOM_MEMORY_DUMP_V21=y"
+EXTRA_OEMAKE:append:gen5 = " CONFIG_QCOM_MEMORY_DUMP_V21=y"
 
 do_install:append() {
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/

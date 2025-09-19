@@ -11,6 +11,6 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-services/scmi-test"
 
-EXTRA_OECMAKE:append:sa8797 = "-DVENDOR_USCMI=1"
+EXTRA_OECMAKE:append:gen5 = " -DVENDOR_USCMI=1"
 
 inherit pkgconfig cmake

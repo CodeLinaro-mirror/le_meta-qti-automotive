@@ -63,7 +63,7 @@ PACKAGECONFIG:remove = "timesyncd "
 
 #Enable coredump by default for lemans
 PACKAGECONFIG:append:sa8775 = " coredump"
-PACKAGECONFIG:append:sa8797 = " coredump"
+PACKAGECONFIG:append:gen5 = " coredump"
 
 # Use glib-2.0 for g_strlcat
 CFLAGS:append = " \

@@ -1,5 +1,5 @@
 SUMMARY = "provide display drivers header"
-DESCRIPTION = "export display driver headers"
+DESCRIPTION = "provide display driver headers"
 HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "GPLv2.0-with-linux-syscall-note"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
@@ -13,7 +13,7 @@ DRM_UAPI_HEADERS = "\
     drm/sde_drm.h \
 "
 
-DRM_UAPI_HEADERS:append:sa8797 = " drm/msm_drm_aiqe.h"
+DRM_UAPI_HEADERS:append:gen5 = " drm/msm_drm_aiqe.h"
 
 MEDIA_UAPI_HEADERS = "\
     media/mmm_color_fmt.h \
@@ -42,7 +42,7 @@ do_install() {
    done
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
    install -d ${D}${includedir}/display/drm
    for h in ${DRM_UAPI_HEADERS}; do
         ${HEADER_INSTALL_TOOL} ${S}/display/$h ${D}${includedir}/display/$h
