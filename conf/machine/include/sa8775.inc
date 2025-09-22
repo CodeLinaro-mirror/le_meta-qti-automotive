@@ -87,12 +87,10 @@ MACHINE_FEATURES:remove = "\
     qti-display \
     qti-graphics \
     qti-audio \
-    qti-vmm \
     qti-camera \
     qti-safety \
     qti-data \
     qti-vnw \
-    early-ramdisk-init \
     qti-security \
     qti-gunyah \
     qti-compute-platform \
