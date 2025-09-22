@@ -1,5 +1,3 @@
-FILESEXTRAPATHS:append := "${THISDIR}/files:"
-
 SRC_URI += "${PATH_TO_REPO}/lv-sepolicy/.git;protocol=${PROTO};destsuffix=lv-sepolicy;usehead=1 \
 "
 SRCREV = "${AUTOREV}"
