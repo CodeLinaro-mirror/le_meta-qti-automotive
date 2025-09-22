@@ -8,17 +8,23 @@ DEPENDS += "${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/safelinux-cfg-modules/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/safelinux-cfg-modules;usehead=1"
 SRC_URI:append = " \
-    file://umd_load.conf \
     ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.1", 'file://0001-safelinux-cfg-mdoules-fix-build-issue-for-msm-6.1.patch;patchdir=../', '', d)} \
     ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.1", 'file://Kbuild', '', d)} \
 "
+
+SRC_URI:append:gen5 = " file://umd_load_sa8797.conf"
+SRC_URI:append:sa8775 = " file://umd_load_sa8775.conf"
 
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules"
 
-TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iommu_qcom.ko iommu_iova_map.ko kiumd.ko qcom_uscmi.ko kryo_arm64_edac.ko kiumd_kgsl.ko mhi_ep_net.ko profiler.ko arm-smmu-qcom-fusa.ko vendor_uscmi.ko pinctrl_fusa.ko qcom_vdev.ko dmabuf_share.ko"
+TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iommu_qcom.ko iommu_iova_map.ko kiumd.ko qcom_uscmi.ko kryo_arm64_edac.ko kiumd_kgsl.ko mhi_ep_net.ko profiler.ko arm-smmu-qcom-fusa.ko pinctrl_fusa.ko qcom_vdev.ko dmabuf_share.ko"
+
 inherit qti-techpack
+
+TECHPACK_MODULES:append:gen5 = " vendor_uscmi.ko"
+TECHPACK_MODULES:append:sa8775 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
 
 do_patch_more() {
     if ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.1", 'true', 'false', d)} ; then
@@ -31,7 +37,6 @@ EXTRA_OEMAKE += "CONFIG_PROFILER=y"
 TECHPACK_MAKE_ARGS = "${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark', 'KBUILD_EXTRA_SYMBOLS=${STAGING_INCDIR}/safelinux-sec-modules/Module.symvers','', d)}"
 
 do_install:append() {
-    install -m 0755 ${WORKDIR}/umd_load.conf -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
     install -d ${D}${includedir}/linux
     install -d ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/linux/iommu_iova_map.h ${D}${includedir}/linux
@@ -42,7 +47,16 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/dmabuf_share.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/scm_user_intf.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_uscmi.h ${D}${includedir}/uapi/misc
+}
+
+do_install:append:gen5() {
+    install -m 0755 ${WORKDIR}/umd_load_sa8797.conf -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/vendor_uscmi.h ${D}${includedir}/uapi/misc
+}
+
+do_install:append:sa8775() {
+    install -m 0755 ${WORKDIR}/umd_load_sa8775.conf -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
+    install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_l3_cache_config.h ${D}${includedir}/uapi/misc
 }
 
 EXTRA_OECONF += "--disable-doc --disable-Werror"
@@ -61,8 +75,15 @@ RPROVIDES:${PN} += "kernel-module-kryo-arm64-edac-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-kiumd-kgsl-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-mhi-ep-net-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-profiler-${KERNEL_VERSION}"
-RPROVIDES:${PN} += "kernel-module-vendor-uscmi-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-vdev-${KERNEL_VERSION}"
+
+RPROVIDES:${PN}:append:gen5 = " kernel-module-vendor-uscmi-${KERNEL_VERSION}"
+
+RPROVIDES:${PN}:append:sa8775 = " \
+    kernel-module-iommu-faults-${KERNEL_VERSION} \
+    kernel-module-qcom-ethqos-filter-${KERNEL_VERSION} \
+    kernel-module-qcom-l3-cache-config-${KERNEL_VERSION} \
+"
 
 FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"
