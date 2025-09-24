@@ -1,0 +1,27 @@
+From 4d304f2115de665ec7fa660c719a03c866f568f4 Mon Sep 17 00:00:00 2001
+From: Jiazai Wu <jiazwu@qti.qualcomm.com>
+Date: Tue, 26 Aug 2025 06:22:00 +0530
+Subject: [PATCH] Call pcm_drain at the end of playback
+
+Upstream-Status: None
+
+Signed-off-by: Jiazai Wu <jiazwu@qti.qualcomm.com>
+---
+ utils/tinyplay.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/utils/tinyplay.c b/utils/tinyplay.c
+index d617074..5af5a2b 100644
+--- a/utils/tinyplay.c
++++ b/utils/tinyplay.c
+@@ -494,6 +494,8 @@ int play_sample(struct ctx *ctx)
+         printf("Remains %zu bytes.\n", remaining_data_size);
+     }
+
++    pcm_drain(ctx->pcm);
++
+     pcm_wait(ctx->pcm, -1);
+
+     free(buffer);
+--
+2.34.1
