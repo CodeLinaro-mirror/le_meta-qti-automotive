@@ -18,7 +18,6 @@ RDEPENDS:${PN} = "\
         gstreamer1.0-plugins-bad \
         gstreamer1.0-plugins-ugly \
         gstreamer1.0-libav \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqeavb', 'gstreamer1.0-plugins-qeavb', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-omx', 'gstreamer1.0-omx mm-vdec-omx-test-lite mm-venc-omx-test-lite', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-codec2', 'codec2 gstreamer1.0-plugins-codec2 gstreamer1.0-plugins-vesdeliver gstreamer1.0-plugins-drmdecryptor drm-player-example', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstdeinterlace', 'gstreamer1.0-plugins-qvdeinterlace', '', d)} \
