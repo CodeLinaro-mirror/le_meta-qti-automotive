@@ -75,6 +75,7 @@ SYSTEMD_SERVICE:${PN}:append:sa8797-multi = "\
 "
 
 DEPENDS += "virtual/kernel-headers"
+DEPENDS += "vmm-lib"
 DEPENDS += "${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "msmhab", "", d)}"
 DEPENDS += "systemd"
 
@@ -83,7 +84,7 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/vhost-user"
 
-inherit cmake systemd
+inherit cmake systemd pkgconfig
 
 CFLAGS += "\
     -I${STAGING_DIR_TARGET}/usr/include/${PREFERRED_PROVIDER_virtual/kernel} \
