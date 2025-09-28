@@ -1,0 +1,314 @@
+From b80b89d98ab7a4f798f24fdd82a09eb9f313bf88 Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Mon, 13 Oct 2025 10:17:08 +0800
+Subject: [PATCH] libmeminfo: add automake
+
+Create automake files for libmeminfo
+
+Upstream-Status: Inappropriate
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+---
+ Makefile.am                       | 28 +++++++++++++
+ configure.ac                      | 36 +++++++++++++++++
+ libdmabufinfo/Makefile.am         | 29 +++++++++++++
+ libdmabufinfo/libdmabufinfo.pc.in | 14 +++++++
+ libdmabufinfo/tools/Makefile.am   | 21 ++++++++++
+ libmeminfo.pc.in                  | 14 +++++++
+ libsmapinfo/Makefile.am           | 26 ++++++++++++
+ tools/Makefile.am                 | 67 +++++++++++++++++++++++++++++++
+ 8 files changed, 235 insertions(+)
+ create mode 100644 Makefile.am
+ create mode 100644 configure.ac
+ create mode 100644 libdmabufinfo/Makefile.am
+ create mode 100644 libdmabufinfo/libdmabufinfo.pc.in
+ create mode 100644 libdmabufinfo/tools/Makefile.am
+ create mode 100644 libmeminfo.pc.in
+ create mode 100644 libsmapinfo/Makefile.am
+ create mode 100644 tools/Makefile.am
+
+diff --git a/Makefile.am b/Makefile.am
+new file mode 100644
+index 0000000..a7dadc2
+--- /dev/null
++++ b/Makefile.am
+@@ -0,0 +1,28 @@
++AM_CPPFLAGS := \
++    -W \
++    -Wall \
++    -Wextra \
++    -Wunused \
++    -Wno-missing-field-initializers
++
++ACLOCAL_AMFLAGS = -I m4
++
++
++SUBDIRS = libdmabufinfo . libsmapinfo tools
++
++# Build libmeminfo.so
++libmeminfo_sources = procmeminfo.cpp sysmeminfo.cpp pageacct.cpp
++lib_LTLIBRARIES = libmeminfo.la
++libmeminfo_la_SOURCES = $(libmeminfo_sources)
++libmeminfo_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/meminfo
++libmeminfo_la_CPPFLAGS += -I$(top_srcdir)/libdmabufinfo/include
++libmeminfo_la_CPPFLAGS += $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++libmeminfo_la_CPPFLAGS += -std=c++20
++libmeminfo_la_CPPFLAGS += @LIBBASE_CFLAGS@ 
++libmeminfo_la_LDFLAGS = @LIBBASE_LIBS@ -L./libdmabufinfo/ -ldmabufinfo 
++# Export headers
++libmeminfo_includedir=$(includedir)/meminfo
++
++pkgconfigdir := $(libdir)/pkgconfig
++pkgconfig_DATA := libmeminfo.pc
++EXTRA_DIST := $(pkgconfig_DATA)
+diff --git a/configure.ac b/configure.ac
+new file mode 100644
+index 0000000..c5ab7d5
+--- /dev/null
++++ b/configure.ac
+@@ -0,0 +1,36 @@
++AC_PREREQ(2.61)
++AC_INIT([libmeminfo],1.0.0)
++AM_INIT_AUTOMAKE([-Wall gnu foreign])
++AC_CONFIG_SRCDIR([Makefile.am])
++AC_CONFIG_HEADERS([config.h])
++AC_CONFIG_MACRO_DIR([m4])
++
++# Check for programs
++AM_PROG_AS
++AC_PROG_CC
++AM_PROG_CC_C_O
++AC_PROG_LIBTOOL
++AC_PROG_AWK
++AC_PROG_CPP
++AC_PROG_CXX
++AC_PROG_INSTALL
++AC_PROG_LN_S
++AC_PROG_MAKE_SET
++PKG_PROG_PKG_CONFIG
++
++PKG_CHECK_MODULES([LIBBASE], [libbase])
++AC_SUBST([LIBBASE_CFLAGS])
++AC_SUBST([LIBBASE_LIBS])
++
++AC_CONFIG_FILES([ \
++    libdmabufinfo/Makefile \
++    libdmabufinfo/tools/Makefile \
++    libdmabufinfo/libdmabufinfo.pc \
++    Makefile \
++    libmeminfo.pc \
++    tools/Makefile \
++    libsmapinfo/Makefile \
++])
++
++AC_OUTPUT
++
+diff --git a/libdmabufinfo/Makefile.am b/libdmabufinfo/Makefile.am
+new file mode 100644
+index 0000000..77ad6dc
+--- /dev/null
++++ b/libdmabufinfo/Makefile.am
+@@ -0,0 +1,29 @@
++AM_CPPFLAGS := \
++    -W \
++    -Wall \
++    -Wextra \
++    -Wunused \
++    -Wno-missing-field-initializers
++
++ACLOCAL_AMFLAGS = -I m4
++
++SUBDIRS = .  tools
++
++
++# Build libdmabufinfo.so
++libdmabufinfo_sources = dmabufinfo.cpp dmabuf_sysfs_stats.cpp
++lib_LTLIBRARIES = libdmabufinfo.la
++
++libdmabufinfo_la_SOURCES = $(libdmabufinfo_sources)
++libdmabufinfo_la_CPPFLAGS = -I$(top_srcdir)/include
++libdmabufinfo_la_CPPFLAGS += $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++libdmabufinfo_la_CPPFLAGS += -std=c++20
++libdmabufinfo_la_CPPFLAGS += -I$(srcdir)/include
++
++libdmabufinfo_la_CPPFLAGS += @LIBBASE_CFLAGS@
++libdmabufinfo_la_LDFLAGS = @LIBBASE_LIBS@
++
++# Export headers
++dmabufinfo_includedir=$(includedir)/dmabufinfo
++dmabufinfo_include_HEADERS := include/dmabufinfo/dmabufinfo.h
++dmabufinfo_include_HEADERS += include/dmabufinfo/dmabuf_sysfs_stats.h
+diff --git a/libdmabufinfo/libdmabufinfo.pc.in b/libdmabufinfo/libdmabufinfo.pc.in
+new file mode 100644
+index 0000000..8f66e46
+--- /dev/null
++++ b/libdmabufinfo/libdmabufinfo.pc.in
+@@ -0,0 +1,14 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: libdmabufinfo
++Description: libdmabufinfo library
++Version: @VERSION@
++Libs: -L${libdir} -ldmabufinfo
++Cflags: -I${includedir}
++
++Name: dmabuf_dump
++Description: dmabuf_dump tool
++Version: @VERSION@
+diff --git a/libdmabufinfo/tools/Makefile.am b/libdmabufinfo/tools/Makefile.am
+new file mode 100644
+index 0000000..8c6190a
+--- /dev/null
++++ b/libdmabufinfo/tools/Makefile.am
+@@ -0,0 +1,21 @@
++AM_CPPFLAGS := \
++    -W \
++    -Wall \
++    -Wextra \
++    -Wunused \
++    -Wno-missing-field-initializers
++
++ACLOCAL_AMFLAGS = -I m4
++
++# Build tool dmabuf_dump
++bin_PROGRAMS = dmabuf_dump
++
++dmabuf_dump_SOURCES = dmabuf_dump.cpp
++dmabuf_dump_CPPFLAGS = $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++dmabuf_dump_CPPFLAGS += -I$(top_srcdir)/include
++dmabuf_dump_CPPFLAGS += -std=c++20
++dmabuf_dump_CPPFLAGS += @LIBBASE_CFLAGS@ 
++dmabuf_dump_CPPFLAGS += -I$(srcdir)/../include
++dmabuf_dump_LDFLAGS = @LIBBASE_LIBS@
++dmabuf_dump_LDADD   = ../libdmabufinfo.la
++
+diff --git a/libmeminfo.pc.in b/libmeminfo.pc.in
+new file mode 100644
+index 0000000..bb005ef
+--- /dev/null
++++ b/libmeminfo.pc.in
+@@ -0,0 +1,14 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: libmeminfo
++Description: libmeminfo library
++Version: @VERSION@
++Libs: -L${libdir} -lmeminfo
++Cflags: -I${includedir}
++
++Name: libmeminfo
++Description: meminfo tool
++Version: @VERSION@
+diff --git a/libsmapinfo/Makefile.am b/libsmapinfo/Makefile.am
+new file mode 100644
+index 0000000..8fd66f6
+--- /dev/null
++++ b/libsmapinfo/Makefile.am
+@@ -0,0 +1,26 @@
++AM_CPPFLAGS := \
++    -W \
++    -Wall \
++    -Wextra \
++    -Wunused \
++    -Wno-missing-field-initializers
++
++ACLOCAL_AMFLAGS = -I m4
++
++libsmapinfo_la_SOURCES = processrecord.cpp smapinfo.cpp
++lib_LTLIBRARIES = libsmapinfo.la
++
++libsmapinfo_la_CPPFLAGS = -I$(top_srcdir)/include
++libsmapinfo_la_CPPFLAGS += $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++libsmapinfo_la_CPPFLAGS += -std=c++20
++libsmapinfo_la_CPPFLAGS += -I$(srcdir)/include
++
++#libdmabufinfo_la_CPPFLAGS += @LIBBASE_CFLAGS@
++#libdmabufinfo_la_LDFLAGS = @LIBBASE_LIBS@
++
++libsmapinfo_la_LIBADD = -lbase -lprocinfo
++
++# Export headers
++libsmapinfo_includedir=$(includedir)/libsmapinfo
++libsmapinfo_include_HEADERS := include/processrecord.h
++libsmapinfo_include_HEADERS += include/smapinfo.h
+diff --git a/tools/Makefile.am b/tools/Makefile.am
+new file mode 100644
+index 0000000..73efe9a
+--- /dev/null
++++ b/tools/Makefile.am
+@@ -0,0 +1,67 @@
++AM_CPPFLAGS := \
++    -W \
++    -Wall \
++    -Wextra \
++    -Wunused \
++    -Wno-missing-field-initializers
++
++ACLOCAL_AMFLAGS = -I m4
++
++
++# Build librank
++bin_PROGRAMS = librank
++librank_SOURCES  =    librank.cpp
++librank_CPPFLAGS =   $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++librank_CPPFLAGS += -I$(top_srcdir)/include
++librank_CPPFLAGS +=  @LIBBASE_CFLAGS@ 
++#librank_CPPFLAGS += -std=c++20
++librank_LDFLAGS  =   @LIBBASE_LIBS@
++librank_LDADD   =   ../libmeminfo.la
++librank_CPPFLAGS += -I$(top_srcdir)/libsmapinfo/include
++librank_LDFLAGS  =   @LIBBASE_LIBS@
++librank_LDADD   =   ../libmeminfo.la
++librank_LDADD += $(top_builddir)/libsmapinfo/libsmapinfo.la
++
++# Build procmem
++bin_PROGRAMS += procmem
++procmem_SOURCES  =    procmem.cpp
++procmem_CPPFLAGS =   $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++procmem_CPPFLAGS += -I$(top_srcdir)/include
++procmem_CPPFLAGS +=  @LIBBASE_CFLAGS@ 
++procmem_CPPFLAGS += -std=c++20
++procmem_LDFLAGS  =   @LIBBASE_LIBS@
++procmem_LDADD   =   ../libmeminfo.la
++
++# Build procrank
++bin_PROGRAMS += procrank
++procrank_SOURCES  =    procrank.cpp
++procrank_CPPFLAGS =   $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++procrank_CPPFLAGS += -I$(top_srcdir)/include
++procrank_CPPFLAGS +=  @LIBBASE_CFLAGS@ 
++procrank_CPPFLAGS += -std=c++20
++procrank_CPPFLAGS += -I$(top_srcdir)/libsmapinfo/include
++procrank_LDFLAGS  =   @LIBBASE_LIBS@
++procrank_LDADD   =   ../libmeminfo.la
++procrank_LDADD += $(top_builddir)/libsmapinfo/libsmapinfo.la
++
++# Build showmap
++bin_PROGRAMS += showmap
++showmap_SOURCES  =    showmap.cpp
++showmap_CPPFLAGS =   $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++showmap_CPPFLAGS += -I$(top_srcdir)/include
++showmap_CPPFLAGS +=  @LIBBASE_CFLAGS@
++showmap_CPPFLAGS += -std=c++20
++showmap_CPPFLAGS += -I$(top_srcdir)/libsmapinfo/include 
++showmap_LDFLAGS  =   @LIBBASE_LIBS@ 
++showmap_LDADD   =   ../libmeminfo.la
++showmap_LDADD += $(top_builddir)/libsmapinfo/libsmapinfo.la
++
++#Build wsstop
++bin_PROGRAMS += wsstop
++wsstop_SOURCES  =    wsstop.cpp
++wsstop_CPPFLAGS =   $(AM_CPPFLAGS) -Wno-error=pointer-to-int-cast
++wsstop_CPPFLAGS += -I$(top_srcdir)/include
++wsstop_CPPFLAGS +=  @LIBBASE_CFLAGS@
++wsstop_CPPFLAGS += -std=c++20
++wsstop_LDFLAGS  =   @LIBBASE_LIBS@ 
++wsstop_LDADD   =   ../libmeminfo.la
+-- 
+2.34.1
+

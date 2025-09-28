@@ -1,0 +1,406 @@
+From f9f877761e6d6ed1cacb912c952209f5d3062963 Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Mon, 13 Oct 2025 10:09:49 +0800
+Subject: [PATCH] libmeminfo: solve build issues under yocto
+
+Solve build issues under yocto environment
+
+Upstream-Status: Inappropriate
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+---
+ androidprocheaps.cpp                       |  2 +-
+ include/meminfo/pageacct.h                 |  2 +-
+ libdmabufinfo/dmabuf_sysfs_stats.cpp       | 12 ++++----
+ libdmabufinfo/dmabufinfo.cpp               |  8 +++---
+ libdmabufinfo/tools/dmabuf_dump.cpp        | 32 +++++++++++-----------
+ libelf64/include/libelf64/elf64.h          |  2 +-
+ libmemevents/include/memevents/memevents.h |  2 +-
+ libmemevents/memevents.cpp                 |  6 ++--
+ libsmapinfo/processrecord.cpp              |  8 +++---
+ libsmapinfo/smapinfo.cpp                   |  9 ++++--
+ pageacct.cpp                               |  4 +--
+ procmeminfo.cpp                            |  8 +++---
+ sysmeminfo.cpp                             | 10 +++----
+ tools/librank.cpp                          |  6 ++--
+ tools/procmem.cpp                          |  4 +--
+ tools/procrank.cpp                         |  6 ++--
+ tools/showmap.cpp                          |  4 +--
+ tools/wsstop.cpp                           |  2 +-
+ 18 files changed, 66 insertions(+), 61 deletions(-)
+
+diff --git a/androidprocheaps.cpp b/androidprocheaps.cpp
+index ed01339..0b0498f 100644
+--- a/androidprocheaps.cpp
++++ b/androidprocheaps.cpp
+@@ -14,7 +14,7 @@
+  * limitations under the License.
+  */
+ 
+-#include <android-base/stringprintf.h>
++#include <base/stringprintf.h>
+ 
+ #include "meminfo_private.h"
+ 
+diff --git a/include/meminfo/pageacct.h b/include/meminfo/pageacct.h
+index 8483d84..08822f2 100644
+--- a/include/meminfo/pageacct.h
++++ b/include/meminfo/pageacct.h
+@@ -22,7 +22,7 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/unique_fd.h>
++#include <base/unique_fd.h>
+ 
+ namespace android {
+ namespace meminfo {
+diff --git a/libdmabufinfo/dmabuf_sysfs_stats.cpp b/libdmabufinfo/dmabuf_sysfs_stats.cpp
+index 38eb5c2..7712811 100644
+--- a/libdmabufinfo/dmabuf_sysfs_stats.cpp
++++ b/libdmabufinfo/dmabuf_sysfs_stats.cpp
+@@ -14,11 +14,11 @@
+  * limitations under the License.
+  */
+ 
+-#include <android-base/file.h>
+-#include <android-base/logging.h>
+-#include <android-base/parseint.h>
+-#include <android-base/stringprintf.h>
+-#include <android-base/strings.h>
++#include <base/file.h>
++#include <base/logging.h>
++#include <base/parseint.h>
++#include <base/stringprintf.h>
++#include <base/strings.h>
+ #include <inttypes.h>
+ 
+ #include <dmabufinfo/dmabuf_sysfs_stats.h>
+@@ -27,6 +27,8 @@
+ #include <string>
+ #include <unordered_map>
+ 
++#include <dirent.h>
++
+ namespace android {
+ namespace dmabufinfo {
+ 
+diff --git a/libdmabufinfo/dmabufinfo.cpp b/libdmabufinfo/dmabufinfo.cpp
+index 3fd2006..17d4b40 100644
+--- a/libdmabufinfo/dmabufinfo.cpp
++++ b/libdmabufinfo/dmabufinfo.cpp
+@@ -28,10 +28,10 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/file.h>
+-#include <android-base/logging.h>
+-#include <android-base/parseint.h>
+-#include <android-base/stringprintf.h>
++#include <base/file.h>
++#include <base/logging.h>
++#include <base/parseint.h>
++#include <base/stringprintf.h>
+ #include <procinfo/process_map.h>
+ 
+ #include <dmabufinfo/dmabuf_sysfs_stats.h>
+diff --git a/libdmabufinfo/tools/dmabuf_dump.cpp b/libdmabufinfo/tools/dmabuf_dump.cpp
+index 00efe36..21bda9f 100644
+--- a/libdmabufinfo/tools/dmabuf_dump.cpp
++++ b/libdmabufinfo/tools/dmabuf_dump.cpp
+@@ -31,7 +31,7 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/stringprintf.h>
++#include <base/stringprintf.h>
+ #include <dmabufinfo/dmabuf_sysfs_stats.h>
+ #include <dmabufinfo/dmabufinfo.h>
+ #include <meminfo/procmeminfo.h>
+@@ -52,7 +52,7 @@ std::unique_ptr<DmabufOutputHelper> outputHelper;
+             "-h\t show this help\n"
+             "  \t If PID is supplied, the dmabuf information for that process is shown.\n"
+             "  \t Per-buffer DMA-BUF stats do not take an argument.\n",
+-            getprogname());
++            "dmabuf_dump");
+ 
+     exit(exit_status);
+ }
+@@ -238,20 +238,20 @@ int main(int argc, char* argv[]) {
+             case 'b':
+                 show_dmabuf_sysfs_stats = true;
+                 break;
+-            case 'o':
+-                format = android::meminfo::GetFormat(optarg);
+-                switch (format) {
+-                    case Format::CSV:
+-                        outputHelper = std::make_unique<CsvOutput>();
+-                        break;
+-                    case Format::RAW:
+-                        outputHelper = std::make_unique<RawOutput>();
+-                        break;
+-                    default:
+-                        fprintf(stderr, "Invalid output format.\n");
+-                        usage(EXIT_FAILURE);
+-                }
+-                break;
++            // case 'o':
++            //     format = android::meminfo::GetFormat(optarg);
++            //     switch (format) {
++            //         case Format::CSV:
++            //             outputHelper = std::make_unique<CsvOutput>();
++            //             break;
++            //         case Format::RAW:
++            //             outputHelper = std::make_unique<RawOutput>();
++            //             break;
++            //         default:
++            //             fprintf(stderr, "Invalid output format.\n");
++            //             usage(EXIT_FAILURE);
++            //     }
++            //     break;
+             case 'h':
+                 usage(EXIT_SUCCESS);
+             default:
+diff --git a/libelf64/include/libelf64/elf64.h b/libelf64/include/libelf64/elf64.h
+index 4abcbd6..7eaacf0 100644
+--- a/libelf64/include/libelf64/elf64.h
++++ b/libelf64/include/libelf64/elf64.h
+@@ -20,7 +20,7 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/logging.h>
++#include <base/logging.h>
+ #include <elf.h>
+ 
+ namespace android {
+diff --git a/libmemevents/include/memevents/memevents.h b/libmemevents/include/memevents/memevents.h
+index e91f631..e7671af 100644
+--- a/libmemevents/include/memevents/memevents.h
++++ b/libmemevents/include/memevents/memevents.h
+@@ -16,7 +16,7 @@
+ 
+ #pragma once
+ 
+-#include <android-base/thread_annotations.h>
++#include <base/thread_annotations.h>
+ 
+ #include <memory>
+ #include <vector>
+diff --git a/libmemevents/memevents.cpp b/libmemevents/memevents.cpp
+index db3c1b8..bde5c34 100644
+--- a/libmemevents/memevents.cpp
++++ b/libmemevents/memevents.cpp
+@@ -31,9 +31,9 @@
+ #include <sstream>
+ #include <string>
+ 
+-#include <android-base/file.h>
+-#include <android-base/logging.h>
+-#include <android-base/result.h>
++#include <base/file.h>
++#include <base/logging.h>
++#include <base/result.h>
+ 
+ #include <memevents/memevents.h>
+ 
+diff --git a/libsmapinfo/processrecord.cpp b/libsmapinfo/processrecord.cpp
+index ca3fdb3..a2a647c 100644
+--- a/libsmapinfo/processrecord.cpp
++++ b/libsmapinfo/processrecord.cpp
+@@ -22,10 +22,10 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/file.h>
+-#include <android-base/parseint.h>
+-#include <android-base/stringprintf.h>
+-#include <android-base/strings.h>
++#include <base/file.h>
++#include <base/parseint.h>
++#include <base/stringprintf.h>
++#include <base/strings.h>
+ #include <meminfo/procmeminfo.h>
+ 
+ #include <processrecord.h>
+diff --git a/libsmapinfo/smapinfo.cpp b/libsmapinfo/smapinfo.cpp
+index 8fe6bee..4697927 100644
+--- a/libsmapinfo/smapinfo.cpp
++++ b/libsmapinfo/smapinfo.cpp
+@@ -28,14 +28,17 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/file.h>
+-#include <android-base/parseint.h>
+-#include <android-base/stringprintf.h>
++#include <base/file.h>
++#include <base/parseint.h>
++#include <base/stringprintf.h>
+ #include <meminfo/sysmeminfo.h>
+ 
+ #include <processrecord.h>
+ #include <smapinfo.h>
+ 
++#include <dirent.h>
++#include <climits>
++
+ namespace android {
+ namespace smapinfo {
+ 
+diff --git a/pageacct.cpp b/pageacct.cpp
+index 7049459..73e0cdb 100644
+--- a/pageacct.cpp
++++ b/pageacct.cpp
+@@ -18,8 +18,8 @@
+ #include <fcntl.h>
+ #include <unistd.h>
+ 
+-#include <android-base/logging.h>
+-#include <android-base/unique_fd.h>
++#include <base/logging.h>
++#include <base/unique_fd.h>
+ 
+ #include "meminfo_private.h"
+ 
+diff --git a/procmeminfo.cpp b/procmeminfo.cpp
+index 91ffa68..e9372b5 100644
+--- a/procmeminfo.cpp
++++ b/procmeminfo.cpp
+@@ -29,10 +29,10 @@
+ #include <utility>
+ #include <vector>
+ 
+-#include <android-base/file.h>
+-#include <android-base/logging.h>
+-#include <android-base/stringprintf.h>
+-#include <android-base/unique_fd.h>
++#include <base/file.h>
++#include <base/logging.h>
++#include <base/stringprintf.h>
++#include <base/unique_fd.h>
+ #include <procinfo/process_map.h>
+ 
+ #include "meminfo_private.h"
+diff --git a/sysmeminfo.cpp b/sysmeminfo.cpp
+index a36d960..fb2800e 100644
+--- a/sysmeminfo.cpp
++++ b/sysmeminfo.cpp
+@@ -38,11 +38,11 @@
+ #include <utility>
+ #include <vector>
+ 
+-#include <android-base/file.h>
+-#include <android-base/logging.h>
+-#include <android-base/parseint.h>
+-#include <android-base/stringprintf.h>
+-#include <android-base/unique_fd.h>
++#include <base/file.h>
++#include <base/logging.h>
++#include <base/parseint.h>
++#include <base/stringprintf.h>
++#include <base/unique_fd.h>
+ #include <dmabufinfo/dmabuf_sysfs_stats.h>
+ 
+ #include "meminfo_private.h"
+diff --git a/tools/librank.cpp b/tools/librank.cpp
+index 57c14c8..fe4f6d3 100644
+--- a/tools/librank.cpp
++++ b/tools/librank.cpp
+@@ -26,8 +26,8 @@
+ #include <memory>
+ #include <set>
+ 
+-#include <android-base/parseint.h>
+-#include <android-base/strings.h>
++#include <base/parseint.h>
++#include <base/strings.h>
+ #include <meminfo/procmeminfo.h>
+ 
+ #include <processrecord.h>
+@@ -38,7 +38,7 @@ using ::android::meminfo::GetFormat;
+ using ::android::smapinfo::SortOrder;
+ 
+ [[noreturn]] static void usage(int exit_status) {
+-    std::cerr << "Usage: " << getprogname() << " [ -P | -L ] [ -v | -r | -p | -u | -s | -h ]\n"
++    std::cerr << "Usage: " << "libcrank" << " [ -P | -L ] [ -v | -r | -p | -u | -s | -h ]\n"
+               << "\n"
+               << "Sort options:\n"
+               << "    -v  Sort processes by VSS.\n"
+diff --git a/tools/procmem.cpp b/tools/procmem.cpp
+index 5eb2f55..3f497b7 100644
+--- a/tools/procmem.cpp
++++ b/tools/procmem.cpp
+@@ -26,7 +26,7 @@
+ #include <string>
+ #include <vector>
+ 
+-#include <android-base/stringprintf.h>
++#include <base/stringprintf.h>
+ #include <meminfo/procmeminfo.h>
+ 
+ using Vma = ::android::meminfo::Vma;
+@@ -54,7 +54,7 @@ bool show_wss = false;
+             "    -u  Sort by USS.\n"
+             "    -m  Sort by mapping order (as read from /proc).\n"
+             "    -h  Hide maps with no RSS.\n",
+-            getprogname());
++            "procmem");
+ 
+     exit(exit_status);
+ }
+diff --git a/tools/procrank.cpp b/tools/procrank.cpp
+index a5d022d..d960418 100644
+--- a/tools/procrank.cpp
++++ b/tools/procrank.cpp
+@@ -25,8 +25,8 @@
+ #include <unordered_map>
+ #include <vector>
+ 
+-#include <android-base/parseint.h>
+-#include <android-base/strings.h>
++#include <base/parseint.h>
++#include <base/strings.h>
+ #include <meminfo/procmeminfo.h>
+ #include <procinfo/process.h>
+ 
+@@ -36,7 +36,7 @@
+ using ::android::smapinfo::SortOrder;
+ 
+ [[noreturn]] static void usage(int exit_status) {
+-    std::cerr << "Usage: " << getprogname() << " [ -W ] [ -v | -r | -p | -u | -s | -h ] [-d PID]"
++    std::cerr << "Usage: " << "procrank" << " [ -W ] [ -v | -r | -p | -u | -s | -h ] [-d PID]"
+               << std::endl
+               << "    -v  Sort by VSS." << std::endl
+               << "    -r  Sort by RSS." << std::endl
+diff --git a/tools/showmap.cpp b/tools/showmap.cpp
+index ac6b722..f044508 100644
+--- a/tools/showmap.cpp
++++ b/tools/showmap.cpp
+@@ -29,8 +29,8 @@
+ #include <memory>
+ #include <string>
+ 
+-#include <android-base/stringprintf.h>
+-#include <android-base/strings.h>
++#include <base/stringprintf.h>
++#include <base/strings.h>
+ #include <meminfo/procmeminfo.h>
+ 
+ #include <processrecord.h>
+diff --git a/tools/wsstop.cpp b/tools/wsstop.cpp
+index c0c6a86..d6a15d2 100644
+--- a/tools/wsstop.cpp
++++ b/tools/wsstop.cpp
+@@ -42,7 +42,7 @@ static pid_t g_pid = -1;
+             "%s [-d DELAY_BETWEEN_EACH_SAMPLE] [-n REFRESH_TOTAL] PID\n"
+             "-d\tdelay between each working set sample (default 0)\n"
+             "-n\ttotal number of refreshes before we exit (default 2)\n",
+-            getprogname());
++            "wsstop");
+ 
+     exit(exit_status);
+ }
+-- 
+2.34.1
+

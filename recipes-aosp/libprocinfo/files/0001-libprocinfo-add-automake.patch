@@ -1,0 +1,76 @@
+From 427b8070f2bf4a4e6f8893b8c4581a6e446539ee Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Mon, 13 Oct 2025 10:59:46 +0800
+Subject: [PATCH] libprocinfo: add automake
+
+Create automake files for libprocinfo
+
+Upstream-Status: Inappropriate
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+---
+ Makefile.am  | 26 ++++++++++++++++++++++++++
+ configure.ac | 18 ++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+ create mode 100644 Makefile.am
+ create mode 100644 configure.ac
+
+diff --git a/Makefile.am b/Makefile.am
+new file mode 100644
+index 0000000..8c1868f
+--- /dev/null
++++ b/Makefile.am
+@@ -0,0 +1,26 @@
++AM_CFLAGS = -std=c++20 \
++	    -Wno-error=pointer-to-int-cast \
++	    -I${top_srcdir}/include
++
++AM_CPPFLAGS = $(AM_CFLAGS)
++
++AM_LDFLAGS = -lpthread \
++	     -lbase \
++	     -llog \
++	     -lutils \
++	     -lcutils
++
++ACLOCAL_AMFLAGS = -I m4
++
++libprocinfo_cpp_sources := process.cpp
++libprocinfo_h_sources := include/procinfo/process.h \
++			 include/procinfo/process_map.h
++
++libprocinfo_la_SOURCES = $(libprocinfo_cpp_sources)
++libprocinfo_la_LDFLAGS = $(AM_LDFLAGS)
++libprocinfo_la_CPPFLAGS = $(AM_CPPFLAGS)
++
++library_includedir = $(includedir)/procinfo
++library_include_HEADERS = $(libprocinfo_h_sources)
++
++lib_LTLIBRARIES = libprocinfo.la
+diff --git a/configure.ac b/configure.ac
+new file mode 100644
+index 0000000..d9f9ebf
+--- /dev/null
++++ b/configure.ac
+@@ -0,0 +1,18 @@
++AC_PREREQ([2.61])
++
++AC_INIT([libprocinfo],[1.0.0])
++
++AM_INIT_AUTOMAKE([foreign])
++
++AM_MAINTAINER_MODE
++
++AC_CONFIG_HEADERS([config.h])
++AC_CONFIG_MACRO_DIR([m4])
++
++AM_PROG_AS
++AC_PROG_CC
++AC_PROG_CXX
++AC_PROG_INSTALL
++LT_INIT
++
++AC_OUTPUT(Makefile)
+-- 
+2.34.1
+
