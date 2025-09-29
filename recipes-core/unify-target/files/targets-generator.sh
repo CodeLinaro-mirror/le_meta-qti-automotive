@@ -31,6 +31,9 @@ case "$SWCONFIG" in
     flex)
         ln -sf /usr/lib/systemd/system/flex.target "$WANTS_DIR/"
         ;;
+    "")
+        ln -sf /usr/lib/systemd/system/nonsafe-ivi.target "$WANTS_DIR/"
+        ;;
 esac
 
 # sltflavor to slt target
@@ -38,11 +41,16 @@ esac
 
 # osconfig to targets
 case "$OSCONFIG" in
-    pvm-gvm)
+    PVM+GVM)
         ln -sf /usr/lib/systemd/system/single-gvm.target "$WANTS_DIR/"
         ;;
-    pvm-2gvm)
+    PVM+2GVM)
         ln -sf /usr/lib/systemd/system/multi-gvm.target "$WANTS_DIR/"
+        ;;
+    PVMOnly)
+        ;;
+    "")
+        ln -sf /usr/lib/systemd/system/single-gvm.target "$WANTS_DIR/"
         ;;
 esac
 
