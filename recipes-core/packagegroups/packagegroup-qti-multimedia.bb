@@ -23,15 +23,11 @@ RDEPENDS:${PN} = "\
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstdeinterlace', 'gstreamer1.0-plugins-qvdeinterlace', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqvrate', 'gstreamer1.0-plugins-qvrate', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqvais', 'gstreamer1.0-plugin-qvais', '', d)} \
-        ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'gstreamer1.0-plugins-qcarcamsrc gstreamer1.0-plugins-vidc gstreamer1.0-plugins-extpoolsink', '', d)} \
+        ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'gstreamer1.0-plugins-qcarcamsrc gstreamer1.0-plugins-vidc', '', d)} \
+        gstreamer1.0-plugins-extpoolsink \
 "
 
 RDEPENDS:${PN}:remove:gen5 = "\
         videodlkm \
 "
 
-# need codec2-app for Lemans targets since codec2-service not enabled yet on Lemans
-RDEPENDS:${PN}:append:quin-gvm-lemans = " codec2-app"
-RDEPENDS:${PN}:append:quin-gvm-lemans-dpk = " codec2-app"
-RDEPENDS:${PN}:append:quin-gvm-monaco = " codec2-app"
-RDEPENDS:${PN}:append:quin-gvm-monaco-dpk = " codec2-app"
