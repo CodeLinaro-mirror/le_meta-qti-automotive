@@ -8,7 +8,7 @@ ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 DEPENDS += "\
     alsa-lib cmake-native glib-2.0 libpcap \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'libuhab', '', d)} \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqeavb', 'gstreamer1.0 gstreamer1.0-plugins-base', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstopenavb', 'gstreamer1.0 gstreamer1.0-plugins-base', '', d)} \
     pciutils \
 "
 
@@ -35,7 +35,7 @@ do_compile() {
     export AVB_FEATURE_NEUTRINO=1
     export AVB_FEATURE_INTF_ALSA2=0
 
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstqeavb', 'true', 'false', d)}; then
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gstopenavb', 'true', 'false', d)}; then
         export AVB_FEATURE_GSTREAMER=1
         export GSTREAMER_1_0=1
     fi
