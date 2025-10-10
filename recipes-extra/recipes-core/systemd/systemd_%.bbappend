@@ -9,7 +9,6 @@ SRC_URI:append = " \
              ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'file://0031-udev-trigger-only-enable-must-part-while-leave-other.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0001-systemd-sleep-change-suspend-state-list.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'deepsleep', 'file://0002-systemd-add-deepsleep-support.patch', '', d)} \
-             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah', 'file://0001-modules-load-implement-parallel-module-loading.patch', '', d)} \
              file://0035-systemd-Change-job-print-method-to-Normal-way.patch \
              ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'file://0001-systemd-Change-systemd-modules-load-service-type-to-.patch', '', d)}"
 
