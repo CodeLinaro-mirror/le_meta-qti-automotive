@@ -14,6 +14,6 @@ do_install:append() {
     #Override default setting and add RuntimeWatchdogSec & RebootWatchdogSec support for ark/qclinux kernel
     if ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ark linux-qcom-custom linux-qcom-custom-rt', 'true', 'false', d)}; then
         echo "RuntimeWatchdogSec=10" >> ${D}${systemd_unitdir}/system.conf.d/00-${PN}.conf
-        echo "RebootWatchdogSec=32" >> ${D}${systemd_unitdir}/system.conf.d/00-${PN}.conf
+        echo "RebootWatchdogSec=30" >> ${D}${systemd_unitdir}/system.conf.d/00-${PN}.conf
     fi
 }
