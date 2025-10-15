@@ -37,6 +37,10 @@ do_install:append() {
 
     install -m 0755 ${WORKDIR}/vm_net.conf -D ${D}${libdir}/modules-load.d/vm_net.conf
     install -m 0755 ${WORKDIR}/vmm_pwr_key.conf -D ${D}${libdir}/modules-load.d/vmm_pwr_key.conf
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'true', 'false', d)}; then
+        sed -i '/After=systemd-modules-load.service/d' ${D}${systemd_unitdir}/system/vfio-device-probe.service
+        sed -i 's#/usr/bin/vfio-device-bind.sh#/bin/echo "vfio already run in early-ramdisk"#g' ${D}${systemd_unitdir}/system/vfio-device-probe.service
+    fi
 }
 
 do_install:append:sa7255() {
@@ -47,12 +51,8 @@ do_install:append:sa8775() {
     install -m 0755 ${S}/vfio-device-probe/sa8775_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8775_dev.conf
 }
 
-do_install:append:sa8797() {
+do_install:append:gen5() {
     install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
-    if ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'true', 'false', d)}; then
-        sed -i '/After=systemd-modules-load.service/d' ${D}${systemd_unitdir}/system/vfio-device-probe.service
-        sed -i 's#/usr/bin/vfio-device-bind.sh#echo "vfio already run in early-ramdisk"#g' ${D}${systemd_unitdir}/system/vfio-device-probe.service
-    fi
 }
 
 FILES:${PN} += "${libdir}/modules-load.d/*"

@@ -14,6 +14,9 @@ PREFERRED_VERSION_wayland = "1.18.0"
 PREFERRED_VERSION_wayland-native = "1.18.0"
 PREFERRED_VERSION_wayland-protocols = "1.20"
 PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
+
+PREFERRED_VERSION_libgpiod = "1.6.4"
+
 # Prefer gbm
 PREFERRED_PROVIDER_virtual/libgbm = "gbm"
 
@@ -24,8 +27,6 @@ PREFERRED_PROVIDER_virtual/wayland-egl  = "adreno"
 PREFERRED_PROVIDER_virtual/egl          = "adreno"
 PREFERRED_PROVIDER_virtual/libgles1     = "adreno"
 PREFERRED_PROVIDER_virtual/libgles2     = "adreno"
-
-BBMASK += "meta-qti-bsp/meta-qti-base/recipes-wlan"
 
 RUSTVERSION = "1.75%"
 
@@ -87,12 +88,10 @@ MACHINE_FEATURES:remove = "\
     qti-display \
     qti-graphics \
     qti-audio \
-    qti-vmm \
     qti-camera \
     qti-safety \
     qti-data \
     qti-vnw \
-    early-ramdisk-init \
     qti-security \
     qti-gunyah \
     qti-compute-platform \
@@ -100,6 +99,9 @@ MACHINE_FEATURES:remove = "\
 
 MACHINE_FEATURES:append = "\
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-bluetooth', '', d)} \
+    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan', '', d)} \
+    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hsp', '', d)} \
+    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hmt', '', d)} \
 "
 
 MACHINE_FEATURES:remove = "\
@@ -126,7 +128,9 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-ipv6-${KERNEL_VERSION} \
     kernel-module-kiumd-${KERNEL_VERSION} \
     kernel-module-iommu-iova-map-${KERNEL_VERSION} \
+    kernel-module-tz-ffi-${KERNEL_VERSION} \
     kernel-module-scm-user-intf-${KERNEL_VERSION} \
+    kernel-module-scm-user-intf-sec-${KERNEL_VERSION} \
     kernel-module-vfio-platform-base-${KERNEL_VERSION} \
     kernel-module-vfio-platform-${KERNEL_VERSION} \
     kernel-module-kiumd-kgsl-${KERNEL_VERSION} \
@@ -142,4 +146,14 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-mhi-ep-net-${KERNEL_VERSION} \
     kernel-module-kryo-arm64-edac-${KERNEL_VERSION} \
     kernel-module-socinfo-${KERNEL_VERSION} \
+    kernel-module-msm-hab-${KERNEL_VERSION} \
+    kernel-module-hyp-udmabuf-${KERNEL_VERSION} \
+    kernel-module-mdt-loader-${KERNEL_VERSION} \
+    kernel-module-gh-msgq-${KERNEL_VERSION} \
+    kernel-module-gh-arm-drv-${KERNEL_VERSION} \
+    kernel-module-gh-rm-drv-${KERNEL_VERSION} \
+    kernel-module-gunyah-${KERNEL_VERSION} \
+    kernel-module-hvc-gunyah-${KERNEL_VERSION} \
+    kernel-module-ipcc-shmem-test-module-${KERNEL_VERSION} \
+    kernel-module-qcom-l3-cache-config-${KERNEL_VERSION} \
 "

@@ -19,7 +19,7 @@ IMAGE_INSTALL += "\
     ${@bb.utils.contains('VARIANT', 'debug', 'packagegroup-qti-debug', '', d)} \
     "
 
-IMAGE_INSTALL:append:sa8797 = " packagegroup-qti-multimedia"
+IMAGE_INSTALL:append:gen5 = " packagegroup-qti-multimedia"
 
 IMAGE_LINGUAS = ""
 

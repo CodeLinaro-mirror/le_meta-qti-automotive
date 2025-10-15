@@ -20,17 +20,17 @@ add_extra_modules() {
 }
 
 ROOTFS_POSTPROCESS_COMMAND:append = " add_extra_modules;"
-ROOTFS_POSTPROCESS_COMMAND:remove:sa8797 = "add_extra_modules;"
+ROOTFS_POSTPROCESS_COMMAND:remove:gen5 = "add_extra_modules;"
 
 # Makes image suitable for development (e.g. enable ssh for login, allows root logins and logins without passwords by ssh)
 IMAGE_FEATURES:append = " ${@bb.utils.contains('VARIANT', 'debug', 'debug-tweaks ssh-server-openssh', '', d)}"
 IMAGE_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'ssh-server-openssh read-only-rootfs', '', d)}"
 IMAGE_FEATURES:append = " package-management"
 
-INCOMPATIBLE_LICENSE:sa8797 = "GPL-3.0-only LGPL-3.0-only AGPL-3.0-only"
+INCOMPATIBLE_LICENSE:gen5 = "GPL-3.0-only LGPL-3.0-only AGPL-3.0-only"
 
 # License issue introduced by selinux, temporarily skip
-INCOMPATIBLE_LICENSE_EXCEPTIONS:append:sa8797 = " binutils:GPL-3.0-only grep:GPL-3.0-only libbfd:GPL-3.0-only libopcodes:GPL-3.0-only"
+INCOMPATIBLE_LICENSE_EXCEPTIONS:append:gen5 = " binutils:GPL-3.0-only grep:GPL-3.0-only libbfd:GPL-3.0-only libopcodes:GPL-3.0-only"
 
 # Add libgomp support
 IMAGE_INSTALL += "libgomp"

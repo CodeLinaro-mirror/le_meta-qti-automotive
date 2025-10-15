@@ -1,0 +1,47 @@
+From fed8a2b970c21d1083e366eff9211074b33aaad3 Mon Sep 17 00:00:00 2001
+From: Martin Ottens <martin.ottens@fau.de>
+Date: Wed Dec 11 17:18:14 2024 +0100
+Subject: Fix Segfault in iperf_err(exit)
+
+Backport from upstream, and rebased.
+
+Upstream-Status: Backport [https://github.com/esnet/iperf/pull/1807/commits]
+Change-Id: fed8a2b970c21d1083e366eff9211074b33aaad3
+Signed-off-by: Martin Ottens <martin.ottens@fau.de>
+---
+ src/iperf_error.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/iperf_error.c b/src/iperf_error.c
+index fede216b..a1d2c4f7 100644
+--- a/src/iperf_error.c
++++ b/src/iperf_error.c
+@@ -111,8 +111,10 @@ iperf_errexit(struct iperf_test *test, const char *format, ...)
+         }
+ 	iperf_json_finish(test);
+     } else {
+-        if (pthread_mutex_lock(&(test->print_mutex)) != 0) {
+-            perror("iperf_errexit: pthread_mutex_lock");
++        if (test != NULL) {
++            if (pthread_mutex_lock(&(test->print_mutex)) != 0) {
++                perror("iperf_errexit: pthread_mutex_lock");
++            }
+         }
+ 
+ 	if (test && test->outfile && test->outfile != stdout) {
+@@ -128,8 +130,10 @@ iperf_errexit(struct iperf_test *test, const char *format, ...)
+ 	    fprintf(stderr, "iperf3: %s\n", str);
+ 	}
+ 
+-        if (pthread_mutex_unlock(&(test->print_mutex)) != 0) {
+-            perror("iperf_errexit: pthread_mutex_unlock");
++        if (test != NULL) {
++            if (pthread_mutex_unlock(&(test->print_mutex)) != 0) {
++                perror("iperf_errexit: pthread_mutex_unlock");
++            }
+         }
+     }
+ 
+-- 
+2.34.1
+

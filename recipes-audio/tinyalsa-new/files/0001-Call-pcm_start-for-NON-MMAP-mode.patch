@@ -33,7 +33,7 @@ index 1b2103a..5133881 100644
 +     * If frames < start_threshold, wait indefinitely.
 +     * Another thread may start capture
 +     */
-+    if (!is_playback && pcm_state(pcm) == PCM_STATE_PREPARED &&
++    if (pcm_state(pcm) == PCM_STATE_PREPARED &&
 +            frames >= pcm->config.start_threshold) {
 +        if (pcm_start(pcm) < 0) {
 +            return -1;

@@ -63,7 +63,7 @@ PACKAGECONFIG:remove = "timesyncd "
 
 #Enable coredump by default for lemans
 PACKAGECONFIG:append:sa8775 = " coredump"
-PACKAGECONFIG:append:sa8797 = " coredump"
+PACKAGECONFIG:append:gen5 = " coredump"
 
 # Use glib-2.0 for g_strlcat
 CFLAGS:append = " \
@@ -89,12 +89,9 @@ do_install:append:sa81x5() {
 
 do_install:append () {
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
-        echo "DefaultLimitNOFILE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
-        echo "DefaultLimitMSGQUEUE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
-        if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'true', 'false', d)}; then
-            echo "DefaultTimeoutStartSec=5s" >> ${D}${sysconfdir}/systemd/system.conf
-            echo "DefaultTimeoutStopSec=5s" >> ${D}${sysconfdir}/systemd/system.conf
-        fi
+       echo "DefaultLimitNOFILE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
+       echo "DefaultLimitMSGQUEUE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
+       echo "DefaultTimeoutStopSec=5s" >> ${D}${sysconfdir}/systemd/system.conf
     fi
 
     # Use kernel rules for network iface name

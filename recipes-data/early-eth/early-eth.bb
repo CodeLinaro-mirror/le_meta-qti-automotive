@@ -23,6 +23,11 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/early_eth1.service ${D}${systemd_unitdir}/system/early_eth1.service
 }
 
+do_install:append:sa8775() {
+    sed -i 's/^WantedBy=.*$/WantedBy=sysinit.target/' ${D}${systemd_unitdir}/system/early_eth0.service
+    sed -i 's/^WantedBy=.*$/WantedBy=sysinit.target/' ${D}${systemd_unitdir}/system/early_eth1.service
+}
+
 SYSTEMD_SERVICE:${PN} = "\
        early_eth0.service \
        early_eth1.service \

@@ -17,4 +17,4 @@ RDEPENDS:${PN} += "\
     attr \
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-fde', 'enable-fde', '', d)} \
 "
-RDEPENDS:${PN}:append:sa8797 = " optee-libckteec"
+RDEPENDS:${PN}:append:gen5 = " optee-libckteec"
