@@ -14,7 +14,6 @@ RDEPENDS:${PN} += "\
     bridge-utils \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'setup-network', '', d)} \
     setup-network-host \
-    gvm-net-configure \
     net-tools \
     ethtool \
     iperf2 \
@@ -29,8 +28,17 @@ RDEPENDS:${PN} += "\
     tcp-wrappers \
     ${@bb.utils.contains('LAYERSERIES_CORENAMES', 'scarthgap', '', 'netkit-telnet', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'proftpd', d)} \
-    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'setup-network-param', '', d)} \
     ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'setup-qos', '', d)} \
     ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'early-eth', '', d)} \
 "
+
+RDEPENDS:${PN}:append:gen5 = " \
+    gvm-net-configure \
+    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'setup-network-param', '', d)} \
+"
+
+RDEPENDS:${PN}:append:sa8775 = " ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'netlink-service-infra', '', d)}"
+
+RDEPENDS:${PN}:remove:sa8650-adas = "netlink-service-infra"
+
 RDEPENDS:${PN}:append:quin-gvm-lemans = " dataeth-dlkm"
