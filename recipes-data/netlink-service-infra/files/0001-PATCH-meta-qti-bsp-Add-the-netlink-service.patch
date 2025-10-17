@@ -1,0 +1,489 @@
+# This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+# Copyright (c) 2025 Qualcomm Technologies, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 6d07ab4b951e1ea8a3c1165a113a73a1341fffc6 Mon Sep 17 00:00:00 2001
+From: Sarosh Hasan <quic_sarohasa@quicinc.com>
+Date: Fri, 27 Dec 2024 14:41:14 +0530
+Subject: [PATCH] [PATCH] meta-qti-bsp: Add the netlink service
+
+Add netlink service for the DMA virtualization.
+
+Signed-off-by: Sarosh Hasan <quic_sarohasa@quicinc.com>
+---
+ .../files/CMakeLists.txt                      |  13 +
+ .../files/netlink-service.c                   | 331 ++++++++++++++++++
+ 2 files changed, 344 insertions(+)
+ create mode 100644 meta-qti-base/recipes-data/netlink-service-infra/files/CMakeLists.txt
+ create mode 100644 meta-qti-base/recipes-data/netlink-service-infra/files/netlink-service.c
+
+diff --git a/meta-qti-base/recipes-data/netlink-service-infra/files/CMakeLists.txt b/meta-qti-base/recipes-data/netlink-service-infra/files/CMakeLists.txt
+new file mode 100644
+index 000000000..c4d1ed71b
+--- /dev/null
++++ b/meta-qti-base/recipes-data/netlink-service-infra/files/CMakeLists.txt
+@@ -0,0 +1,13 @@
++cmake_minimum_required(VERSION 3.16)
++
++project(netlinkServiceInfra)
++
++include(GNUInstallDirs)
++
++set(EXEC_NAME netlink-service)
++set(SOURCES netlink-service.c)
++
++add_executable(${EXEC_NAME} ${SOURCES})
++target_link_libraries(${EXEC_NAME} pthread)
++
++install(TARGETS ${EXEC_NAME} DESTINATION /usr/bin)
+diff --git a/meta-qti-base/recipes-data/netlink-service-infra/files/netlink-service.c b/meta-qti-base/recipes-data/netlink-service-infra/files/netlink-service.c
+new file mode 100644
+index 000000000..16905a4e5
+--- /dev/null
++++ b/meta-qti-base/recipes-data/netlink-service-infra/files/netlink-service.c
+@@ -0,0 +1,441 @@
++/*
++ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ */
++
++#include <stdio.h>
++#include <stdarg.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <sys/socket.h>
++#include <linux/netlink.h>
++#include <linux/rtnetlink.h>
++#include <linux/if.h>
++#include <arpa/inet.h>
++#include <pthread.h>
++#include <netinet/in.h>
++#include <fcntl.h>
++#include <errno.h>
++#include <sys/select.h>
++
++#ifndef IF_NAMESIZE
++#define IF_NAMESIZE 16
++#endif
++
++#ifndef TCP_KEEPIDLE
++#define TCP_KEEPIDLE 4
++#endif
++
++#ifndef TCP_KEEPINTVL
++#define TCP_KEEPINTVL 5
++#endif
++
++#ifndef TCP_KEEPCNT
++#define TCP_KEEPCNT 6
++#endif
++#define BUFSIZE 8192
++#define SERVER_IP "192.168.1.1"
++#define SERVER_PORT 8888
++#define MAX_RETRIES 20
++#define RETRY_DELAY 500000
++
++int client_sock = -1;
++
++typedef enum {
++	EMAC_HW_DOWN = 0,
++	EMAC_HW_UP = 1,
++	EMAC_LINK_DOWN = 2,
++	EMAC_LINK_UP = 3,
++	STATE_UNKNOWN = 4
++} InterfaceState;
++
++#define BUF_LEN 120
++
++struct vlan_info {
++	int vlan_status;
++	int vid;
++	int gvm_link_state;
++};
++
++enum {
++	HEALTH_MONITOR = 1,
++	DEL_GVM_THIN_VLAN = 2,
++	ADD_GVM_THIN_VLAN = 3,
++	ADD_ALL_GVM_THIN_VLAN = 4,
++	GVM_REMOVE = 5
++};
++
++struct vlan_info recv_vlan;
++static InterfaceState prev_hw_state = STATE_UNKNOWN;
++static InterfaceState prev_link_state = STATE_UNKNOWN;
++pthread_mutex_t state_mutex = PTHREAD_MUTEX_INITIALIZER;
++
++void printToKmsg(const char *format, ...)
++{
++	char message[256], command[512];
++	va_list args;
++	va_start(args, format);
++	vsnprintf(message, sizeof(message), format, args);
++	va_end(args);
++
++	snprintf(command, sizeof(command), "echo 'eth-netlink : %s\n' > /dev/kmsg", message);
++	system(command);
++}
++
++/* Add strlcpy as banned API requirement */
++size_t strlcpy(char *dst, const char *src, size_t len)
++{
++	char *d = dst;
++	size_t n = len;
++	const char *s = src;
++
++	if (n != 0) {
++		while (--n != 0) {
++			*d = *s;
++			if (*d == '\0')
++				break;
++			d++;
++			s++;
++		}
++	}
++	if (n == 0) {
++		if (len != 0)
++			*d = '\0';
++		/* advance to the end of the source string */
++		while (*s++)
++			;
++	}
++	/* Return the number of characters */
++	return (s - src - 1);
++}
++
++int send_with_retry(const InterfaceState *state)
++{
++	int retries = 0;
++	int ret = 0;
++
++	while (retries < MAX_RETRIES) {
++		if (client_sock >= 0) {
++			ret = send(client_sock, state, sizeof(*state), 0);
++			if (ret < 0) {
++				if (ret == EPIPE || ret == ECONNRESET) {
++					printToKmsg(" lost connection!!!");
++					close(client_sock);
++					return ret;
++				}
++				printToKmsg("send failed, retrying...ret = %d",ret);
++			} else
++				return 0;
++		}
++		retries++;
++		usleep(50000);
++	}
++	return -1;
++}
++
++void write_to_chardev(struct vlan_info vlan, InterfaceState cur_link_state)
++{
++	int fd;
++	char buffer[BUF_LEN];
++
++	fd = open("/dev/qcom_ethqos_filter_dev", O_WRONLY);
++	if (fd < 0) {
++		printToKmsg("chrdev: Failed to open the character device");
++	} else {
++		snprintf(buffer, BUF_LEN, "VLAN Status: %d, VID: %d, PVM: %d, GVM: %d",
++					vlan.vlan_status, vlan.vid, cur_link_state, vlan.gvm_link_state);
++		write(fd, buffer, strlen(buffer));
++		close(fd);
++		printToKmsg("chrdev: vlan info written to character device");
++	}
++}
++
++void handle_netlink_msg(struct nlmsghdr *nlh)
++{
++	struct ifinfomsg *ifi = NLMSG_DATA(nlh);
++	struct rtattr *attr = IFLA_RTA(ifi);
++	int len = nlh->nlmsg_len - NLMSG_LENGTH(sizeof(*ifi));
++	InterfaceState cur_hw_state = STATE_UNKNOWN;
++	InterfaceState cur_link_state = STATE_UNKNOWN;
++	char ifname[IF_NAMESIZE];
++
++	while (RTA_OK(attr, len)) {
++		if (attr->rta_type == IFLA_IFNAME) {
++			strlcpy(ifname, RTA_DATA(attr), IF_NAMESIZE);
++			if (strcmp(ifname, "eth0") == 0) {
++				if (ifi->ifi_flags & IFF_UP)
++					cur_hw_state = EMAC_HW_UP;
++				else
++					cur_hw_state = EMAC_HW_DOWN;
++
++				if (ifi->ifi_flags & IFF_LOWER_UP)
++					cur_link_state = EMAC_LINK_UP;
++				else
++					cur_link_state = EMAC_LINK_DOWN;
++
++				pthread_mutex_lock(&state_mutex);
++				if (cur_hw_state != prev_hw_state) {
++					if (client_sock >= 0) {
++							if (send_with_retry(&cur_hw_state) < 0) {
++								printToKmsg("Fail cur_hw");
++							}
++							printToKmsg("state sent to socket");
++						}
++						prev_hw_state = cur_hw_state;
++				}
++
++				if (cur_link_state != prev_link_state) {
++					if (client_sock >= 0) {
++						if (send_with_retry(&cur_link_state) < 0) {
++							printToKmsg("Fail cur_link");
++						}
++						printToKmsg("LINK state sent");
++					}
++					prev_link_state = cur_link_state;
++					if (cur_link_state == EMAC_LINK_UP)
++						recv_vlan.vlan_status = ADD_ALL_GVM_THIN_VLAN;
++					write_to_chardev(recv_vlan,cur_link_state);
++				}
++				pthread_mutex_unlock(&state_mutex);
++				break;
++			}
++		}
++		attr = RTA_NEXT(attr, len);
++	}
++}
++
++void *netlink_listener(void *arg)
++{
++	int sock_netlink;
++	struct sockaddr_nl sa_netlink;
++	char buf[BUFSIZE];
++	struct iovec iov = { buf, sizeof(buf) };
++	struct msghdr msg = {
++	   &sa_netlink, sizeof(sa_netlink), &iov, 1, NULL, 0, 0 };
++	struct nlmsghdr *nlh;
++	int ret;
++	ssize_t len;
++	fd_set read_fds;
++
++	sock_netlink = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
++	if (sock_netlink < 0) {
++		printToKmsg("netlink socket failed");
++		return NULL;
++	}
++
++	memset(&sa_netlink, 0, sizeof(sa_netlink));
++	sa_netlink.nl_family = AF_NETLINK;
++	sa_netlink.nl_pid = getpid();
++	sa_netlink.nl_groups = RTMGRP_LINK |
++	    RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
++
++	if (bind(sock_netlink,
++	         (struct sockaddr *)&sa_netlink,
++	         sizeof(sa_netlink)) < 0) {
++		printToKmsg("netlink bind failed");
++		close(sock_netlink);
++		return NULL;
++	}
++
++	while (1) {
++		FD_ZERO(&read_fds);
++		FD_SET(sock_netlink, &read_fds);
++
++		ret = select(sock_netlink + 1, &read_fds, NULL, NULL, NULL);
++		if (ret < 0) {
++			printToKmsg("select failed");
++			close(sock_netlink);
++			return NULL;
++		}
++
++		if (FD_ISSET(sock_netlink, &read_fds)) {
++				len = recvmsg(sock_netlink, &msg, 0);
++				if (len < 0) {
++				printToKmsg("recvmsg failed");
++				close(sock_netlink);
++				return NULL;
++			}
++
++			for (nlh = (struct nlmsghdr *)buf;
++			            NLMSG_OK(nlh, len);
++			            nlh = NLMSG_NEXT(nlh, len)) {
++				if (nlh->nlmsg_type == NLMSG_DONE) {
++					break;
++				}
++				if (nlh->nlmsg_type == RTM_NEWLINK ||
++				    nlh->nlmsg_type == RTM_DELLINK) {
++					handle_netlink_msg(nlh);
++				}
++			}
++		}
++	}
++	close(sock_netlink);
++	return NULL;
++}
++
++int bind_with_retry(int inet_sock,
++                    struct sockaddr *server_addr,
++                    socklen_t addrlen)
++{
++	int attempts = 0;
++
++	while (attempts < MAX_RETRIES) {
++		if (bind(inet_sock, server_addr, addrlen) == 0)
++			return 0;
++
++		printToKmsg("inet bind failed, retrying...");
++		usleep(RETRY_DELAY);
++		attempts++;
++	}
++	printToKmsg("inet bind failed after maximum retries");
++	close(inet_sock);
++	return -1;
++}
++
++void *inet_socket_server(void *arg)
++{
++	int inet_sock;
++	struct sockaddr_in server_addr, client;
++	int sock_len;
++	int opt = 1;
++	int keepalive = 1;
++	int keepidle = 10;
++	int keepintvl = 5;
++	int keepcnt = 4;
++
++	inet_sock = socket(AF_INET, SOCK_STREAM, 0);
++	if (inet_sock < 0) {
++		printToKmsg("Could not create inet socket");
++		return NULL;
++	}
++	if (setsockopt(inet_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
++		printToKmsg("setsockopt(SO_REUSEADDR) failed");
++		close(inet_sock);
++		return NULL;
++	}
++	if(setsockopt(inet_sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&keepalive, sizeof(keepalive)) < 0){
++		printToKmsg("Can`t set a socket option SO_KEEPALIVE");
++		close(inet_sock);
++		return NULL;
++	}
++	if(setsockopt(inet_sock, IPPROTO_TCP, TCP_KEEPIDLE, (char *)&keepidle, sizeof(keepidle)) < 0) {
++		printToKmsg("Can`t set a socket option TCP_KEEPIDLE");
++		close(inet_sock);
++		return NULL;
++	}
++	if(setsockopt(inet_sock, IPPROTO_TCP, TCP_KEEPINTVL, (char *)&keepintvl, sizeof(keepintvl)) < 0) {
++		printToKmsg("Can`t set a socket option TCP_KEEPINTVL");
++		close(inet_sock);
++		return NULL;
++	}
++	if(setsockopt(inet_sock, IPPROTO_TCP, TCP_KEEPCNT, (char *)&keepcnt, sizeof(keepcnt)) < 0) {
++		printToKmsg("Can`t set a socket option TCP_KEEPCNT");
++		close(inet_sock);
++		return NULL;
++	}
++	server_addr.sin_family = AF_INET;
++	server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
++	server_addr.sin_port = htons(SERVER_PORT);
++
++	if (bind_with_retry(inet_sock,
++	                    (struct sockaddr *)&server_addr,
++	                     sizeof(server_addr)) < 0) {
++		close(inet_sock);
++		return NULL;
++	}
++
++	if (listen(inet_sock, 1) < 0) {
++		printToKmsg("inet listen failed");
++		close(inet_sock);
++		return NULL;
++	}
++
++	printToKmsg("Waiting for incoming connections...");
++	sock_len = sizeof(struct sockaddr_in);
++	/* Set socket to non-blocking mode*/
++	fcntl(inet_sock, F_SETFL, O_NONBLOCK);
++
++	while (1) {
++		/*accept connection*/
++		while ((client_sock = accept(inet_sock,
++		        (struct sockaddr *)&client,
++		        (socklen_t *)&sock_len)) < 0) {
++			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
++				printToKmsg("accept failed: %d", errno);
++			}
++			usleep(50000);
++		}
++		printToKmsg("connection accepted...");
++
++		if (send_with_retry(&prev_hw_state) < 0)
++			printToKmsg("Failed to send prev_hw_state");
++
++		if (send_with_retry(&prev_link_state) < 0)
++			printToKmsg("Failed to send prev_link_state");
++		printToKmsg("Initial Interface and LINK state sent to socket");
++
++		/* Keep the connection open to send and receive state updates*/
++		while (1) {
++			if (client_sock < 0)
++				break;
++			ssize_t recv_len = recv(client_sock, &recv_vlan, sizeof(recv_vlan), 0);
++			if (recv_len < 0) {
++				if (errno == EINTR)
++					continue;
++				else if (errno == EAGAIN || errno == EWOULDBLOCK) {
++					usleep(50000);
++					continue;
++				} else {
++					printToKmsg("recv failed");
++				break;
++				}
++			} else if (recv_len == 0) {
++				printToKmsg("Client disconnected");
++				break;
++			}
++			if (recv_vlan.vlan_status == HEALTH_MONITOR) {
++				continue;
++			}
++			write_to_chardev(recv_vlan,prev_link_state);
++			usleep(50000);
++		}
++		printToKmsg("Closing client socket");
++		close(client_sock);
++	}
++	close(inet_sock);
++	return NULL;
++}
++
++int main(void)
++{
++	pthread_t netlink_thread, inet_thread;
++	recv_vlan.vlan_status = DEL_GVM_THIN_VLAN;
++	recv_vlan.vid = 0;
++	recv_vlan.gvm_link_state = EMAC_LINK_DOWN;
++
++	if (pthread_create(&netlink_thread, NULL,
++	                   netlink_listener, NULL) != 0) {
++		printToKmsg("netlink pthread_create failed");
++		return -1;
++	}
++
++	if (pthread_create(&inet_thread, NULL,
++	                   inet_socket_server, NULL) != 0) {
++		printToKmsg("inet pthread_create failed");
++		return -1;
++	}
++
++	if (pthread_join(netlink_thread, NULL) != 0) {
++		printToKmsg("netlink pthread_join failed");
++		return -1;
++	}
++
++	if (pthread_join(inet_thread, NULL) != 0) {
++		printToKmsg("inet pthread_join failed");
++		return -1;
++	}
++
++	pthread_mutex_destroy(&state_mutex);
++	return 0;
++}
+-- 
+2.17.1
+
