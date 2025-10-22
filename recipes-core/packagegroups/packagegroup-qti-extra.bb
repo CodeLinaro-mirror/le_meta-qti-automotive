@@ -19,7 +19,6 @@ RDEPENDS:${PN} += "\
     openssl \
     libxml2 \
     libnl \
-    coreutils \
     sec-config \
     libsensors \
     libatomic \
