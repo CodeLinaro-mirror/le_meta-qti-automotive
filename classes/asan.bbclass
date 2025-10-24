@@ -40,7 +40,7 @@ python __anonymous() {
     d.appendVar('LDFLAGS', ' -lasan')
 
     # Inherit meson, needs add compile flags at meson-configure file additionally
-    if recipe_name in ['weston-sdm-extension', 'gstreamer1.0-plugins-extpoolsink', 'gstreamer1.0-plugins-qvdeinterlace', 'gstreamer1.0-plugins-vidc', 'gstreamer1.0-plugins-qcarcamsrc', 'gstreamer1.0-qvconv']:
+    if recipe_name in ['weston-sdm-extension', 'gstreamer1.0-plugins-extpoolsink', 'gstreamer1.0-plugins-qvdeinterlace', 'gstreamer1.0-plugins-vidc', 'gstreamer1.0-plugins-qcarcamsrc', 'gstreamer1.0-plugins-qvconv']:
         d.appendVar('EXTRA_OEMESON', ' -DASAN=true')
         return
 
