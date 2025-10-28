@@ -27,10 +27,7 @@ IMAGE_FEATURES:append = " ${@bb.utils.contains('VARIANT', 'debug', 'debug-tweaks
 IMAGE_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'ssh-server-openssh read-only-rootfs', '', d)}"
 IMAGE_FEATURES:append = " package-management"
 
-INCOMPATIBLE_LICENSE:gen5 = "GPL-3.0-only LGPL-3.0-only AGPL-3.0-only"
-
-# License issue introduced by selinux, temporarily skip
-INCOMPATIBLE_LICENSE_EXCEPTIONS:append:gen5 = " binutils:GPL-3.0-only grep:GPL-3.0-only libbfd:GPL-3.0-only libopcodes:GPL-3.0-only"
+INCOMPATIBLE_LICENSE = "GPL-3.0* LGPL-3.0* AGPL-3.0*"
 
 # Add libgomp support
 IMAGE_INSTALL += "libgomp"
