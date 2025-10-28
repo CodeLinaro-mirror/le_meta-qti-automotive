@@ -1,0 +1,133 @@
+From e2c9289326281112efe29ddf78b85ccb1472599a Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <quic_naiwyu@quicinc.com>
+Date: Thu, 6 Feb 2025 14:57:15 +0800
+Subject: [PATCH] lttng-tools: refined lttng-sessiond process of fd cleanup
+
+lttng-sessiond now use _SC_OPEN_MAX to loop fds to close when fork, it caused
+system stuck at looping non-existent fds if _SC_OPEN_MAX is configured as huge
+number, refine to only loop opened fds.
+
+Upstream-Status: Inappropriate [other]
+
+Signed-off-by: Naiwen Yu <quic_naiwyu@quicinc.com>
+---
+ src/bin/lttng-sessiond/main.c | 37 +++++++++++++++++++++++++++--------
+ src/common/runas.c            | 35 ++++++++++++++++++++++++++-------
+ 2 files changed, 57 insertions(+), 15 deletions(-)
+
+diff --git a/src/bin/lttng-sessiond/main.c b/src/bin/lttng-sessiond/main.c
+index eddce5c..25d7c49 100644
+--- a/src/bin/lttng-sessiond/main.c
++++ b/src/bin/lttng-sessiond/main.c
+@@ -28,6 +28,7 @@
+ #include <urcu/uatomic.h>
+ #include <unistd.h>
+ #include <ctype.h>
++#include <dirent.h>
+ 
+ #include <common/common.h>
+ #include <common/compat/socket.h>
+@@ -1566,17 +1567,37 @@ int main(int argc, char **argv)
+ 			goto exit_options;
+ 		}
+ 
+-		/*
+-		 * We are in the child. Make sure all other file descriptors are
+-		 * closed, in case we are called with more opened file
+-		 * descriptors than the standard ones and the lock file.
+-		 */
+-		for (i = 3; i < sysconf(_SC_OPEN_MAX); i++) {
+-			if (i == lockfile_fd) {
++		// /*
++		//  * We are in the child. Make sure all other file descriptors are
++		//  * closed, in case we are called with more opened file
++		//  * descriptors than the standard ones and the lock file.
++		//  */
++		// for (i = 3; i < sysconf(_SC_OPEN_MAX); i++) {
++		// 	if (i == lockfile_fd) {
++		// 		continue;
++		// 	}
++		// 	(void) close(i);
++		// }
++
++		// In system with huge _SC_OPEN_MAX, it will spend much time closing
++		// non-existent fds, change to close only fds that opened at the moment
++		DIR *dir = opendir("/proc/self/fd");
++		if (dir == NULL) {
++			ERR("Not find fd from parent process");
++			goto exit_options;
++		}
++
++		struct dirent *entry;
++		while ((entry = readdir(dir)) != NULL) {
++			int fd = atoi(entry->d_name);
++			if (fd == lockfile_fd) {
+ 				continue;
+ 			}
+-			(void) close(i);
++			if (fd > 2) { // Skip standard input (0), output (1), and error (2)
++				close(fd);
++			}
+ 		}
++		closedir(dir);
+ 	}
+ 
+ 	if (launch_run_as_worker(argv[0]) < 0) {
+diff --git a/src/common/runas.c b/src/common/runas.c
+index ac268cf..1235122 100644
+--- a/src/common/runas.c
++++ b/src/common/runas.c
+@@ -22,6 +22,7 @@
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <unistd.h>
++#include <dirent.h>
+ 
+ #include <common/bytecode/bytecode.h>
+ #include <common/lttng-kernel.h>
+@@ -1504,15 +1505,35 @@ int run_as_create_worker_no_lock(const char *procname,
+ 			exit(EXIT_FAILURE);
+ 		}
+ 
+-		/*
+-		 * Close all FDs aside from STDIN, STDOUT, STDERR and sockpair[1]
+-		 * Sockpair[1] is used as a control channel with the master
+-		 */
+-		for (i = 3; i < sysconf(_SC_OPEN_MAX); i++) {
+-			if (i != worker->sockpair[1]) {
+-				(void) close(i);
++		// /*
++		//  * Close all FDs aside from STDIN, STDOUT, STDERR and sockpair[1]
++		//  * Sockpair[1] is used as a control channel with the master
++		//  */
++		// for (i = 3; i < sysconf(_SC_OPEN_MAX); i++) {
++		// 	if (i != worker->sockpair[1]) {
++		// 		(void) close(i);
++		// 	}
++		// }
++
++		// In system with huge _SC_OPEN_MAX, it will spend much time closing
++		// non-existent fds, change to close only fds that opened at the moment
++		DIR *dir = opendir("/proc/self/fd");
++		if (dir == NULL) {
++			ERR("Not find fd from parent process");
++			goto error_fork;
++		}
++
++		struct dirent *entry;
++		while ((entry = readdir(dir)) != NULL) {
++			int fd = atoi(entry->d_name);
++			if (fd == worker->sockpair[1]) {
++				continue;
++			}
++			if (fd > 2) { // Skip standard input (0), output (1), and error (2)
++				close(fd);
+ 			}
+ 		}
++		closedir(dir);
+ 
+ 		worker->sockpair[0] = -1;
+ 		ret = run_as_worker(worker);
+-- 
+2.25.1
+
