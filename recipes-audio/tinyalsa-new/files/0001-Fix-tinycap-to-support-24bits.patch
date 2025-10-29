@@ -1,0 +1,31 @@
+Changes from Qualcomm Technologies, Inc. are provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 28d9104ec76a4d992a983f7e940c760ceb35c120 Mon Sep 17 00:00:00 2001
+From: Xuewen Liu <xuewliu@qti.qualcomm.com>
+Date: Wed, 5 Nov 2025 17:03:23 +0800
+Subject: [PATCH] Fix-tinycap-to-support-24bits
+
+Change-Id: Iaee95add66b176f7c4559ed235e3105445489c51
+Signed-off-by: Xuewen Liu <xuewliu@qti.qualcomm.com>
+---
+ utils/tinycap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/utils/tinycap.c b/utils/tinycap.c
+index 78831c7..20c7c27 100644
+--- a/utils/tinycap.c
++++ b/utils/tinycap.c
+@@ -169,7 +169,7 @@ int main(int argc, char **argv)
+         format = PCM_FORMAT_S32_LE;
+         break;
+     case 24:
+-        format = PCM_FORMAT_S24_LE;
++        format = PCM_FORMAT_S24_3LE;
+         break;
+     case 16:
+         format = PCM_FORMAT_S16_LE;
+-- 
+2.34.1
+

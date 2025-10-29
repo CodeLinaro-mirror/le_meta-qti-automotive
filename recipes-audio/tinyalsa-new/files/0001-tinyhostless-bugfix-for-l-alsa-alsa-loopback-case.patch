@@ -1,0 +1,50 @@
+Changes from Qualcomm Technologies, Inc. are provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 4033293ff8d3c34d6cc1c98c24779f596048c1f9 Mon Sep 17 00:00:00 2001
+From: Hexuan Zhu <hexuzhu@qti.qualcomm.com>
+Date: Mon, 15 Sep 2025 10:47:39 +0800
+Subject: [PATCH] tinyhostless: bugfix for -l(alsa-alsa) loopback case
+Upstrem-Status: Pending
+Signed-off-by: Hexuan Zhu<hexuzhu@qti.qualcomm.com>
+---
+ utils/tinyhostless.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/utils/tinyhostless.c b/utils/tinyhostless.c
+index 2d2b274..c956474 100644
+--- a/utils/tinyhostless.c
++++ b/utils/tinyhostless.c
+@@ -290,22 +290,23 @@ int play_sample(unsigned int card, unsigned int p_device,
+     signal(SIGHUP, stream_close);
+     signal(SIGTERM, stream_close);
+
+-    if (pcm_cap != NULL) pcm_start(pcm_cap);
+-    if (pcm_play != NULL) pcm_start(pcm_play);
+-
++    if (!do_loopback) {
++        if (pcm_cap != NULL) pcm_start(pcm_cap);
++        if (pcm_play != NULL) pcm_start(pcm_play);
++    }
+     clock_gettime(CLOCK_MONOTONIC, &now);
+     end.tv_sec = now.tv_sec + play_cap_time;
+     end.tv_nsec = now.tv_nsec;
+
+     do  {
+         if (do_loopback) {
+-            if (pcm_readi(pcm_cap, buffer, size)) {
++            if (pcm_readi(pcm_cap, buffer, size) < 0) {
+                 fprintf(stderr, "Unable to read from PCM capture device %u (%s)\n",
+                         c_device, pcm_get_error(pcm_cap));
+                 rc = errno;
+                 break;
+             }
+-            if (pcm_writei(pcm_play, buffer, size)) {
++            if (pcm_writei(pcm_play, buffer, size) < 0) {
+                 fprintf(stderr, "Unable to write to PCM playback device %u (%s)\n",
+                         p_device, pcm_get_error(pcm_play));
+                 break;
+--
+2.17.1
+

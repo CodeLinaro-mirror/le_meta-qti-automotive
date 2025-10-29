@@ -5,6 +5,7 @@ Subject: [PATCH] enter SETUP state at the end of pcm_drain
 
 pcm_drain stops the pcm like pcm_drop.
 it should also set plugin state SETUP.
+Signed-off-by: Jiazai Wu <jiazwu@qti.qualcomm.com>
 ---
  src/pcm_plugin.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
