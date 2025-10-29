@@ -37,4 +37,5 @@ do_install:append(){
 
     # Install login wrapper to enable user login for busybox sh
     install -m 0755 ${WORKDIR}/sh_login ${D}${base_bindir}/sh_login
+    echo '/bin/sh_login' >> ${D}${sysconfdir}/shells
 }
