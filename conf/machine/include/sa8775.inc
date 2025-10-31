@@ -136,6 +136,12 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-mhi-ep-net-${KERNEL_VERSION} \
     kernel-module-kryo-arm64-edac-${KERNEL_VERSION} \
     kernel-module-socinfo-${KERNEL_VERSION} \
+    kernel-module-phylink-${KERNEL_VERSION} \
+    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
+    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
+    kernel-module-stmmac-${KERNEL_VERSION} \
+    kernel-module-stmmac-platform-${KERNEL_VERSION} \
+    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
     kernel-module-msm-hab-${KERNEL_VERSION} \
     kernel-module-hyp-udmabuf-${KERNEL_VERSION} \
     kernel-module-mdt-loader-${KERNEL_VERSION} \
