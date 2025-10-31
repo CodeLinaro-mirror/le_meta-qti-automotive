@@ -18,3 +18,5 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-fde', 'enable-fde', '', d)} \
 "
 RDEPENDS:${PN}:append:gen5 = " optee-libckteec"
+RDEPENDS:${PN}:append:sa8775-flex = " optee-libckteec"
+RDEPENDS:${PN}:append:gh-gvm-lemans = " optee-libckteec"
