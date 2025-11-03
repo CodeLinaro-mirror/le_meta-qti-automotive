@@ -29,6 +29,7 @@ require ${BPN}-crates.inc
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
+SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = " qcrosvm_lv.service"
 SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " qcrosvm_lv.service"
 SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " qcrosvm_lv.service"
 
@@ -37,6 +38,9 @@ EXTRA_OECMAKE += "\
 "
 
 VM_CONFIG_XML ?= "vm_config_la.xml"
+VM_CONFIG_XML:sa8255-ivi = "vm_config_lalv.xml"
+VM_CONFIG_XML:sa7255-ivi = "vm_config_lalv.xml"
+VM_CONFIG_XML:sa8775-flex = "vm_config_lalv.xml"
 
 do_install:append() {
     install -d ${D}${sysconfdir}
@@ -56,6 +60,11 @@ do_install:append:sa8775() {
 do_install:append:sa7255() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa7255.service ${D}/${systemd_unitdir}/system/qcrosvm.service
+}
+
+do_install:append:sa7255-ivi() {
+    install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${S}/qcrosvm_lv_sa7255.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
 }
 
 do_install:append:sa8255-ivi() {
