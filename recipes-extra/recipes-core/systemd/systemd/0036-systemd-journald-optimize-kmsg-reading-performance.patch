@@ -1,0 +1,38 @@
+From a2d7b86824a261ee697c72cadee3545199453178 Mon Sep 17 00:00:00 2001
+From: Lei wang <leiwan@qti.qualcomm.com>
+Date: Sun, 8 Jun 2025 22:02:44 +0800
+Subject: [PATCH] systemd: journald: optimize kmsg reading performance
+
+Bypass journal metadata collection for udev devices, which has
+performance issue.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+---
+ src/journal/journald-kmsg.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/journal/journald-kmsg.c b/src/journal/journald-kmsg.c
+index 1b79e9366c..b63c31894d 100644
+--- a/src/journal/journald-kmsg.c
++++ b/src/journal/journald-kmsg.c
+@@ -213,6 +213,7 @@ void dev_kmsg_record(Server *s, char *p, size_t l) {
+                 k = e + 1;
+         }
+ 
++#if 0
+         if (kernel_device) {
+                 _cleanup_(sd_device_unrefp) sd_device *d = NULL;
+ 
+@@ -252,6 +253,7 @@ void dev_kmsg_record(Server *s, char *p, size_t l) {
+                         }
+                 }
+         }
++#endif
+ 
+         if (asprintf(&source_time, "_SOURCE_MONOTONIC_TIMESTAMP=%llu", usec) >= 0)
+                 iovec[n++] = IOVEC_MAKE_STRING(source_time);
+-- 
+2.34.1
+
