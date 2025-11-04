@@ -64,12 +64,6 @@ SYSTEMD_SERVICE:${PN}:append:sa8775-flex = "\
 SYSTEMD_SERVICE:${PN}:append:gen5 = "\
     ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
     ${LA_EXTRA_SERVICES_LIST_GEN5} \
-"
-
-# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
-SYSTEMD_SERVICE:${PN}:append:gen5-multi = "\
-    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
-    ${LA_EXTRA_SERVICES_LIST_GEN5} \
     ${LV_SERVICES_LIST} \
     ${LV_EXTRA_SERVICES_LIST_GEN5} \
 "
@@ -130,17 +124,6 @@ do_install:append:sa8775-flex() {
 }
 
 do_install:append:gen5() {
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-}
-
-# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
-do_install:append:gen5-multi() {
     for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
