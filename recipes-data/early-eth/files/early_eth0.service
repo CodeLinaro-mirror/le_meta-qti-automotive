@@ -6,6 +6,8 @@
 [Unit]
 Description=eth0 installer
 DefaultDependencies=no
+Conflicts=shutdown.target
+Before=shutdown.target
 
 [Service]
 User=early-eth
@@ -22,4 +24,4 @@ Restart=on-failure
 RestartSec=1ms
 
 [Install]
-WantedBy=sys-devices-platform-1a00000.ethernet-net-eth0.device
+WantedBy=sysinit.target
