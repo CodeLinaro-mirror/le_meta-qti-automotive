@@ -33,8 +33,10 @@ do_install:append() {
     install -d ${D}/boot/early-ramdisk
     install -d ${D}/realroot
     install -d ${D}/etc/modules-load.f
+    install -d ${D}/etc/modules-load.l
     touch ${D}/init
     install -m 0755 ${S}/conf/${TARGET_PATH_NAME}/*.conf -D ${D}/etc/modules-load.f/
+    install -m 0755 ${S}/conf/${TARGET_PATH_NAME}/*.late -D ${D}/etc/modules-load.l/
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-external-boot', 'true', 'false', d)}; then
         # External hdd root device node is detected by 00-external-bootup.conf load done.
         install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/02-external-bootup.conf.in -D ${D}/etc/modules-load.f/00-external-bootup.conf
