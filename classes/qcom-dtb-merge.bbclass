@@ -138,12 +138,11 @@ merge_ddr_dtbos_single () {
     for dtb_file in $dtb_files; do
         for dtbo_file in $dtbo_files; do
             dtbo_string=$(basename $dtbo_file)
-            prefix2=$(echo "$dtbo_string" | sed -e 's/-.*//')
             dtbo_string=$(echo "$dtbo_string" | sed -e 's/\.[^.]*$//')
             input_dtb=$(basename "$dtb_file")
             prefix1=$(echo "$input_dtb" | sed -e 's/-.*//')
 
-            if [ "$prefix1" != "$prefix2" ]; then
+            if [ "$prefix1" = "sa8397p" ]; then
                 cp $dtb_file $out_dir
                 continue
             fi
