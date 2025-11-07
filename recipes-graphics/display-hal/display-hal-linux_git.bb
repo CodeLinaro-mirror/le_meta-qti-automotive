@@ -35,7 +35,7 @@ inherit autotools-brokensep pkgconfig
 
 EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
 EXTRA_OECONF += "--enable-sdmhaldrm"
-EXTRA_OECMAKE += "-DRT_SCHEDULE:BOOL=${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'ON', 'OFF', d)}"
+EXTRA_OECONF:append:gen5 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '--enable-rt-schedule', '--disable-rt-schedule', d)}"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
