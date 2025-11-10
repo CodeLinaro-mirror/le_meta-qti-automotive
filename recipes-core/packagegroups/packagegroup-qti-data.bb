@@ -38,6 +38,7 @@ RDEPENDS:${PN}:append:gen5 = " \
 "
 
 RDEPENDS:${PN}:append:sa8775 = " ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'netlink-service-infra', '', d)}"
+RDEPENDS:${PN}:append:sa7255 = " ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'netlink-service-infra', '', d)}"
 
 RDEPENDS:${PN}:remove:sa8650-adas = "netlink-service-infra"
 

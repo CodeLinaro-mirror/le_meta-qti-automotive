@@ -22,6 +22,7 @@ CFLAGS:append:gen5 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVF
 TARGET_PATH_NAME ?= "${MACHINE}"
 TARGET_PATH_NAME:sa8775 = "sa8775-qclinux"
 TARGET_PATH_NAME:sa7255 = "sa7255"
+TARGET_PATH_NAME:sa7255-ivi = "sa7255-qclinux"
 TARGET_PATH_NAME:gen5 = "sa8797"
 
 do_install:append() {
@@ -44,6 +45,10 @@ do_install:append() {
 }
 
 do_install:append:sa8775() {
+    install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/07-gvm.conf.in -D ${D}/etc/modules-load.f/07-gvm.conf
+}
+
+do_install:append:sa7255-ivi() {
     install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/07-gvm.conf.in -D ${D}/etc/modules-load.f/07-gvm.conf
 }
 
