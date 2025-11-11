@@ -70,7 +70,7 @@ MACHINE_FEATURES += "\
     qti-multimedia \
     qti-display \
     qti-graphics \
-    qti-audio \
+    qti-audio-aw \
     qti-vmm \
     qti-camera \
     qti-safety \
@@ -84,7 +84,6 @@ MACHINE_FEATURES += "\
 "
 
 MACHINE_FEATURES:remove = "\
-    qti-audio \
 "
 
 MACHINE_FEATURES:append = "\
