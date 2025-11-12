@@ -1,5 +1,6 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
+include conf/distro/include/qclinux-bbmask-prop.inc
 
 SOC_FAMILY = "sa8797"
 SOC_FAMILY ?= "sa-common"
