@@ -1,0 +1,37 @@
+From c8227ec750c317ac88afb625b21e8338eaac5af3 Mon Sep 17 00:00:00 2001
+From: Kai Meng <kmeng@qti.qualcomm.com>
+Date: Thu, 13 Nov 2025 11:20:52 +0800
+Subject: [PATCH] open nscd_use_shm boolean
+
+Many new selinux denials appear after trim sepolicy for bootkpi,
+most of new denials like "accept" permission deny:
+AVC avc:  denied  { accept } for  pid=1057 comm="pm_monitor"
+path="/run/qcom_pm/kgsl@1.sock"
+scontext=system_u:system_r:adreno200_t:s0
+tcontext=system_u:system_r:adreno200_t:s0 tclass=unix_stream_socket
+permissive=0
+open this boolean could avoid this denials.
+
+Upstream-Status: Pending
+
+Signed-off-by: Kai Meng <kmeng@qti.qualcomm.com>
+---
+ policy/modules/services/nscd.te | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/policy/modules/services/nscd.te b/policy/modules/services/nscd.te
+index f63b75f4f..a95ac1601 100644
+--- a/policy/modules/services/nscd.te
++++ b/policy/modules/services/nscd.te
+@@ -15,7 +15,7 @@ gen_require(`
+ ##	can use nscd shared memory.
+ ##	</p>
+ ## </desc>
+-gen_tunable(nscd_use_shm, false)
++gen_tunable(nscd_use_shm, true)
+ 
+ attribute_role nscd_roles;
+ 
+-- 
+2.34.1
+

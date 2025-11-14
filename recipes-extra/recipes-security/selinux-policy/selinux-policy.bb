@@ -8,6 +8,7 @@ DEPENDS += "bzip2-replacement-native checkpolicy-native m4-native policycoreutil
 PROVIDES = "virtual/refpolicy"
 
 SRC_URI = "git://git.codelinaro.org/clo/yocto-mirrors/github/selinuxproject/refpolicy.git;protocol=https;branch=master;name=refpolicy;destsuffix=refpolicy \
+        ${PATH_TO_REPO}/lv-sepolicy/.git;protocol=${PROTO};destsuffix=lv-sepolicy;usehead=1 \
 "
 
 # Specific config files for Poky
@@ -16,6 +17,7 @@ SRC_URI += "file://customizable_types  \
             file://0001-Make-unconfined_u-the-default-selinux-user.patch \
             file://0002-policy-modules-roles-sysadm-allow-sysadm-to-use-init.patch \
             file://0003-allow-ftp-can-login.patch \
+            file://0004-open-nscd_use_shm-boolean.patch \
 "
 
 SRCREV_refpolicy = "429b26878be53e0b3537771a98e240e6e383ee73"
