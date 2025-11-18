@@ -22,7 +22,7 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules"
 
-TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iommu_qcom.ko iommu_iova_map.ko kiumd.ko qcom_uscmi.ko kryo_arm64_edac.ko kiumd_kgsl.ko mhi_ep_net.ko profiler.ko arm-smmu-qcom-fusa.ko pinctrl_fusa.ko qcom_vdev.ko dmabuf_share.ko iommu_faults.ko"
+TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iommu_qcom.ko iommu_iova_map.ko kiumd.ko qcom_uscmi.ko kryo_arm64_edac.ko kiumd_kgsl.ko mhi_ep_net.ko profiler.ko arm-smmu-qcom-fusa.ko pinctrl_fusa.ko qcom_vdev.ko dmabuf_share.ko iommu_faults.ko qcom_remote_virq.ko"
 
 inherit qti-techpack
 
@@ -78,6 +78,7 @@ RPROVIDES:${PN} += "kernel-module-vendor-uscmi-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-iommu-faults-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-ethqos-filter-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-l3-cache-config-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-qcom-remote-virq-${KERNEL_VERSION}"
 
 FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"
