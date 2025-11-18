@@ -5,6 +5,8 @@ do_install:append() {
                 sed -i "/ForwardToSyslog=yes/d" ${D}${systemd_unitdir}/journald.conf.d/00-systemd-conf.conf
         [ -f ${D}${systemd_unitdir}/journald.conf.d/00-systemd-conf.conf ] && \
                 echo "Compress=no" >> ${D}${systemd_unitdir}/journald.conf.d/00-systemd-conf.conf
+        [ -f ${D}${systemd_unitdir}/journald.conf.d/00-systemd-conf.conf ] && \
+                echo "Audit=no" >> ${D}${systemd_unitdir}/journald.conf.d/00-systemd-conf.conf
         [ -f ${D}${systemd_unitdir}/system.conf.d/00-systemd-conf.conf ] && \
                 echo "DefaultOOMScoreAdjust=-100" >> ${D}${systemd_unitdir}/system.conf.d/00-systemd-conf.conf
 }
