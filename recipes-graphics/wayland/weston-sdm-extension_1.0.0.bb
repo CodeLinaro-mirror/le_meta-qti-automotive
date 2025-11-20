@@ -27,8 +27,11 @@ DEPENDS += "cairo \
 
 DEPENDS:remove:sa8775 = "display-intf-headers"
 DEPENDS:append:sa8775 = " display-ship-linux"
+DEPENDS:remove:sa7255 = "display-intf-headers"
+DEPENDS:append:sa7255 = " display-ship-linux"
 CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston-sdm-extension", "graphics/weston-sdm-extension", d)}"
 CODE_DIR:sa8775 = "graphics/weston-sdm-extension"
+CODE_DIR:sa7255 = "graphics/weston-sdm-extension"
 
 SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1"
 SRCREV = "${AUTOREV}"

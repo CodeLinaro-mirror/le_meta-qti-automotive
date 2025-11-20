@@ -70,31 +70,29 @@ do_install:append() {
 
     install -m 0644 ${S}/usr-lib-firmware-qcom.mount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.mount
     install -m 0644 ${S}/usr-lib-firmware-qcom.automount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.automount
-}
 
-do_install:append:sa8775() {
-    install -d ${D}${sysconfdir}/sysconfig/
-    install -m 0755 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
-    install -m 0755 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
-    install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
-    install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
-    install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
-}
+    if ${@bb.utils.contains_any('SOC_FAMILY', 'sa7255 sa8775', 'true', 'false', d)}; then
+        install -d ${D}${sysconfdir}/sysconfig/
+        install -m 0755 ${S}/lpass_cfg ${D}${sysconfdir}/sysconfig/lpass_cfg
+        install -m 0755 ${S}/cdsp0_cfg ${D}${sysconfdir}/sysconfig/cdsp0_cfg
+        install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
+        install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
+        install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
 
-do_install:append:sa8255-ivi() {
-    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
-        install -d -p ${D}/firmware/vm/boot/autoghgvmlv
-        install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.automount
-        install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv.mount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount
+        if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
+            install -d -p ${D}/firmware/vm/boot/autoghgvmlv
+            install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.automount
+            install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv.mount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount
 
-        if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-            sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount
+            if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+                sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount
+            fi
+
+            ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.automount \
+                ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv.automount
+            ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount \
+                ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv.mount
         fi
-
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv.automount
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv.mount
     fi
 }
 
