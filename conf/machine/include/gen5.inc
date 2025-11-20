@@ -9,12 +9,6 @@ PREFERRED_PROVIDER_virtual/kernel = "linux-qcom-custom-rt"
 PREFERRED_PROVIDER_virtual/kernel-headers = "linux-kernel-qcom-headers"
 PREFERRED_VERSION_linux-qcom-custom-rt = "6.6"
 
-# Prefer Wayland/Weston version
-PREFERRED_VERSION_weston = "8.0.0"
-PREFERRED_VERSION_wayland = "1.18.0"
-PREFERRED_VERSION_wayland-native = "1.18.0"
-PREFERRED_VERSION_wayland-protocols = "1.20"
-PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
 #grep use GPL-2.0-only version from meta-gplv2/recipes-extended/grep
 PREFERRED_VERSION_grep = "2.5%"
 PREFERRED_VERSION_libgpiod = "1.6.4"
