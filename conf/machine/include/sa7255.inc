@@ -1,6 +1,6 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
-
+include conf/distro/include/qclinux-bbmask-prop.inc
 SOC_FAMILY ?= "sa7255"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
