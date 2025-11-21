@@ -65,3 +65,4 @@ IMAGE_ROOTFS_EXTRA_SPACE = "0"
 # disable runtime dependency on run-postinsts -> update-rc.d
 ROOTFS_BOOTSTRAP_INSTALL = ""
 
+INCOMPATIBLE_LICENSE = "GPL-3.0* LGPL-3.0* AGPL-3.0*"

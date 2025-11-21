@@ -24,7 +24,6 @@ do_install:append() {
 }
 
 do_install:append:sa8775() {
-    sed -i 's/^WantedBy=.*$/WantedBy=sysinit.target/' ${D}${systemd_unitdir}/system/early_eth0.service
     sed -i 's/^WantedBy=.*$/WantedBy=sysinit.target/' ${D}${systemd_unitdir}/system/early_eth1.service
 }
 

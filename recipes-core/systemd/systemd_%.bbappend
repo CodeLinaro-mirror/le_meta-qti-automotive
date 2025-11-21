@@ -16,7 +16,7 @@ SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "5.15", "
 
 SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0033-systemd-Make-root-s-home-directory-configurable-2.patch', '', d)} "
 
-SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0035-systemd-Make-systemd-init-run-in-RT-priority.patch', '', d)} "
+SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0035-systemd-Make-systemd-init-run-in-high-priority.patch', '', d)} "
 
 # Remove backlight - Loads/Saves Screen Backlight Brightness, not required.
 RUMI_PACKAGECONFIG = "\
@@ -61,9 +61,10 @@ PACKAGECONFIG:remove = "backlight"
 #Disable systemd-timesyncd which not used in project.
 PACKAGECONFIG:remove = "timesyncd "
 
-#Enable coredump by default for lemans
+#Enable coredump by default
 PACKAGECONFIG:append:sa8775 = " coredump"
 PACKAGECONFIG:append:gen5 = " coredump"
+PACKAGECONFIG:append:sa7255 = " coredump"
 
 # Use glib-2.0 for g_strlcat
 CFLAGS:append = " \
@@ -91,7 +92,7 @@ do_install:append () {
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
        echo "DefaultLimitNOFILE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
        echo "DefaultLimitMSGQUEUE=infinity" >> ${D}${sysconfdir}/systemd/system.conf
-       echo "DefaultTimeoutStopSec=5s" >> ${D}${sysconfdir}/systemd/system.conf
+       echo "DefaultTimeoutStopSec=10s" >> ${D}${sysconfdir}/systemd/system.conf
     fi
 
     # Use kernel rules for network iface name
@@ -100,8 +101,8 @@ do_install:append () {
     # Create a symlink to the touchscreen input device via USB1
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
         echo '# Create a symlink to the touchscreen input device or the mouse input device via USB1' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
-        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}!="1", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
-        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{ID_INPUT_MOUSE}!="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}!="1", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{ID_INPUT_MOUSE}!="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
     fi
 
     #Remove privatetmp=true from hostname service

@@ -14,14 +14,18 @@ S = "${WORKDIR}/vendor/qcom/opensource/safelinux-dbg-modules"
 
 TECHPACK_MODULES = "minidump/minidump.ko \
                     kaslr_store/kaslr_store.ko \
-                    memory_dump_v21/memory_dump_v21.ko \
                     memory_dump_v2/memory_dump_v2.ko \
-                    xbl_log/dump_boot_log.ko \
+                    nhlos_log/dump_boot_log.ko \
 "
+TECHPACK_MODULES:append:gen5 = " memory_dump_v21/memory_dump_v21.ko"
+
 inherit qti-techpack systemd
 EXTRA_OEMAKE += "KDIR=${STAGING_KERNEL_DIR}"
 
 EXTRA_OEMAKE:append:gen5 = " CONFIG_QCOM_MEMORY_DUMP_V21=y"
+
+QCOM_DCC_CONF ?= "qcom_dcc_sa8775.conf"
+QCOM_DCC_CONF:gen5 = "qcom_dcc_sa8797.conf"
 
 do_install:append() {
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
@@ -34,7 +38,7 @@ do_install:append() {
     install -m 0644 ${S}/qcom_dcc/qcom-dcc.service -D ${D}/${systemd_unitdir}/system/qcom-dcc.service
 
     install -d ${D}/${sysconfdir}/qcom_dcc
-    install -m 0755 ${S}/qcom_dcc/qcom_dcc_sa8797.conf -D ${D}/${sysconfdir}/qcom_dcc/qcom_dcc_sa8797.conf
+    install -m 0755 ${S}/qcom_dcc/${QCOM_DCC_CONF} -D ${D}/${sysconfdir}/qcom_dcc/${QCOM_DCC_CONF}
 }
 
 RPROVIDES:${PN} += "${@'kernel-module-minidump-${KERNEL_VERSION}'.replace('_', '-')}"

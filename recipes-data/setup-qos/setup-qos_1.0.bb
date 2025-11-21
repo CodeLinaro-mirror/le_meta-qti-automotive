@@ -14,6 +14,13 @@ SRC_URI = "\
     file://setup_eth.sh \
 "
 
+SRC_URI:sa8775 = "\
+    file://setup_eth0_sa8775.service \
+    file://setup_eth1_sa8775.service \
+    file://config_sa8775.ini \
+    file://setup_eth_sa8775.sh \
+"
+
 inherit systemd useradd
 
 USERADD_PACKAGES = "${PN}"
@@ -29,6 +36,18 @@ do_install() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/setup_eth0.service ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/setup_eth1.service ${D}${systemd_unitdir}/system/
+  fi
+}
+
+do_install:sa8775() {
+  if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
+    install -d ${D}${sysconfdir}/initscripts
+    install -m 0755 ${WORKDIR}/setup_eth_sa8775.sh ${D}${sysconfdir}/initscripts/setup_eth.sh
+    install -m 0755 ${WORKDIR}/config_sa8775.ini ${D}${sysconfdir}/initscripts/config.ini
+
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/setup_eth0_sa8775.service ${D}${systemd_unitdir}/system/setup_eth0.service
+    install -m 0644 ${WORKDIR}/setup_eth1_sa8775.service ${D}${systemd_unitdir}/system/setup_eth1.service
   fi
 }
 

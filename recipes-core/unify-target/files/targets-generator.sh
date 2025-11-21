@@ -10,7 +10,7 @@ get_cmdline_value() {
     echo "$CMDLINE" | tr ' ' '\n' | awk -F= -v key="$1" '$1==key && NF>1{print $2}'
 }
 
-SWCONFIG=$(get_cmdline_value swconfig)
+PRODCONFIG=$(get_cmdline_value prodconfig)
 SLTFLAVOR=$(get_cmdline_value sltflavor)
 OSCONFIG=$(get_cmdline_value osconfig)
 
@@ -18,7 +18,7 @@ WANTS_DIR="$GENERATOR_DIR/default.target.wants"
 mkdir -p "$WANTS_DIR"
 
 # swconfig to targets
-case "$SWCONFIG" in
+case "$PRODCONFIG" in
     non-safe-ivi)
         ln -sf /usr/lib/systemd/system/nonsafe-ivi.target "$WANTS_DIR/"
         ;;
@@ -31,18 +31,26 @@ case "$SWCONFIG" in
     flex)
         ln -sf /usr/lib/systemd/system/flex.target "$WANTS_DIR/"
         ;;
+    "")
+        ln -sf /usr/lib/systemd/system/nonsafe-ivi.target "$WANTS_DIR/"
+        ;;
 esac
 
 # sltflavor to slt target
-[ "$SLTFLAVOR" = "SLT" ] && ln -sf /usr/lib/systemd/system/slt.target "$WANTS_DIR/"
+[ "$SLTFLAVOR" = "1" ] && ln -sf /usr/lib/systemd/system/slt.target "$WANTS_DIR/"
 
 # osconfig to targets
 case "$OSCONFIG" in
-    pvm-gvm)
+    PVM+GVM)
         ln -sf /usr/lib/systemd/system/single-gvm.target "$WANTS_DIR/"
         ;;
-    pvm-2gvm)
+    PVM+2GVM)
         ln -sf /usr/lib/systemd/system/multi-gvm.target "$WANTS_DIR/"
+        ;;
+    PVMOnly)
+        ;;
+    "")
+        ln -sf /usr/lib/systemd/system/single-gvm.target "$WANTS_DIR/"
         ;;
 esac
 

@@ -1,0 +1,14 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+[Unit]
+Description=Netlink Service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/netlink-service
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

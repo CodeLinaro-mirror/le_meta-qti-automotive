@@ -13,6 +13,8 @@ Fixes: #35229 #32436
 
 Upstream-Status: Backport [https://github.com/poettering/systemd/commit/5ee8b3edb385b216eb4f3316323ae1287824971a]
 
+Signed-off-by: Lennart Poettering <lennart@poettering.net>
+
 diff --git a/src/libsystemd/sd-journal/journal-file.c b/src/libsystemd/sd-journal/journal-file.c
 index fecddb932f..acceea7770 100644
 --- a/src/libsystemd/sd-journal/journal-file.c

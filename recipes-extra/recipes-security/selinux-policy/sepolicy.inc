@@ -1,9 +1,3 @@
-FILESEXTRAPATHS:append := "${THISDIR}/files:"
-
-SRC_URI += "${PATH_TO_REPO}/lv-sepolicy/.git;protocol=${PROTO};destsuffix=lv-sepolicy;usehead=1 \
-"
-SRCREV = "${AUTOREV}"
-
 def copy_files_with_extensions(source_dir, target_dir, extensions):
     import shutil
     if not os.path.exists(target_dir):

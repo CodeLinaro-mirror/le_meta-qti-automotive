@@ -8,6 +8,7 @@ DEPENDS += "bzip2-replacement-native checkpolicy-native m4-native policycoreutil
 PROVIDES = "virtual/refpolicy"
 
 SRC_URI = "git://git.codelinaro.org/clo/yocto-mirrors/github/selinuxproject/refpolicy.git;protocol=https;branch=master;name=refpolicy;destsuffix=refpolicy \
+        ${PATH_TO_REPO}/lv-sepolicy/.git;protocol=${PROTO};destsuffix=lv-sepolicy;usehead=1 \
 "
 
 # Specific config files for Poky
@@ -16,6 +17,7 @@ SRC_URI += "file://customizable_types  \
             file://0001-Make-unconfined_u-the-default-selinux-user.patch \
             file://0002-policy-modules-roles-sysadm-allow-sysadm-to-use-init.patch \
             file://0003-allow-ftp-can-login.patch \
+            file://0004-open-nscd_use_shm-boolean.patch \
 "
 
 SRCREV_refpolicy = "429b26878be53e0b3537771a98e240e6e383ee73"
@@ -74,11 +76,46 @@ EXTRA_OEMAKE += "tc_usrbindir=${STAGING_BINDIR_NATIVE}"
 EXTRA_OEMAKE += "OUTPUT_POLICY=`${STAGING_BINDIR_NATIVE}/checkpolicy -V | cut -d' ' -f1`"
 EXTRA_OEMAKE += "CC='${BUILD_CC}' CFLAGS='${BUILD_CFLAGS}' PYTHON='${PYTHON}'"
 
-disable_policy_modules () {
-    for module in ${PURGE_POLICY_MODULES} ; do
-        sed -i "s/^\(\<${module}\>\) *= *.*$/\1 = off/" ${S}/policy/modules.conf
-    done
-}
+# To trim the number of policies for bootkpi
+CORE_POLICY_MODULES = "unconfined \
+    selinuxutil \
+    storage \
+    sysnetwork \
+    application \
+    libraries \
+    miscfiles \
+    logging \
+    userdomain \
+    init \
+    mount \
+    modutils \
+    getty \
+    authlogin \
+    locallogin \
+"
+
+# systemd dependent policy modules
+CORE_POLICY_MODULES += "${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'clock systemd udev fstools dbus', '', d)}"
+
+# nscd caches libc-issued requests to the name service.
+# Without nscd.pp, commands want to use these caches will be blocked.
+EXTRA_POLICY_MODULES += "nscd"
+
+# pam_mail module enables checking and display of mailbox status upon
+# "login", so "login" process will access to /var/spool/mail.
+EXTRA_POLICY_MODULES += "mta"
+
+# sysnetwork requires type definitions (insmod_t, consoletype_t,
+# hostname_t, ping_t, netutils_t) from modules:
+EXTRA_POLICY_MODULES += "modutils consoletype hostname netutils"
+
+# Adapt to qti changes
+# We write some patches for upstreaming refpolicy, so related modules should be compiled.
+EXTRA_POLICY_MODULES += "sysadm ssh sysstat loadkeys ipsec cron ftp alsa logrotate rpm pulseaudio xserver networkmanager irqbalance bluetooth"
+
+# Adapt to qti changes
+# We call some interface functions defined in upstreaming refpolicy, so need to introduce them into the complation.
+EXTRA_POLICY_MODULES += "xdg virt qemu"
 
 do_compile() {
     if [ -f "${WORKDIR}/modules.conf" ] ; then
@@ -86,8 +123,18 @@ do_compile() {
     fi
 
     oe_runmake conf
-    disable_policy_modules
     oe_runmake policy
+}
+
+generate_modules_list () {
+    QTI_POLICY_DIR="${S}/policy/modules/qti_sepolicy"
+    QTI_POLICY_MODULES=""
+    for f in $(find ${QTI_POLICY_DIR} -name '*.te'); do
+        modname=$(basename $f .te)
+        QTI_POLICY_MODULES="${QTI_POLICY_MODULES} ${modname}"
+    done
+
+    POLICY_MODULES_MIN="${CORE_POLICY_MODULES} ${EXTRA_POLICY_MODULES} ${QTI_POLICY_MODULES}"
 }
 
 prepare_policy_store () {
@@ -105,20 +152,21 @@ prepare_policy_store () {
     HLL_TYPE=$(echo ${POL_SRC}/base.* | awk -F . '{if (NF>1) {print $NF}}')
     HLL_BIN=${STAGING_DIR_NATIVE}${prefix}/libexec/selinux/hll/${HLL_TYPE}
 
-    for i in ${POL_SRC}/*.${HLL_TYPE}; do
-        MOD_NAME=$(basename $i | sed "s/\.${HLL_TYPE}$//")
-        MOD_DIR=${POL_ACTIVE_MODS}/${MOD_NAME}
+    for i in base ${POLICY_MODULES_MIN}; do
+        MOD_FILE=${POL_SRC}/${i}.${HLL_TYPE}
+        MOD_DIR=${POL_ACTIVE_MODS}/${i}
         mkdir -p ${MOD_DIR}
         echo -n "${HLL_TYPE}" > ${MOD_DIR}/lang_ext
-        if ! bzip2 -t $i >/dev/null 2>&1; then
-            ${HLL_BIN} $i | bzip2 --stdout > ${MOD_DIR}/cil
-            bzip2 -f $i && mv -f $i.bz2 $i
+
+        if ! bzip2 -t ${MOD_FILE} >/dev/null 2>&1; then
+            ${HLL_BIN} ${MOD_FILE} | bzip2 --stdout > ${MOD_DIR}/cil
+            bzip2 -f ${MOD_FILE} && mv -f ${MOD_FILE}.bz2 ${MOD_FILE}
         else
-            bunzip2 --stdout $i | \
+            bunzip2 --stdout ${MOD_FILE} | \
                 ${HLL_BIN} | \
                 bzip2 --stdout > ${MOD_DIR}/cil
         fi
-        cp $i ${MOD_DIR}/hll
+        cp ${MOD_FILE} ${MOD_DIR}/hll
     done
 }
 
@@ -188,6 +236,7 @@ SELINUXTYPE=${POLICY_NAME}
 }
 
 do_install() {
+    generate_modules_list
     prepare_policy_store
     rebuild_policy
     install_misc_files

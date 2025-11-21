@@ -1,5 +1,6 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
+include conf/distro/include/qclinux-bbmask-prop.inc
 
 SOC_FAMILY = "sa8775"
 include conf/machine/include/soc-family.inc
@@ -70,7 +71,7 @@ MACHINE_FEATURES += "\
     qti-multimedia \
     qti-display \
     qti-graphics \
-    qti-audio \
+    qti-audio-aw \
     qti-vmm \
     qti-camera \
     qti-safety \
@@ -84,17 +85,6 @@ MACHINE_FEATURES += "\
 "
 
 MACHINE_FEATURES:remove = "\
-    qti-multimedia \
-    qti-display \
-    qti-graphics \
-    qti-audio \
-    qti-camera \
-    qti-safety \
-    qti-data \
-    qti-vnw \
-    qti-security \
-    qti-gunyah \
-    qti-compute-platform \
 "
 
 MACHINE_FEATURES:append = "\
@@ -146,6 +136,12 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-mhi-ep-net-${KERNEL_VERSION} \
     kernel-module-kryo-arm64-edac-${KERNEL_VERSION} \
     kernel-module-socinfo-${KERNEL_VERSION} \
+    kernel-module-phylink-${KERNEL_VERSION} \
+    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
+    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
+    kernel-module-stmmac-${KERNEL_VERSION} \
+    kernel-module-stmmac-platform-${KERNEL_VERSION} \
+    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
     kernel-module-msm-hab-${KERNEL_VERSION} \
     kernel-module-hyp-udmabuf-${KERNEL_VERSION} \
     kernel-module-mdt-loader-${KERNEL_VERSION} \

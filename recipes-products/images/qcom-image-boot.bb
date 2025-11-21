@@ -8,8 +8,6 @@ DEPENDS += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', 'audiolite
 DEPENDS += "${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar', bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', 'audiolite-devicetree', '', d), '', d)}"
 DEPENDS:append:gen5 = "${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-multimedia qti-display qti-audio qti-graphics qti-camera', ' mm-vfio-devicetree', '', d)}"
 
-DEPENDS:append:sa8775 = " audiolite-devicetree"
-
 IMAGE_CLASSES:remove = "qimage"
 IMAGE_FEATURES:remove = "ssh-server-openssh"
 
@@ -25,15 +23,35 @@ do_make_dtb() {
     install -d ${DEPLOY_DIR_IMAGE}/dtbs
     install -d ${DEPLOY_DIR_IMAGE}/interout
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
+    install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
+    install -d ${DEPLOY_DIR_IMAGE}/flexdtb
 
     dtb_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/dtb
     dtbo_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
     out_directory=${DEPLOY_DIR_IMAGE}/dtbs
     inter_out_dir=${DEPLOY_DIR_IMAGE}/interout
     ddrdtbos_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
+    ddrdtbosflex_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
+    flex_directory=${DEPLOY_DIR_IMAGE}/flexdtb
 
     merge_dtbos $dtb_dir $dtbo_dir $inter_out_dir
+
+    #Copy flex dtb from interout to separate directory
+
+    for file in "$inter_out_dir"/*flex*; do
+         if [ -f "$file" ]; then
+             mv "$file" "$flex_directory"
+         fi
+    done
+
     merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
+
+    # Apply overlay for flex dtb
+    if ! [[ -z "$(ls -A "$flex_directory")" || -z "$(ls -A "$ddrdtbosflex_dir")" ]]; then
+        merge_ddr_dtbos_single $flex_directory $ddrdtbosflex_dir $out_directory
+    elif ! [[ -z "$(ls -A "$flex_directory")" ]]; then
+        cp -r "$flex_directory"/* "$out_directory"/
+    fi
 
     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
 }
