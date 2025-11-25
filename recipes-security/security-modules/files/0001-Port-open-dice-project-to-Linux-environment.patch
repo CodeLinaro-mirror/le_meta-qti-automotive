@@ -1,0 +1,280 @@
+From 83a21f094d9b26edb7a6608005bc8020e93dbc69 Mon Sep 17 00:00:00 2001
+From: Amit Blay <ablay@qti.qualcomm.com>
+Date: Thu, 11 Dec 2025 10:49:34 -0800
+Subject: Port open-dice project to Linux environment
+
+1. Originally the open-dice supports BoringSSL for its crypto.
+This patch port it to use OpenSSL, for systems with OpenSSL only support.
+
+2. Add a Makefile to build exactly what's needed for Linux.
+
+Change-Id: Ib41cee5bff49d454e0a9a4aacbf8f00acbb2fe6f
+Signed-off-by: Amit Blay <ablay@qti.qualcomm.com>
+---
+ Makefile                   |  19 +++++
+ src/openssl_ed25519_ops.c  | 142 +++++++++++++++++++++++++++++++++++++
+ src/openssl_hash_kdf_ops.c |  77 ++++++++++++++++++++
+ 3 files changed, 238 insertions(+)
+ create mode 100644 Makefile
+ create mode 100644 src/openssl_ed25519_ops.c
+ create mode 100644 src/openssl_hash_kdf_ops.c
+
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 0000000..0e160be
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,19 @@
++CFLAGS += -Wall -g -O2 -fPIC
++#LDFLAGS += -shared
++TARGET = libopendice.so.1.0.0
++LIBS = -lssl -lcrypto
++SOURCES = src/android.c src/dice.c src/cbor_cert_op.c src/cbor_reader.c src/cbor_writer.c src/clear_memory.c src/openssl_ed25519_ops.c src/openssl_hash_kdf_ops.c src/utils.c
++INC = -I./include -I./include/dice/config/android -I./include/dice/config/boringssl_ed25519
++OBJECTS = $(SOURCES:.c=.o)
++
++all: $(TARGET)
++
++$(TARGET): $(OBJECTS)
++	$(CC) $(CFLAGS) $(INC) -shared -Wl,-soname,libopendice.so.1 \
++		$(LDFLAGS) $(LIBS) -o $@ $^
++
++%.o: %.c
++	$(CC) $(CFLAGS) $(INC) -c $< -o $@
++
++clean:
++	rm -f $(TARGET) $(OBJECTS)
+diff --git a/src/openssl_ed25519_ops.c b/src/openssl_ed25519_ops.c
+new file mode 100644
+index 0000000..a41141e
+--- /dev/null
++++ b/src/openssl_ed25519_ops.c
+@@ -0,0 +1,142 @@
++// Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++
++// Copyright 2022 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License"); you may not
++// use this file except in compliance with the License. You may obtain a copy of
++// the License at
++//
++//     https://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++// License for the specific language governing permissions and limitations under
++// the License.
++
++// An implementation of the ed25519 signature operations using OpenSSL.
++
++#include <stdint.h>
++#include <string.h>
++
++#include "dice/config/cose_key_config.h"
++#include "dice/dice.h"
++#include "dice/ops.h"
++#include <openssl/evp.h>
++
++#if DICE_PRIVATE_KEY_SEED_SIZE != 32
++#error "Private key seed is expected to be 32 bytes."
++#endif
++#if DICE_PUBLIC_KEY_BUFFER_SIZE != 32
++#error "Ed25519 needs 32 bytes to store the public key."
++#endif
++#if DICE_PRIVATE_KEY_BUFFER_SIZE != 64
++#error "This Ed25519 implementation needs 64 bytes for the private key."
++#endif
++#if DICE_SIGNATURE_BUFFER_SIZE != 64
++#error "Ed25519 needs 64 bytes to store the signature."
++#endif
++
++DiceResult DiceGetKeyParam(void *context_not_used,
++						   DicePrincipal principal_not_used,
++						   DiceKeyParam *key_param)
++{
++	(void)context_not_used;
++	(void)principal_not_used;
++	key_param->public_key_size = DICE_PUBLIC_KEY_BUFFER_SIZE;
++	key_param->signature_size = DICE_SIGNATURE_BUFFER_SIZE;
++
++	key_param->cose_key_type = kCoseKeyKtyOkp;
++	key_param->cose_key_algorithm = kCoseAlgEdDsa;
++	key_param->cose_key_curve = kCoseCrvEd25519;
++	return kDiceResultOk;
++}
++
++int ED25519_verify(const uint8_t *message, size_t message_len,
++				   const uint8_t signature[64], const uint8_t public_key[32]);
++
++int ED25519_sign(uint8_t *out_sig, const uint8_t *message, size_t message_len,
++				 const uint8_t public_key[32], const uint8_t private_key[32]);
++
++void ED25519_public_from_private(uint8_t out_public_key[32],
++								 const uint8_t private_key[32]);
++
++DiceResult DiceKeypairFromSeed(
++	void *context_not_used, DicePrincipal principal_not_used,
++	const uint8_t seed[DICE_PRIVATE_KEY_SEED_SIZE],
++	uint8_t public_key[DICE_PUBLIC_KEY_BUFFER_SIZE],
++	uint8_t private_key[DICE_PRIVATE_KEY_BUFFER_SIZE])
++{
++	(void)context_not_used;
++
++	size_t pub_key_len = 32;
++	EVP_PKEY *pkey = NULL;
++	DiceResult ret = kDiceResultPlatformError;
++
++	do {
++
++		pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, seed, 32);
++		if (pkey == NULL)
++			break;
++
++		if (EVP_PKEY_get_raw_public_key(pkey, public_key, &pub_key_len) != 1)
++			break;
++
++		memcpy(private_key, seed, DICE_PRIVATE_KEY_SEED_SIZE);
++
++		ret = kDiceResultOk;
++	} while (0);
++
++	if (pkey)
++		EVP_PKEY_free(pkey);
++
++	return ret;
++}
++
++DiceResult DiceSign(void *context_not_used, const uint8_t *message,
++					size_t message_size,
++					const uint8_t private_key[DICE_PRIVATE_KEY_BUFFER_SIZE],
++					uint8_t signature[DICE_SIGNATURE_BUFFER_SIZE])
++{
++	(void)context_not_used;
++	EVP_MD_CTX *md_ctx = NULL;
++	EVP_PKEY *pkey = NULL;
++	DiceResult ret = kDiceResultPlatformError;
++
++	size_t sig_len = DICE_SIGNATURE_BUFFER_SIZE;
++
++	do {
++		pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, NULL, private_key, 32);
++		if (pkey == NULL)
++			break;
++
++		md_ctx = EVP_MD_CTX_new();
++		if (md_ctx == NULL)
++			break;
++
++		if (EVP_DigestSignInit_ex(md_ctx, NULL, NULL, NULL, NULL, pkey, NULL) != 1)
++			break;
++
++		if (EVP_DigestSign(md_ctx, signature, &sig_len, message, message_size) != 1)
++			break;
++
++		ret = kDiceResultOk;
++	} while (0);
++
++	if (pkey)
++		EVP_PKEY_free(pkey);
++	if (md_ctx)
++		EVP_MD_CTX_free(md_ctx);
++
++	return ret;
++}
++
++DiceResult DiceVerify(void *context_not_used, const uint8_t *message,
++					  size_t message_size,
++					  const uint8_t signature[DICE_SIGNATURE_BUFFER_SIZE],
++					  const uint8_t public_key[DICE_PUBLIC_KEY_BUFFER_SIZE])
++{
++	(void)context_not_used;
++	return kDiceResultPlatformError;
++}
+diff --git a/src/openssl_hash_kdf_ops.c b/src/openssl_hash_kdf_ops.c
+new file mode 100644
+index 0000000..043c394
+--- /dev/null
++++ b/src/openssl_hash_kdf_ops.c
+@@ -0,0 +1,77 @@
++// Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++
++// Copyright 2022 Google LLC
++//
++// Licensed under the Apache License, Version 2.0 (the "License"); you may not
++// use this file except in compliance with the License. You may obtain a copy of
++// the License at
++//
++//     https://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++// License for the specific language governing permissions and limitations under
++// the License.
++
++// An implementation of the hash and kdf crypto operations using OpenSSL. The
++// algorithms used are SHA512 and HKDF-SHA512.
++
++#include <stdint.h>
++
++#include "dice/dice.h"
++#include "dice/ops.h"
++#include <openssl/kdf.h>
++#include <openssl/evp.h>
++#include <openssl/sha.h>
++#include <openssl/core_names.h>
++
++DiceResult DiceHash(void* context_not_used, const uint8_t* input,
++                    size_t input_size, uint8_t output[DICE_HASH_SIZE]) {
++	(void)context_not_used;
++	SHA512(input, input_size, output);
++	return kDiceResultOk;
++}
++
++DiceResult DiceKdf(void* context_not_used, size_t length, const uint8_t* ikm,
++                   size_t ikm_size, const uint8_t* salt, size_t salt_size,
++                   const uint8_t* info, size_t info_size, uint8_t* output) {
++	(void)context_not_used;
++
++	EVP_KDF *kdf = NULL;
++	EVP_KDF_CTX *kctx = NULL;
++	DiceResult ret = kDiceResultPlatformError;
++
++	do {
++		/* Fetch the HKDF implementation */
++		kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
++		if (kdf == NULL)
++			break;
++
++		kctx = EVP_KDF_CTX_new(kdf);
++		if (kctx == NULL)
++			break;
++
++		/* Set parameters: digest, salt, key (IKM), info */
++		OSSL_PARAM params[] = {
++			OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_DIGEST, "SHA512", 0),
++			OSSL_PARAM_octet_string(OSSL_KDF_PARAM_SALT, (uint8_t*)salt, salt_size),
++			OSSL_PARAM_octet_string(OSSL_KDF_PARAM_KEY, (uint8_t*)ikm, ikm_size),
++			OSSL_PARAM_octet_string(OSSL_KDF_PARAM_INFO, (uint8_t*)info, info_size),
++			OSSL_PARAM_END
++		};
++
++		if (EVP_KDF_derive(kctx, output, length, params) <= 0)
++			break;
++
++		ret= kDiceResultOk;
++	} while (0);
++
++	if (kctx)
++		EVP_KDF_CTX_free(kctx);
++	if (kdf)
++		EVP_KDF_free(kdf);
++
++	return ret;
++}
+-- 
+2.34.1
+
