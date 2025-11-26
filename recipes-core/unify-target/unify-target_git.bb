@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440
 DEPENDS += "systemd"
 
 SRC_URI = "file://targets-generator.sh"
+SRC_URI:append = " file://services-enabler.sh"
 SRC_URI:append = " file://safe-ivi.target"
 SRC_URI:append = " file://nonsafe-ivi.target"
 SRC_URI:append = " file://adas.target"
@@ -32,6 +33,7 @@ SYSTEMD_SERVICE:${PN} = "\
 SYSTEMD_AUTO_ENABLE:${PN} = "disable"
 
 FILES:${PN} += "${systemd_unitdir}/system-generators/targets-generator"
+FILES:${PN} += "${systemd_unitdir}/system-generators/services-enabler"
 
 do_install:append() {
     install -d ${D}/${systemd_unitdir}/system
@@ -44,4 +46,5 @@ do_install:append() {
     install -m 0644 ${S}/multi-gvm.target ${D}/${systemd_unitdir}/system/multi-gvm.target
     install -d ${D}/${systemd_unitdir}/system-generators
     install -m 0755 ${S}/targets-generator.sh ${D}/${systemd_unitdir}/system-generators/targets-generator
+    install -m 0755 ${S}/services-enabler.sh ${D}/${systemd_unitdir}/system-generators/services-enabler
 }
