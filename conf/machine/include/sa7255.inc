@@ -17,6 +17,10 @@ PREFERRED_PROVIDER_virtual/wayland-egl  = "adreno"
 PREFERRED_PROVIDER_virtual/egl          = "adreno"
 PREFERRED_PROVIDER_virtual/libgles1     = "adreno"
 PREFERRED_PROVIDER_virtual/libgles2     = "adreno"
+VIRTUAL-RUNTIME_wayland-egl  = "adreno"
+VIRTUAL-RUNTIME_egl          = "adreno"
+VIRTUAL-RUNTIME_libgles1     = "adreno"
+VIRTUAL-RUNTIME_libgles2     = "adreno"
 
 RUSTVERSION = "1.75%"
 
