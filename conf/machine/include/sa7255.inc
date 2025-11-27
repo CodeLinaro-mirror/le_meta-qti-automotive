@@ -5,13 +5,6 @@ SOC_FAMILY ?= "sa7255"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
 
-# Prefer Wayland/Weston version
-PREFERRED_VERSION_weston = "8.0.0"
-PREFERRED_VERSION_wayland = "1.18.0"
-PREFERRED_VERSION_wayland-native = "1.18.0"
-PREFERRED_VERSION_wayland-protocols = "1.20"
-PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
-
 PREFERRED_VERSION_libgpiod = "1.6.4"
 
 # Prefer gbm
