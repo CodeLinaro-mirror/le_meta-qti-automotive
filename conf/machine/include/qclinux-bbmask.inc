@@ -14,6 +14,7 @@ BBMASK:append = " meta-qti-realtime/recipes-products/images/qcom-guestvm-image.b
 BBMASK:append = " meta-qti-auto-kernel/recipes-products/images/qti-image-ark-boot.bbappend"
 BBMASK:append = " meta-qcom/recipes-support/fastrpc/fastrpc_git.bb"
 BBMASK:append = " meta-qcom"
+BBMASK:append = " meta-qti-qualcommprofiler"
 BBMASK:append = " meta-qti-core"
 BBMASK:append = " meta-qti-display"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/u-boot/u-boot-tools_2025.01.bb"
