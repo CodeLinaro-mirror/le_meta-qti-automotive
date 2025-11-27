@@ -1,7 +1,7 @@
 
 SUMMARY = "multimedia framework"
 DESCRIPTION = "packages for multimedia"
-LICENSE = "GPLv2+ & LGPLv2+"
+LICENSE = "GPL-2.0-or-later & LGPL-2.0-or-later"
 
 PACKAGE_ARCH = "${TUNE_PKGARCH}"
 
