@@ -8,6 +8,7 @@ BBMASK:append = " meta-qti-bsp/dynamic-layers/openembedded-layer/recipes-devtool
 BBMASK:append = " meta-qti-bsp/recipes-core/uutils-coreutils/uutils-coreutils_%.bbappend"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-libgpt_1.0.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-abctl_1.0.bb"
+BBMASK:append = " meta-qti-bsp/recipes-firmware/firmware"
 BBMASK:append = " meta-qti-realtime/recipes-kernel/images/linux-qcom-uki.bbappend"
 BBMASK:append = " meta-qti-realtime/recipes-core/packagegroups/packagegroup-qcom-initscripts.bbappend"
 BBMASK:append = " meta-qti-realtime/recipes-products/images/qcom-guestvm-image.bbappend"
