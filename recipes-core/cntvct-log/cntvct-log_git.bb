@@ -19,7 +19,7 @@ SYSTEMD_SERVICE:${PN} = "cntvct@multi-user.service"
 
 do_install:append() {
     install -D -m 0644 ${S}/usr/lib/systemd/system/cntvct@.service ${D}${systemd_system_unitdir}/cntvct@.service
-    sed -i 's|ExecStart=/usr/bin/cntvct|ExecStart=/bin/bash -c '\''echo "cntvct@%i[\$BASHPID]: $(/usr/bin/cntvct)" > /dev/kmsg'\''|' ${D}${systemd_system_unitdir}/cntvct@.service
+    sed -i 's|ExecStart=/usr/bin/cntvct|ExecStart=/bin/sh -c '\''echo "cntvct@%i[$$$$]: $(/usr/bin/cntvct)" > /dev/kmsg'\''|' ${D}${systemd_system_unitdir}/cntvct@.service
 }
 
 FILES:${PN} += "${systemd_system_unitdir}/cntvct@.service"
