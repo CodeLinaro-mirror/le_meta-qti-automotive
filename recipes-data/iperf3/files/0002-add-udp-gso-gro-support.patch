@@ -1,0 +1,865 @@
+Backport from upstream, and rebased.
+
+Author: Guillaume Egles <gegles@us.ibm.com>
+Date:   Fri Sep 5 17:30:22 2025 +0000
+Subject: Add UDP GSO/GRO support (Linux) and --no-gsro switch
+Upstream-status: Pending
+Signed-off-by: Guillaume Egles <gegles@us.ibm.com>
+
+diff --git a/configure b/configure
+index 3f289953..69ac2616 100755
+--- a/configure
++++ b/configure
+@@ -17153,6 +17153,78 @@ printf "%s\n" "#define HAVE_TCP_INFO_SND_WND 1" >>confdefs.h
+ 
+ fi
+ 
++# Check for UDP_SEGMENT sockopt
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking UDP_SEGMENT socket option" >&5
++printf %s "checking UDP_SEGMENT socket option... " >&6; }
++if test ${iperf3_cv_header_udp_segment+y}
++then :
++  printf %s "(cached) " >&6
++else case e in #(
++  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <linux/udp.h>
++int
++main (void)
++{
++int foo = UDP_SEGMENT;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"
++then :
++  iperf3_cv_header_udp_segment=yes
++else case e in #(
++  e) iperf3_cv_header_udp_segment=no ;;
++esac
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
++esac
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $iperf3_cv_header_udp_segment" >&5
++printf "%s\n" "$iperf3_cv_header_udp_segment" >&6; }
++if test "x$iperf3_cv_header_udp_segment" = "xyes"; then
++
++printf "%s\n" "#define HAVE_UDP_SEGMENT 1" >>confdefs.h
++
++fi
++
++# Check for UDP_GRO sockopt
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking UDP_GRO socket option" >&5
++printf %s "checking UDP_GRO socket option... " >&6; }
++if test ${iperf3_cv_header_udp_gro+y}
++then :
++  printf %s "(cached) " >&6
++else case e in #(
++  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <linux/udp.h>
++int
++main (void)
++{
++int foo = UDP_GRO;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"
++then :
++  iperf3_cv_header_udp_gro=yes
++else case e in #(
++  e) iperf3_cv_header_udp_gro=no ;;
++esac
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
++esac
++fi
++{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $iperf3_cv_header_udp_gro" >&5
++printf "%s\n" "$iperf3_cv_header_udp_gro" >&6; }
++if test "x$iperf3_cv_header_udp_gro" = "xyes"; then
++
++printf "%s\n" "#define HAVE_UDP_GRO 1" >>confdefs.h
++
++fi
++
+ # Check if we need -lrt for clock_gettime
+ { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing clock_gettime" >&5
+ printf %s "checking for library containing clock_gettime... " >&6; }
+diff --git a/configure.ac b/configure.ac
+index 66c1e97a..d73c2095 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -337,6 +337,30 @@ if test "x$iperf3_cv_header_tcp_info_snd_wnd" = "xyes"; then
+   AC_DEFINE([HAVE_TCP_INFO_SND_WND], [1], [Have tcpi_snd_wnd field in tcp_info.])
+ fi
+ 
++# Check for UDP_SEGMENT sockopt
++AC_CACHE_CHECK([UDP_SEGMENT socket option],
++[iperf3_cv_header_udp_segment],
++AC_COMPILE_IFELSE(
++  [AC_LANG_PROGRAM([[#include <linux/udp.h>]],
++                   [[int foo = UDP_SEGMENT;]])],
++  iperf3_cv_header_udp_segment=yes,
++  iperf3_cv_header_udp_segment=no))
++if test "x$iperf3_cv_header_udp_segment" = "xyes"; then
++    AC_DEFINE([HAVE_UDP_SEGMENT], [1], [Have UDP_SEGMENT sockopt.])
++fi
++
++# Check for UDP_GRO sockopt
++AC_CACHE_CHECK([UDP_GRO socket option],
++[iperf3_cv_header_udp_gro],
++AC_COMPILE_IFELSE(
++  [AC_LANG_PROGRAM([[#include <linux/udp.h>]],
++                   [[int foo = UDP_GRO;]])],
++  iperf3_cv_header_udp_gro=yes,
++  iperf3_cv_header_udp_gro=no))
++if test "x$iperf3_cv_header_udp_gro" = "xyes"; then
++    AC_DEFINE([HAVE_UDP_GRO], [1], [Have UDP_GRO sockopt.])
++fi
++
+ # Check if we need -lrt for clock_gettime
+ AC_SEARCH_LIBS(clock_gettime, [rt posix4])
+ # Check for clock_gettime support
+diff --git a/src/iperf.h b/src/iperf.h
+index 202d3016..e452e849 100644
+--- a/src/iperf.h
++++ b/src/iperf.h
+@@ -83,6 +83,17 @@ typedef atomic_uint_fast64_t atomic_iperf_size_t;
+ typedef unsigned int uint
+ #endif // __vxworks or __VXWORKS__
+ 
++#define GSO_BF_MAX_SIZE 64000
++#define GSO_DEF 0
++#ifndef UDP_SEGMENT
++#define UDP_SEGMENT 103
++#endif
++#define GRO_DEF 0
++#define GRO_BF_MAX_SIZE 65535
++#ifndef UDP_GRO
++#define UDP_GRO 104
++#endif
++
+ struct iperf_sctp_info
+ {
+     long rtt;
+@@ -184,6 +195,15 @@ struct iperf_settings
+     int       idle_timeout;         /* server idle time timeout */
+     unsigned int snd_timeout; /* Timeout for sending tcp messages in active mode, in us */
+     struct iperf_time rcv_timeout;  /* Timeout for receiving messages in active mode, in us */
++#ifdef HAVE_UDP_SEGMENT
++    int       gso;
++    int       gso_dg_size;
++    int       gso_bf_size;
++#endif
++#ifdef HAVE_UDP_GRO
++    int       gro;
++    int       gro_bf_size;
++#endif
+ };
+ 
+ struct iperf_test;
+@@ -473,5 +493,4 @@ extern int gerror; /* error value from getaddrinfo(3), for use in internal error
+ 
+ /* In Reverse mode, maximum number of packets to wait for "accept" response - to handle out of order packets */
+ #define MAX_REVERSE_OUT_OF_ORDER_PACKETS 2
+-
+ #endif /* !__IPERF_H */
+diff --git a/src/iperf_api.c b/src/iperf_api.c
+index fa06dc83..fc8934ca 100644
+--- a/src/iperf_api.c
++++ b/src/iperf_api.c
+@@ -1143,6 +1143,9 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+     {"time-skew-threshold", required_argument, NULL, OPT_SERVER_SKEW_THRESHOLD},
+     {"use-pkcs1-padding", no_argument, NULL, OPT_USE_PKCS1_PADDING},
+ #endif /* HAVE_SSL */
++#if defined(HAVE_UDP_SEGMENT) || defined(HAVE_UDP_GRO)
++        {"no-gsro", no_argument, NULL, OPT_NO_GSRO},
++#endif
+ 	{"fq-rate", required_argument, NULL, OPT_FQ_RATE},
+ 	{"pacing-timer", required_argument, NULL, OPT_PACING_TIMER},
+ 	{"connect-timeout", required_argument, NULL, OPT_CONNECT_TIMEOUT},
+@@ -1647,6 +1650,17 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+ 		test->settings->connect_timeout = unit_atoi(optarg);
+ 		client_flag = 1;
+ 		break;
++#if defined(HAVE_UDP_SEGMENT) || defined(HAVE_UDP_GRO)
++            case OPT_NO_GSRO:
++		/* Disable GSO/GRO which would otherwise be enabled by default */
++#ifdef HAVE_UDP_SEGMENT
++		test->settings->gso = 0;
++#endif
++#ifdef HAVE_UDP_GRO
++		test->settings->gro = 0;
++#endif
++                break;
++#endif
+ 	    case 'h':
+ 		usage_long(stdout);
+ 		exit(0);
+@@ -1667,6 +1681,8 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+         return -1;
+     }
+ 
++/* GSO/GRO are enabled by default when available, disabled only via --no-gsro */
++
+ #if defined(HAVE_SSL)
+ 
+     if (test->role == 's' && (client_username || client_rsa_public_key)){
+@@ -1767,6 +1783,20 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
+ 	i_errno = IEUDPBLOCKSIZE;
+ 	return -1;
+     }
++
++#ifdef HAVE_UDP_SEGMENT
++    if (test->protocol->id == Pudp && test->settings->gso) {
++        test->settings->gso_dg_size = blksize;
++        /* use the multiple of datagram size for the best efficiency. */
++        if (test->settings->gso_dg_size > 0) {
++            test->settings->gso_bf_size = (test->settings->gso_bf_size / test->settings->gso_dg_size) * test->settings->gso_dg_size;
++        } else {
++            /* If gso_dg_size is 0 (unlimited bandwidth), use default UDP datagram size */
++            test->settings->gso_dg_size = DEFAULT_UDP_BLKSIZE;
++        }
++    }
++#endif
++
+     test->settings->blksize = blksize;
+ 
+     if (!rate_flag)
+@@ -2271,6 +2301,22 @@ send_parameters(struct iperf_test *test)
+ 	    cJSON_AddNumberToObject(j, "pacing_timer", test->settings->pacing_timer);
+ 	if (test->settings->burst)
+ 	    cJSON_AddNumberToObject(j, "burst", test->settings->burst);
++
++#ifdef HAVE_UDP_SEGMENT
++	/* Send UDP GSO settings from client to server */
++	if (test->protocol->id == Pudp) {
++	    cJSON_AddNumberToObject(j, "gso", test->settings->gso);
++	    cJSON_AddNumberToObject(j, "gso_dg_size", test->settings->gso_dg_size);
++	    cJSON_AddNumberToObject(j, "gso_bf_size", test->settings->gso_bf_size);
++	}
++#endif
++#ifdef HAVE_UDP_GRO
++	/* Send UDP GRO settings from client to server */
++	if (test->protocol->id == Pudp) {
++	    cJSON_AddNumberToObject(j, "gro", test->settings->gro);
++	    cJSON_AddNumberToObject(j, "gro_bf_size", test->settings->gro_bf_size);
++	}
++#endif
+ 	if (test->settings->tos)
+ 	    cJSON_AddNumberToObject(j, "TOS", test->settings->tos);
+ 	if (test->settings->flowlabel)
+@@ -2379,6 +2425,33 @@ get_parameters(struct iperf_test *test)
+ 	    test->settings->socket_bufsize = j_p->valueint;
+ 	if ((j_p = iperf_cJSON_GetObjectItemType(j, "len", cJSON_Number)) != NULL)
+ 	    test->settings->blksize = j_p->valueint;
++
++#ifdef HAVE_UDP_SEGMENT
++	/* Accept UDP GSO settings provided by the client */
++	if ((j_p = iperf_cJSON_GetObjectItemType(j, "gso", cJSON_Number)) != NULL)
++	    test->settings->gso = j_p->valueint;
++	if ((j_p = iperf_cJSON_GetObjectItemType(j, "gso_dg_size", cJSON_Number)) != NULL)
++	    test->settings->gso_dg_size = j_p->valueint;
++	if ((j_p = iperf_cJSON_GetObjectItemType(j, "gso_bf_size", cJSON_Number)) != NULL)
++	    test->settings->gso_bf_size = j_p->valueint;
++
++	/* Backward-compatibility: If client didn't send GSO params, derive from blksize. */
++	if (test->protocol->id == Pudp && test->settings->gso == 1 && test->settings->gso_dg_size == 0) {
++	    test->settings->gso_dg_size = test->settings->blksize;
++	    if (test->settings->gso_dg_size > 0) {
++	        test->settings->gso_bf_size = (test->settings->gso_bf_size / test->settings->gso_dg_size) * test->settings->gso_dg_size;
++	    } else {
++	        test->settings->gso_dg_size = DEFAULT_UDP_BLKSIZE;
++	    }
++	}
++#endif
++#ifdef HAVE_UDP_GRO
++	/* Accept UDP GRO settings provided by the client */
++	if ((j_p = iperf_cJSON_GetObjectItemType(j, "gro", cJSON_Number)) != NULL)
++	    test->settings->gro = j_p->valueint;
++	if ((j_p = iperf_cJSON_GetObjectItemType(j, "gro_bf_size", cJSON_Number)) != NULL)
++	    test->settings->gro_bf_size = j_p->valueint;
++#endif
+ 	if ((j_p = iperf_cJSON_GetObjectItemType(j, "bandwidth", cJSON_Number)) != NULL)
+ 	    test->settings->rate = j_p->valueint;
+ 	if ((j_p = iperf_cJSON_GetObjectItemType(j, "fqrate", cJSON_Number)) != NULL)
+@@ -3009,6 +3082,15 @@ iperf_defaults(struct iperf_test *testp)
+     testp->settings->fqrate = 0;
+     testp->settings->pacing_timer = DEFAULT_PACING_TIMER;
+     testp->settings->burst = 0;
++#ifdef HAVE_UDP_SEGMENT
++    testp->settings->gso = 1;  /* Enable GSO by default */
++    testp->settings->gso_dg_size = 0;
++    testp->settings->gso_bf_size = GSO_BF_MAX_SIZE;
++#endif
++#ifdef HAVE_UDP_GRO
++    testp->settings->gro = 1;  /* Enable GRO by default */
++    testp->settings->gro_bf_size = GRO_BF_MAX_SIZE;
++#endif
+     testp->settings->mss = 0;
+     testp->settings->bytes = 0;
+     testp->settings->blocks = 0;
+@@ -3311,6 +3393,13 @@ iperf_reset_test(struct iperf_test *test)
+     test->settings->burst = 0;
+     test->settings->mss = 0;
+     test->settings->tos = 0;
++#ifdef HAVE_UDP_SEGMENT
++    test->settings->gso_dg_size = 0;
++    test->settings->gso_bf_size = GSO_BF_MAX_SIZE;
++#endif
++#ifdef HAVE_UDP_GRO
++    test->settings->gro_bf_size = GRO_BF_MAX_SIZE;
++#endif
+     test->settings->dont_fragment = 0;
+     test->zerocopy = 0;
+ 
+@@ -4467,6 +4556,7 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
+ {
+     struct iperf_stream *sp;
+     int ret = 0;
++    int size;
+ 
+     char template[1024];
+     if (test->tmp_template) {
+@@ -4525,13 +4615,24 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
+         free(sp);
+         return NULL;
+     }
+-    if (ftruncate(sp->buffer_fd, test->settings->blksize) < 0) {
++    size = test->settings->blksize;
++#ifdef HAVE_UDP_SEGMENT
++    if (test->protocol->id == Pudp && test->settings->gso && (size < test->settings->gso_bf_size))
++        size = test->settings->gso_bf_size;
++#endif
++#ifdef HAVE_UDP_GRO
++    if (test->protocol->id == Pudp && test->settings->gro && (size < test->settings->gro_bf_size))
++        size = test->settings->gro_bf_size;
++#endif
++    if (sp->test->debug)
++        printf("Buffer %d bytes\n", size);
++    if (ftruncate(sp->buffer_fd, size) < 0) {
+         i_errno = IECREATESTREAM;
+         free(sp->result);
+         free(sp);
+         return NULL;
+     }
+-    sp->buffer = (char *) mmap(NULL, test->settings->blksize, PROT_READ|PROT_WRITE, MAP_PRIVATE, sp->buffer_fd, 0);
++    sp->buffer = (char *) mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_PRIVATE, sp->buffer_fd, 0);
+     if (sp->buffer == MAP_FAILED) {
+         i_errno = IECREATESTREAM;
+         free(sp->result);
+diff --git a/src/iperf_api.h b/src/iperf_api.h
+index 2b71613e..a40435b8 100644
+--- a/src/iperf_api.h
++++ b/src/iperf_api.h
+@@ -101,6 +101,7 @@ typedef atomic_uint_fast64_t atomic_iperf_size_t;
+ #define OPT_JSON_STREAM 28
+ #define OPT_SND_TIMEOUT 29
+ #define OPT_USE_PKCS1_PADDING 30
++#define OPT_NO_GSRO 31
+ 
+ /* states */
+ #define TEST_START 1
+diff --git a/src/iperf_client_api.c b/src/iperf_client_api.c
+index 8807541f..94893be4 100644
+--- a/src/iperf_client_api.c
++++ b/src/iperf_client_api.c
+@@ -499,29 +499,41 @@ iperf_connect(struct iperf_test *test)
+      * the user always has the option to override.
+      */
+     if (test->protocol->id == Pudp) {
+-	if (test->settings->blksize == 0) {
+-	    if (test->ctrl_sck_mss) {
+-		test->settings->blksize = test->ctrl_sck_mss;
+-	    }
+-	    else {
+-		test->settings->blksize = DEFAULT_UDP_BLKSIZE;
+-	    }
+-	    if (test->verbose) {
+-		printf("Setting UDP block size to %d\n", test->settings->blksize);
+-	    }
+-	}
++    if (test->settings->blksize == 0) {
++        if (test->ctrl_sck_mss) {
++        test->settings->blksize = test->ctrl_sck_mss;
++        }
++        else {
++        test->settings->blksize = DEFAULT_UDP_BLKSIZE;
++        }
++        if (test->verbose) {
++        printf("Setting UDP block size to %d\n", test->settings->blksize);
++        }
++    }
++#ifdef HAVE_UDP_SEGMENT
++    if (test->settings->gso) {
++        test->settings->gso_dg_size = test->settings->blksize;
++        /* use the multiple of datagram size for the best efficiency. */
++        if (test->settings->gso_dg_size > 0) {
++            test->settings->gso_bf_size = (test->settings->gso_bf_size / test->settings->gso_dg_size) * test->settings->gso_dg_size;
++        } else {
++            /* If gso_dg_size is 0 (unlimited bandwidth), use default UDP datagram size */
++            test->settings->gso_dg_size = DEFAULT_UDP_BLKSIZE;
++        }
++    }
++#endif
+ 
+-	/*
+-	 * Regardless of whether explicitly or implicitly set, if the
+-	 * block size is larger than the MSS, print a warning.
+-	 */
+-	if (test->ctrl_sck_mss > 0 &&
+-	    test->settings->blksize > test->ctrl_sck_mss) {
+-	    char str[WARN_STR_LEN];
+-	    snprintf(str, sizeof(str),
+-		     "UDP block size %d exceeds TCP MSS %d, may result in fragmentation / drops", test->settings->blksize, test->ctrl_sck_mss);
+-	    warning(str);
+-	}
++    /*
++    * Regardless of whether explicitly or implicitly set, if the
++    * block size is larger than the MSS, print a warning.
++    */
++    if (test->ctrl_sck_mss > 0 &&
++        test->settings->blksize > test->ctrl_sck_mss) {
++        char str[WARN_STR_LEN];
++        snprintf(str, sizeof(str),
++            "UDP block size %d exceeds TCP MSS %d, may result in fragmentation / drops", test->settings->blksize, test->ctrl_sck_mss);
++        warning(str);
++    }
+     }
+ 
+     return 0;
+diff --git a/src/iperf_config.h.in b/src/iperf_config.h.in
+index 217aee3d..566c871e 100644
+--- a/src/iperf_config.h.in
++++ b/src/iperf_config.h.in
+@@ -123,6 +123,12 @@
+ /* Have TCP_USER_TIMEOUT sockopt. */
+ #undef HAVE_TCP_USER_TIMEOUT
+ 
++/* Have UDP_GRO sockopt. */
++#undef HAVE_UDP_GRO
++
++/* Have UDP_SEGMENT sockopt. */
++#undef HAVE_UDP_SEGMENT
++
+ /* Define to 1 if you have the <unistd.h> header file. */
+ #undef HAVE_UNISTD_H
+ 
+diff --git a/src/iperf_locale.c b/src/iperf_locale.c
+index 32883da8..3e6b766c 100644
+--- a/src/iperf_locale.c
++++ b/src/iperf_locale.c
+@@ -205,6 +205,9 @@ const char usage_longstr[] = "Usage: iperf3 [-s|-c host] [options]\n"
+                            "  --extra-data str          data string to include in client and server JSON\n"
+                            "  --get-server-output       get results from server\n"
+                            "  --udp-counters-64bit      use 64-bit counters in UDP test packets\n"
++#if defined(HAVE_UDP_SEGMENT) || defined(HAVE_UDP_GRO)
++                           "  --no-gsro                 disable UDP GSO/GRO (Generic Segmentation/Receive Offload)\n"
++#endif
+                            "  --repeating-payload       use repeating pattern in payload, instead of\n"
+                            "                            randomized payload (like in iperf2)\n"
+ #if defined(HAVE_DONT_FRAGMENT)
+diff --git a/src/iperf_udp.c b/src/iperf_udp.c
+index 150b8c69..91c5a651 100644
+--- a/src/iperf_udp.c
++++ b/src/iperf_udp.c
+@@ -47,6 +47,8 @@
+ #include "net.h"
+ #include "cjson.h"
+ 
++#undef HAVE_UDP_GRO
++
+ /* iperf_udp_recv
+  *
+  * receives the data for UDP
+@@ -202,6 +204,84 @@ iperf_udp_send(struct iperf_stream *sp)
+     int       size = sp->settings->blksize;
+     struct iperf_time before;
+ 
++#ifdef HAVE_UDP_SEGMENT
++    int       dgram_sz;
++    int       buf_sz;
++    int       cnt = 0;
++    char      *dgram_buf;
++    char      *dgram_buf_end;
++    const int min_pkt_size = sizeof(uint32_t) * 3; /* sec + usec + pcount (32-bit) */
++
++    if (sp->test->settings->gso) {
++    dgram_sz = sp->test->settings->gso_dg_size;
++    /* Use full GSO buffer to pack multiple datagrams, as originally. */
++    buf_sz = sp->test->settings->gso_bf_size;
++	/* Validate GSO parameters */
++	if (dgram_sz <= 0 || dgram_sz < min_pkt_size || dgram_sz > buf_sz) {
++	    if (sp->test->debug_level >= DEBUG_LEVEL_INFO)
++		printf("Invalid GSO dgram_sz %d for buf_sz %d, disabling GSO\n", dgram_sz, buf_sz);
++	    dgram_sz = buf_sz = size;
++	    sp->test->settings->gso = 0;  /* Disable GSO for safety */
++	}
++    } else {
++	dgram_sz = buf_sz = size;
++    }
++
++    dgram_buf = sp->buffer;
++    dgram_buf_end = sp->buffer + buf_sz;
++
++    while (buf_sz > 0 && dgram_buf + dgram_sz <= dgram_buf_end) {
++	    cnt++;
++
++	    if (sp->test->debug)
++		    printf("%d (%d) remaining %d\n", cnt, dgram_sz, buf_sz);
++
++	    /* Prevent buffer underflow */
++	    if (buf_sz < dgram_sz) {
++		if (sp->test->debug_level >= DEBUG_LEVEL_INFO)
++		    printf("Buffer underflow protection: buf_sz %d < dgram_sz %d\n", buf_sz, dgram_sz);
++		break;
++	    }
++
++	    iperf_time_now(&before);
++	    ++sp->packet_count;
++
++	    if (sp->test->udp_counters_64bit) {
++
++		    uint32_t  sec, usec;
++		    uint64_t  pcount;
++
++		    sec = htonl(before.secs);
++		    usec = htonl(before.usecs);
++		    pcount = htobe64(sp->packet_count);
++
++		    memcpy(dgram_buf, &sec, sizeof(sec));
++		    memcpy(dgram_buf+4, &usec, sizeof(usec));
++		    memcpy(dgram_buf+8, &pcount, sizeof(pcount));
++
++	    }
++	    else {
++
++		    uint32_t  sec, usec, pcount;
++
++		    sec = htonl(before.secs);
++		    usec = htonl(before.usecs);
++		    pcount = htonl(sp->packet_count);
++
++		    memcpy(dgram_buf, &sec, sizeof(sec));
++		    memcpy(dgram_buf+4, &usec, sizeof(usec));
++		    memcpy(dgram_buf+8, &pcount, sizeof(pcount));
++
++	    }
++	    dgram_buf += dgram_sz;
++	    buf_sz -= dgram_sz;
++    }
++
++    /* Warn if we didn't process all the buffer due to size mismatch */
++    if (buf_sz > 0 && sp->test->debug_level >= DEBUG_LEVEL_INFO) {
++	printf("GSO: %d bytes remaining unprocessed\n", buf_sz);
++    }
++#else
+     iperf_time_now(&before);
+ 
+     ++sp->packet_count;
+@@ -233,7 +313,14 @@ iperf_udp_send(struct iperf_stream *sp)
+ 	memcpy(sp->buffer+8, &pcount, sizeof(pcount));
+ 
+     }
++#endif /* HAVE_UDP_SEGMENT */
+ 
++#ifdef HAVE_UDP_SEGMENT
++    if (sp->test->settings->gso) {
++        size = sp->test->settings->gso_bf_size;
++        r = Nwrite_gso(sp->socket, sp->buffer, size, Pudp, sp->test->settings->gso_dg_size);
++    } else
++#endif
+     r = Nwrite(sp->socket, sp->buffer, size, Pudp);
+ 
+     if (r <= 0) {
+@@ -250,7 +337,7 @@ iperf_udp_send(struct iperf_stream *sp)
+     sp->result->bytes_sent_this_interval += r;
+ 
+     if (sp->test->debug_level >=  DEBUG_LEVEL_DEBUG)
+-	printf("sent %d bytes of %d, total %" PRIu64 "\n", r, sp->settings->blksize, sp->result->bytes_sent);
++	printf("sent %d bytes of %d, total %" PRIu64 "\n", r, size, sp->result->bytes_sent);
+ 
+     return r;
+ }
+@@ -360,6 +447,42 @@ iperf_udp_buffercheck(struct iperf_test *test, int s)
+     return rc;
+ }
+ 
++#ifdef HAVE_UDP_SEGMENT
++int
++iperf_udp_gso(struct iperf_test *test, int s)
++{
++    int rc;
++    int gso = test->settings->gso_dg_size;
++
++    rc = setsockopt(s, IPPROTO_UDP, UDP_SEGMENT, (char*) &gso, sizeof(gso));
++    if (rc) {
++	iperf_printf(test, "No GSO (%d)\n", rc);
++        test->settings->gso = 0;
++    } else
++	iperf_printf(test, "GSO (%d)\n", gso);
++
++    return rc;
++}
++#endif
++
++#ifdef HAVE_UDP_GRO
++int
++iperf_udp_gro(struct iperf_test *test, int s)
++{
++    int rc;
++    int gro = 1;
++
++    rc = setsockopt(s, IPPROTO_UDP, UDP_GRO, (char*) &gro, sizeof(gro));
++    if (rc) {
++	iperf_printf(test, "No GRO (%d)\n", rc);
++        test->settings->gro = 0;
++    } else
++	iperf_printf(test, "GRO\n");
++
++    return rc;
++}
++#endif
++
+ /*
+  * iperf_udp_accept
+  *
+@@ -419,6 +542,15 @@ iperf_udp_accept(struct iperf_test *test)
+ 	}
+     }
+ 
++#ifdef HAVE_UDP_SEGMENT
++    if (test->settings->gso)
++        iperf_udp_gso(test, s);
++#endif
++#ifdef HAVE_UDP_GRO
++    if (test->settings->gro)
++        iperf_udp_gro(test, s);
++#endif
++
+ #if defined(HAVE_SO_MAX_PACING_RATE)
+     /* If socket pacing is specified, try it. */
+     if (test->settings->fqrate) {
+@@ -518,6 +650,16 @@ iperf_udp_connect(struct iperf_test *test)
+     if (rc < 0)
+ 	/* error */
+ 	return rc;
++
++#ifdef HAVE_UDP_SEGMENT
++    if (test->settings->gso)
++        iperf_udp_gso(test, s);
++#endif
++#ifdef HAVE_UDP_GRO
++    if (test->settings->gro)
++        iperf_udp_gro(test, s);
++#endif
++
+     /*
+      * If the socket buffer was too small, but it was the default
+      * size, then try explicitly setting it to something larger.
+diff --git a/src/net.c b/src/net.c
+index b693ea7f..3830f076 100644
+--- a/src/net.c
++++ b/src/net.c
+@@ -38,6 +38,11 @@
+ #include <string.h>
+ #include <fcntl.h>
+ #include <limits.h>
++#if defined(HAVE_UDP_SEGMENT) || defined(HAVE_UDP_GRO)
++#include <linux/udp.h>
++#endif
++
++#include "iperf.h"
+ 
+ #ifdef HAVE_SENDFILE
+ #ifdef linux
+@@ -479,6 +484,88 @@ Nread_no_select(int fd, char *buf, size_t count, int prot)
+     return count - nleft;
+ }
+ 
++#ifdef HAVE_UDP_GRO
++static int recv_msg_gro(int fd, char *buf, int len, int *gso_size)
++{
++	char control[CMSG_SPACE(sizeof(uint16_t))] = {0};
++	struct msghdr msg = {0};
++	struct iovec iov = {0};
++	struct cmsghdr *cmsg;
++	uint16_t *gsosizeptr;
++	int ret;
++
++	/* Input validation */
++	if (!buf || len <= 0 || !gso_size) {
++		return -1;
++	}
++
++	iov.iov_base = buf;
++	iov.iov_len = len;
++
++	msg.msg_iov = &iov;
++	msg.msg_iovlen = 1;
++
++	msg.msg_control = control;
++	msg.msg_controllen = sizeof(control);
++
++	*gso_size = -1;
++	ret = recvmsg(fd, &msg, MSG_DONTWAIT);
++
++	if (ret > 0) {
++		for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
++			if (cmsg->cmsg_level == IPPROTO_UDP && cmsg->cmsg_type == UDP_GRO) {
++				/* Validate cmsg data length */
++				if (cmsg->cmsg_len >= CMSG_LEN(sizeof(uint16_t))) {
++					gsosizeptr = (uint16_t *) CMSG_DATA(cmsg);
++					*gso_size = *gsosizeptr;
++					/* Sanity check the gso_size value */
++					if (*gso_size <= 0 || *gso_size > len) {
++						*gso_size = -1;  /* Mark as invalid */
++					}
++				}
++				break;
++			}
++		}
++	}
++
++	return ret;
++}
++
++int
++Nread_gro(int fd, char *buf, size_t count, int prot, int *dgram_sz)
++{
++	register ssize_t r;
++
++	/* Input validation */
++	if (!buf || count <= 0 || !dgram_sz) {
++		return NET_HARDERROR;
++	}
++
++	/* Limit maximum buffer size to prevent excessive memory usage */
++	if (count > MAX_UDP_BLOCKSIZE) {
++		count = MAX_UDP_BLOCKSIZE;
++	}
++
++	r = recv_msg_gro(fd, buf, count, dgram_sz);
++
++	if (r < 0) {
++		if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
++			return 0;
++		} else {
++			printf("\nUnexpected error (%d)\n", errno);
++			return NET_HARDERROR;
++		}
++	}
++
++	/* Additional validation of returned dgram_sz */
++	if (r > 0 && *dgram_sz > 0 && *dgram_sz > r) {
++		/* dgram_sz shouldn't be larger than actual received data */
++		*dgram_sz = r;
++	}
++
++	return r;
++}
++#endif /* HAVE_UDP_GRO */
+ 
+ /*
+  *                      N W R I T E
+@@ -518,6 +605,79 @@ Nwrite(int fd, const char *buf, size_t count, int prot)
+     return count;
+ }
+ 
++#ifdef HAVE_UDP_SEGMENT
++static void udp_msg_gso(struct cmsghdr *cm, uint16_t gso_size)
++{
++	uint16_t *valp;
++
++	cm->cmsg_level = IPPROTO_UDP;
++	cm->cmsg_type = UDP_SEGMENT;
++	cm->cmsg_len = CMSG_LEN(sizeof(gso_size));
++	valp = (void *) CMSG_DATA(cm);
++	*valp = gso_size;
++}
++
++static int udp_sendmsg_gso(int fd, const char *buf, size_t count, uint16_t gso_size)
++{
++	char control[CMSG_SPACE(sizeof(gso_size))] = {0};
++	struct msghdr msg = {0};
++	struct iovec iov = {0};
++	size_t msg_controllen;
++	struct cmsghdr *cmsg;
++	int ret;
++
++	iov.iov_base = (void *) buf;
++	iov.iov_len = count;
++
++	msg.msg_iov = &iov;
++	msg.msg_iovlen = 1;
++
++	msg.msg_control = control;
++	msg.msg_controllen = sizeof(control);
++	cmsg = CMSG_FIRSTHDR(&msg);
++
++	udp_msg_gso(cmsg, gso_size);
++
++	msg_controllen = CMSG_SPACE(sizeof(gso_size));
++	msg.msg_controllen = msg_controllen;
++
++	ret = sendmsg(fd, &msg, 0);
++
++	if (ret != iov.iov_len)
++		printf("msg: %u != %llu\n", ret, (unsigned long long) iov.iov_len);
++
++	return ret;
++}
++
++int
++Nwrite_gso(int fd, const char *buf, size_t count, int prot, uint16_t gso_size)
++{
++	register ssize_t r;
++
++	r = udp_sendmsg_gso(fd, buf, count, gso_size);
++
++	if (r < 0) {
++		switch (errno) {
++			case EINTR:
++			case EAGAIN:
++#if (EAGAIN != EWOULDBLOCK)
++			case EWOULDBLOCK:
++#endif
++				printf("\nerrono (%d)\n", errno);
++				return 0;
++
++			case ENOBUFS:
++				printf("\nUnexpected error ENOBUFS (%d)\n", ENOBUFS);
++				return NET_SOFTERROR;
++
++			default:
++				printf("\nUnexpected error (%d)\n", errno);
++				return NET_HARDERROR;
++		}
++	}
++	return r;
++}
++#endif /* HAVE_UDP_SEGMENT */
+ 
+ int
+ has_sendfile(void)
+diff --git a/src/net.h b/src/net.h
+index 859c52ce..3d06dc5f 100644
+--- a/src/net.h
++++ b/src/net.h
+@@ -39,6 +39,12 @@ int Nsendfile(int fromfd, int tofd, const char *buf, size_t count) /* __attribut
+ int setnonblocking(int fd, int nonblocking);
+ int getsockdomain(int sock);
+ int parse_qos(const char *tos);
++#ifdef HAVE_UDP_GRO
++int Nread_gro(int fd, char *buf, size_t count, int prot, int *dgram_sz);
++#endif
++#ifdef HAVE_UDP_SEGMENT
++int Nwrite_gso(int fd, const char *buf, size_t count, int prot, uint16_t gso_size);
++#endif
+ 
+ #define NET_SOFTERROR -1
+ #define NET_HARDERROR -2
