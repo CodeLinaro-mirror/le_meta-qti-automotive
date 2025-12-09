@@ -18,6 +18,14 @@ S = "${WORKDIR}/external/vhost-device"
 CARGO_SRC_DIR = "vhost-device-gpio"
 
 inherit cargo pkgconfig systemd
+
+SYSTEMD_SERVICE:${PN}:gen5 = "vhost-device-gpio.service"
+
+do_install:append:gen5() {
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${S}/vhost-device-gpio/vhost-device-gpio_sa8797.service ${D}${systemd_system_unitdir}/vhost-device-gpio.service
+}
+
 include vhost-device-crates.inc
 
 CARGO_BUILD_FLAGS:remove = "--frozen"
