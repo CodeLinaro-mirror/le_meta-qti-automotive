@@ -1,7 +1,7 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
 include conf/distro/include/qclinux-bbmask-prop.inc
-SOC_FAMILY = "sa8797"
+SOC_FAMILY = "gen5"
 SOC_FAMILY ?= "sa-common"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
@@ -9,12 +9,6 @@ PREFERRED_PROVIDER_virtual/kernel = "linux-qcom-custom-rt"
 PREFERRED_PROVIDER_virtual/kernel-headers = "linux-kernel-qcom-headers"
 PREFERRED_VERSION_linux-qcom-custom-rt = "6.6"
 
-# Prefer Wayland/Weston version
-PREFERRED_VERSION_weston = "8.0.0"
-PREFERRED_VERSION_wayland = "1.18.0"
-PREFERRED_VERSION_wayland-native = "1.18.0"
-PREFERRED_VERSION_wayland-protocols = "1.20"
-PREFERRED_VERSION_wayland-ivi-extension = "2.2.0"
 #grep use GPL-2.0-only version from meta-gplv2/recipes-extended/grep
 PREFERRED_VERSION_grep = "2.5%"
 PREFERRED_VERSION_libgpiod = "1.6.4"
@@ -30,9 +24,10 @@ PREFERRED_PROVIDER_virtual/wayland-egl  = "adreno"
 PREFERRED_PROVIDER_virtual/egl          = "adreno"
 PREFERRED_PROVIDER_virtual/libgles1     = "adreno"
 PREFERRED_PROVIDER_virtual/libgles2     = "adreno"
-
-BBMASK:sa8797 += "meta-qti-bsp/meta-qti-base/recipes-kernel/edk2/edk2_4.0.bb"
-BBMASK:sa8797 += "meta-qti-bsp/meta-qti-base/recipes-kernel/edk2/edk2_5.0.bb"
+VIRTUAL-RUNTIME_wayland-egl  = "adreno"
+VIRTUAL-RUNTIME_egl          = "adreno"
+VIRTUAL-RUNTIME_libgles1     = "adreno"
+VIRTUAL-RUNTIME_libgles2     = "adreno"
 
 # Enables timestamping functionality during building the kernel
 KERNEL_DEBUG_TIMESTAMPS = "1"

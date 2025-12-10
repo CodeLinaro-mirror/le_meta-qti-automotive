@@ -21,7 +21,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/gstreamer/gst-plugins-qti-oss/gst-plugin-qvconv"
 
 #inherit python3native to export related STAGING ENVs
-inherit meson pkgconfig qprebuilt python3native
+inherit meson pkgconfig python3native
 
 CXXFLAGS += "\
     -I${STAGING_INCDIR} \

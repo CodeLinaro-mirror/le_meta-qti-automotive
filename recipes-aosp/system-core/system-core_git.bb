@@ -40,6 +40,7 @@ EXTRA_OECONF = "\
 POST_BOOT_SCRIPT ?= "init.qcom.post_boot.sh"
 POST_BOOT_SCRIPT:gen5 = "sa8797/init.qcom.post_boot.sh"
 POST_BOOT_SCRIPT:sa8775 = "lemans/init.qcom.post_boot.sh"
+POST_BOOT_SCRIPT:sa7255 = "monaco/init.qcom.post_boot.sh"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/usb/

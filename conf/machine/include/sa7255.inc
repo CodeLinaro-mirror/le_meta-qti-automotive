@@ -1,13 +1,9 @@
 include conf/machine/include/basemachine.inc
 include conf/machine/include/qclinux-bbmask.inc
 include conf/distro/include/qclinux-bbmask-prop.inc
-
-SOC_FAMILY = "sa8775"
+SOC_FAMILY ?= "sa7255"
 include conf/machine/include/soc-family.inc
 PRODUCT = "${MACHINE}"
-
-include conf/machine/include/arm/armv8-2a/tune-cortexa78c.inc
-TUNE_FEATURES:tune-cortexa78c = "${TUNE_FEATURES:tune-armv8-2a-crypto} cortexa78c"
 
 PREFERRED_VERSION_libgpiod = "1.6.4"
 
@@ -48,40 +44,27 @@ EXTRA_IMAGECMD_ext4 += " -b 4096 "
 
 IMAGE_CLASSES += "qimage"
 
-IMAGE_INSTALL += "\
-    openssh-scp \
-    openssh-ssh \
-    openssh-sshd \
-    openssh-sftp \
-    openssh-sftp-server \
-    "
-
-IMAGE_FEATURES += "ssh-server-openssh"
-
 EXTRA_IMAGEDEPENDS += "qcom-image-boot:do_sign_boot_img"
 
 IMAGE_FEATURES:append = " read-only-rootfs"
 
 MACHINE_FEATURES += "\
+    qti-vmm \
+    qti-data \
+    qti-gunyah \
     qti-core \
     qti-tools \
-    qti-multimedia \
+    early-ramdisk-init \
+    qti-umd \
     qti-display \
     qti-graphics \
-    qti-audio-aw \
-    qti-vmm \
+    qti-multimedia \
     qti-camera \
-    qti-safety \
-    qti-data \
-    qti-vnw \
-    early-ramdisk-init \
     qti-security \
-    qti-umd \
-    qti-gunyah \
+    qti-vnw \
+    qti-audio-aw \
     qti-compute-platform \
-"
-
-MACHINE_FEATURES:remove = "\
+    qti-safety \
 "
 
 MACHINE_FEATURES:append = "\
@@ -91,13 +74,14 @@ MACHINE_FEATURES:append = "\
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hmt', '', d)} \
 "
 
+BBMASK:remove:auto-slt = "meta-qti-bsp/meta-qti-base/recipes-wlan"
+
 MACHINE_FEATURES:remove = "\
-    ${@bb.utils.contains('TCMODE', 'external-ubuntu', 'qti-vmm', '', d)} \
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)} \
 "
 
 SECTOOLS_VERSION = "sectools-v2"
-SECTOOLS_SECURITY_PROFILE = "lemans_tz_security_profile.xml"
+SECTOOLS_SECURITY_PROFILE = "monaco_tz_security_profile.xml"
 
 EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-pinctrl-msm-${KERNEL_VERSION} \
@@ -108,7 +92,7 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-ufs-qcom-${KERNEL_VERSION} \
     kernel-module-ufshcd-core-${KERNEL_VERSION} \
     kernel-module-ufshcd-pltfrm-${KERNEL_VERSION} \
-    kernel-module-pinctrl-sa8775p-${KERNEL_VERSION} \
+    kernel-module-pinctrl-sa7255p-${KERNEL_VERSION} \
     kernel-module-aquantia-${KERNEL_VERSION}  \
     kernel-module-marvell-${KERNEL_VERSION} \
     kernel-module-virtio-mmio-${KERNEL_VERSION} \
@@ -133,12 +117,6 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-mhi-ep-net-${KERNEL_VERSION} \
     kernel-module-kryo-arm64-edac-${KERNEL_VERSION} \
     kernel-module-socinfo-${KERNEL_VERSION} \
-    kernel-module-phylink-${KERNEL_VERSION} \
-    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
-    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
-    kernel-module-stmmac-${KERNEL_VERSION} \
-    kernel-module-stmmac-platform-${KERNEL_VERSION} \
-    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
     kernel-module-msm-hab-${KERNEL_VERSION} \
     kernel-module-hyp-udmabuf-${KERNEL_VERSION} \
     kernel-module-mdt-loader-${KERNEL_VERSION} \
@@ -147,6 +125,4 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-gh-rm-drv-${KERNEL_VERSION} \
     kernel-module-gunyah-${KERNEL_VERSION} \
     kernel-module-hvc-gunyah-${KERNEL_VERSION} \
-    kernel-module-ipcc-shmem-test-module-${KERNEL_VERSION} \
-    kernel-module-qcom-l3-cache-config-${KERNEL_VERSION} \
 "

@@ -25,6 +25,11 @@ do_install:append:sa8775() {
     install -m 0644 ${S}/vhost-user-scmi.service ${D}/${systemd_unitdir}/system/vhost-user-scmi.service
 }
 
+do_install:append:sa7255() {
+    install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${S}/vhost-user-scmi-sa7255.service ${D}/${systemd_unitdir}/system/vhost-user-scmi.service
+}
+
 do_install:append:sa8255-ivi() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/vhost-user-scmi-lv.service ${D}/${systemd_unitdir}/system/vhost-user-scmi-lv.service

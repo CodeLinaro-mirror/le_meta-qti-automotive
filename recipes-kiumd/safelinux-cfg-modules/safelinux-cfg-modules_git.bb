@@ -12,8 +12,11 @@ SRC_URI:append = " \
     ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.1", 'file://Kbuild', '', d)} \
 "
 
-SRC_URI:append:gen5 = " file://umd_load_sa8797.conf"
-SRC_URI:append:sa8775 = " file://umd_load_sa8775.conf"
+SRC_URI:append = " file://${UMD_LOAD_CONF}"
+
+UMD_LOAD_CONF ?= "umd_load_sa8797.conf"
+UMD_LOAD_CONF:sa8775 = "umd_load_sa8775.conf"
+UMD_LOAD_CONF:sa7255 = "umd_load_sa8775.conf"
 
 SRCREV = "${AUTOREV}"
 
@@ -25,6 +28,7 @@ inherit qti-techpack
 
 TECHPACK_MODULES:append:gen5 = " vendor_uscmi.ko"
 TECHPACK_MODULES:append:sa8775 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
+TECHPACK_MODULES:append:sa7255 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
 
 do_patch_more() {
     if ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.1", 'true', 'false', d)} ; then
@@ -47,16 +51,9 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/dmabuf_share.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/scm_user_intf.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_uscmi.h ${D}${includedir}/uapi/misc
-}
-
-do_install:append:gen5() {
-    install -m 0755 ${WORKDIR}/umd_load_sa8797.conf -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/vendor_uscmi.h ${D}${includedir}/uapi/misc
-}
-
-do_install:append:sa8775() {
-    install -m 0755 ${WORKDIR}/umd_load_sa8775.conf -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_l3_cache_config.h ${D}${includedir}/uapi/misc
+    install -m 0755 ${WORKDIR}/${UMD_LOAD_CONF} -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
 }
 
 EXTRA_OECONF += "--disable-doc --disable-Werror"
@@ -78,14 +75,10 @@ RPROVIDES:${PN} += "kernel-module-kiumd-kgsl-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-mhi-ep-net-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-profiler-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-vdev-${KERNEL_VERSION}"
-
-RPROVIDES:${PN}:append:gen5 = " kernel-module-vendor-uscmi-${KERNEL_VERSION}"
-
-RPROVIDES:${PN}:append:sa8775 = " \
-    kernel-module-iommu-faults-${KERNEL_VERSION} \
-    kernel-module-qcom-ethqos-filter-${KERNEL_VERSION} \
-    kernel-module-qcom-l3-cache-config-${KERNEL_VERSION} \
-"
+RPROVIDES:${PN} += "kernel-module-vendor-uscmi-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-iommu-faults-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-qcom-ethqos-filter-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-qcom-l3-cache-config-${KERNEL_VERSION}"
 
 FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"
