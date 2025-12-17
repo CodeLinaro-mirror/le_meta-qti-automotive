@@ -11,7 +11,7 @@ PREFERRED_VERSION_linux-qcom-custom-rt = "6.6"
 
 #grep use GPL-2.0-only version from meta-gplv2/recipes-extended/grep
 PREFERRED_VERSION_grep = "2.5%"
-PREFERRED_VERSION_libgpiod = "1.6.4"
+PREFERRED_VERSION_libgpiod = "2.1.2"
 preferred-kernel = "PREFERRED_VERSION_linux-qcom-custom-rt"
 kernel-version = "6.6"
 # Prefer gbm
