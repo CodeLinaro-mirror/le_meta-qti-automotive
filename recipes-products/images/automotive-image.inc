@@ -17,6 +17,7 @@ IMAGE_INSTALL += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'packagegroup-qti-umd', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'packagegroup-qti-vmm', '', d)} \
     ${@bb.utils.contains('VARIANT', 'debug', 'packagegroup-qti-debug', '', d)} \
+    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-qcnode', 'packagegroup-qti-qcnode', '', d)} \
     "
 
 IMAGE_INSTALL:append:gen5 = " packagegroup-qti-multimedia"
