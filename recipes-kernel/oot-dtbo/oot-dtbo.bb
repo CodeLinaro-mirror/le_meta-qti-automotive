@@ -70,5 +70,13 @@ do_deploy() {
     if ls ${OVERLAYED_OOT_DTBS_OUT}/*.dtb 2>&1 > /dev/null; then
         install -m 0644 ${OVERLAYED_OOT_DTBS_OUT}/*.dtb ${DEPLOYDIR}/build-artifacts/dtb/
     fi
+    if [ -n "${OOT_DDR_DTBOS}" ]; then
+        install -d ${DEPLOYDIR}/build-artifacts/ddrdtbos
+        for dtb in ${OOT_DDR_DTBOS}; do
+            if [ -f ${B}/$dtb ]; then
+                install -m 0644 ${B}/$dtb ${DEPLOYDIR}/build-artifacts/ddrdtbos
+            fi
+        done
+    fi
 }
 addtask do_deploy after do_install
