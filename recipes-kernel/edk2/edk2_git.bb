@@ -28,10 +28,12 @@ DISABLE_NONBOOTDEVICE_ENABLED:sa6155 = "1"
 LOAD_KM_SET_ROT ?= "0"
 LOAD_KM_SET_ROT:sa8775 = "1"
 LOAD_KM_SET_ROT:sa7255 = "1"
+LOAD_KM_SET_ROT:sa8797dc = "1"
 LOAD_KM_SET_ROT:gen5 = "1"
 SCMI_UPDATES_NEEDED ?= "0"
 SCMI_UPDATES_NEEDED:sa7255 = "1"
 SCMI_UPDATES_NEEDED:sa8775 = "1"
+SCMI_UPDATES_NEEDED:sa8797dc = "1"
 SCMI_UPDATES_NEEDED:gen5 = "1"
 PVM_SKIP_DTBO = "${@bb.utils.contains('MACHINE_FEATURES', 'dt-overlay', '0', '1', d)}"
 
@@ -78,6 +80,13 @@ EXTRA_OEMAKE:append:sa7255 = " 'SUPPORT_AB_BOOT_LXC=1' \
                                'BOOTIMAGE_LOAD_VERIFY_IN_PARALLEL=1' \
                                'ENABLE_SAIL_BOOT=1' \
                                'EMMC_MULTI_LUN_SUPPORT=1' "
+
+EXTRA_OEMAKE:append:sa8797dc = " 'SUPPORT_AB_BOOT_LXC=1' \
+                               'ENABLE_LV_ATOMIC_AB=1' \
+                               'AB_RETRYCOUNT_DISABLE=1' \
+                               'VERIFIED_BOOT_LE=1' \
+                               'BASE_ADDRESS=0xD9E00000' \
+                               'LOAD_ADDRESS=0X94D00000' "
 
 do_configure[noexec] = "1"
 do_compile () {
