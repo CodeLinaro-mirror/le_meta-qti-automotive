@@ -13,7 +13,6 @@ PACKAGE_ARCHS[vardepsexclude] += "BASEMACHINE_ARCH"
 
 # Default Image names
 BOOTIMAGE_TARGET ?= "${PRODUCT}-boot.img"
-CACHEIMAGE_TARGET ?= "${PRODUCT}-cache.ext4"
 PERSISTIMAGE_TARGET ?= "${PRODUCT}-persist.ext4"
 RECOVERYIMAGE_TARGET ?= "${PRODUCT}-recoveryfs.ext4"
 SYSTEMIMAGE_TARGET ?= "${PRODUCT}-sysfs.ext4"

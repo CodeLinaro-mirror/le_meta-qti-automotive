@@ -1,0 +1,50 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) 2025 Qualcomm Technologies, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From fd90748ffd6b6b690a5aa69137791425bf64af95 Mon Sep 17 00:00:00 2001
+From: Saheli Saha <sahesaha@qti.qualcomm.com>
+Date: Wed, 24 Sep 2025 13:33:28 +0530
+Subject: [PATCH] Adding library changes for Indestructible attribute
+
+Introduced the attribute CKA_INDESTRUCTIBLE,
+which allows the creation of "indestructible"
+objects/keys which persist always, even after
+the re-initialization of token.
+
+Change-Id: I99f8229e47b48f2dee1a3cccb8fd100241df27e4
+Signed-off-by: Saheli Saha <sahesaha@qti.qualcomm.com>
+---
+ libckteec/include/pkcs11.h    | 2 ++
+ libckteec/include/pkcs11_ta.h | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/libckteec/include/pkcs11.h b/libckteec/include/pkcs11.h
+index d140dd829..8e8ace8fb 100644
+--- a/libckteec/include/pkcs11.h
++++ b/libckteec/include/pkcs11.h
+@@ -198,6 +198,8 @@ struct CK_ATTRIBUTE {
+ #define CKA_DEFAULT_CMS_ATTRIBUTES	0x0502
+ #define CKA_SUPPORTED_CMS_ATTRIBUTES	0x0503
+ #define CKA_ALLOWED_MECHANISMS		(0x0600 | CKF_ARRAY_ATTRIBUTE)
++/* Vendor Defined Indestructible Attribute */
++#define CKA_INDESTRUCTIBLE 0x80000010
+ 
+ /* Attribute CKA_CLASS refers to a CK_OBJECT_CLASS typed value */
+ typedef CK_ULONG CK_OBJECT_CLASS;
+diff --git a/libckteec/include/pkcs11_ta.h b/libckteec/include/pkcs11_ta.h
+index 864502f85..b6c068815 100644
+--- a/libckteec/include/pkcs11_ta.h
++++ b/libckteec/include/pkcs11_ta.h
+@@ -1139,6 +1139,8 @@ enum pkcs11_attr_id {
+ 	PKCS11_CKA_ALLOWED_MECHANISMS		= 0x40000600,
+ 	/* Vendor extension: reserved for undefined ID (~0U) */
+ 	PKCS11_CKA_UNDEFINED_ID			= PKCS11_UNDEFINED_ID,
++	/* Vendor Defined Indestructible Attribute */
++	PKCS11_CKA_INDESTRUCTIBLE = 0x80000010,
+ };
+ 
+ /*
+-- 
+2.34.1
+

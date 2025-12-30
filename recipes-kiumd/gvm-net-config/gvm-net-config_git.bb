@@ -5,6 +5,8 @@ LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=b796c0007db682166a1721da80267bb2"
 
 SYSTEMD_SERVICE:${PN} = "gvm_net_config.service"
+SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = " gvm_net_config_lvgvm.service"
+SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " gvm_net_config_lvgvm.service"
 
 SRC_URI = "\
     ${PATH_TO_REPO}/vendor/qcom/opensource/kiumd/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/kiumd;usehead=1 \
@@ -20,8 +22,21 @@ do_compile[noexec] = "1"
 do_install:append() {
     install -d -p ${D}/usr/local/bin
     install -m 0755 ${S}/gvm_net_config.sh -D ${D}/usr/local/bin
-    sed -i 's/eth1/eth0/g' ${D}/usr/local/bin/gvm_net_config.sh
     install -m 0644 ${S}/gvm_net_config.service -D ${D}${systemd_system_unitdir}/gvm_net_config.service
+}
+
+do_install:append:sa7255-ivi() {
+    install -d -p ${D}/usr/local/bin
+
+    install -m 0755 ${S}/gvm_net_config_lvgvm.sh -D ${D}/usr/local/bin
+    install -m 0644 ${S}/gvm_net_config_lvgvm.service -D ${D}${systemd_system_unitdir}/gvm_net_config_lvgvm.service
+}
+
+do_install:append:sa8255-ivi() {
+    install -d -p ${D}/usr/local/bin
+
+    install -m 0755 ${S}/gvm_net_config_lvgvm.sh -D ${D}/usr/local/bin
+    install -m 0644 ${S}/gvm_net_config_lvgvm.service -D ${D}${systemd_system_unitdir}/gvm_net_config_lvgvm.service
 }
 
 FILES:${PN} += "/usr/local/bin/*"

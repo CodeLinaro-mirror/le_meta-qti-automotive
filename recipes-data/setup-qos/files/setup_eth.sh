@@ -275,8 +275,9 @@ add_perf_tc_eth0() {
 		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
 		exit 0
 	fi
-	#Pin eth0’s IRQ to CPU0: find eth0’s IRQ from /proc/interrupts and set its smp_affinity mask to 0x1
-	echo 1 > /proc/irq/$(awk '/eth0/{split($1,a,":");print a[1]; exit}' /proc/interrupts)/smp_affinity
+	# Configure TX interrupt coalescing on eth0 to generate an interrupt
+	# after up to 128 packets are transmitted, reducing interrupt rate/CPU load
+	ethtool -C $interface tx-frames 128
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4

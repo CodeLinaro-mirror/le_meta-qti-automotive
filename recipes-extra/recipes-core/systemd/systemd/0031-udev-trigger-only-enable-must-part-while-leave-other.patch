@@ -8,19 +8,17 @@ Signed-off-by: Lei wang <quic_leiwan@quicinc.com>
 Upstream-Status: Inappropriate [only for rumi case]
 
 ---
- units/systemd-udev-trigger.service | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ units/systemd-udev-trigger.service | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/units/systemd-udev-trigger.service b/units/systemd-udev-trigger.service
-index cb1e4f9fea..39e59ea70f 100644
+index 18e1bc5c4b..2e31ca3ccd 100644
 --- a/units/systemd-udev-trigger.service
 +++ b/units/systemd-udev-trigger.service
-@@ -19,4 +19,4 @@ ConditionPathIsReadWrite=/sys
- [Service]
+@@ -20,4 +20,3 @@ ConditionPathIsReadWrite=/sys
  Type=oneshot
  RemainAfterExit=yes
+ ExecStart=-udevadm trigger -w --subsystem-match=block --type=devices --action=add
 -ExecStart=-udevadm trigger --type=all --action=add --prioritized-subsystem=module,block,tpmrm,net,tty,input
-+ExecStart=-udevadm trigger --subsystem-match=block --type=devices --action=add
 --
-2.25.1
-
+2.34.1
