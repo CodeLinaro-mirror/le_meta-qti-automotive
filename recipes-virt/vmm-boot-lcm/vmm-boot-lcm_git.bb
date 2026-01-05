@@ -10,8 +10,6 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/vmm-boot-lcm"
 RDEPENDS:${PN} = "vmm-lib abctl"
 
-SRC_DIR = "${SRC_DIR_ROOT}/vendor/qcom/opensource/vmm-boot-lcm"
-
 SYSTEMD_SERVICE:${PN} = "vmm-boot-lcm.service"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
