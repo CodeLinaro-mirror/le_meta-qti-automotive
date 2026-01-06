@@ -26,8 +26,8 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
-# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Changes from Qualcomm Technologies, Inc. are provided under the following license:
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 DUMP_TO_KMSG=/dev/kmsg
@@ -294,6 +294,8 @@ add_perf_tc_eth0() {
 	# Configure TX interrupt coalescing on eth0 to generate an interrupt
 	# after up to 128 packets are transmitted, reducing interrupt rate/CPU load
 	ethtool -C $interface tx-frames 128 > /dev/null 2>&1
+	# Enable Receive Packet Steering on eth0 RX queue 0 and map it to CPUs 0–5
+	echo 3f000 > /sys/class/net/$interface/queues/rx-0/rps_cpus
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4
