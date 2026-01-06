@@ -1,0 +1,35 @@
+From b62af1e52ec2769b9eac9de7bd1fcbca7ef8f2fd Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@codeaurora.org>
+Date: Tue, 15 Dec 2020 18:12:56 +0800
+Subject: [PATCH] backend: change default repaint-window value to 15
+
+The original default repaint-window time is 7 ms, this is not enough
+for multiple outputs repaint.
+Increase the value to optimize the performance for multiple displays.
+This change is ported from 2652748
+Hardcode 15 as a default value in weston compositor instead of configurable
+weston.ini to make sure it would take effect.
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: I1970256e436746c195626483bcbd99e5e1070ad2
+Signed-off-by: Xiaoyu Huang <xiahua@codeaurora.org>
+(cherry picked from commit b34329c79ce93cc5ac4c79582bf757572acbb40e)
+(cherry picked from commit 527cc8bf11da6995a80603421fd0693e92828fe8)
+---
+ libweston/compositor.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index 26413f4..b41a03a 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -100,7 +100,7 @@
+  * \defgroup compositor Compositor
+  */
+ 
+-#define DEFAULT_REPAINT_WINDOW 7 /* milliseconds */
++#define DEFAULT_REPAINT_WINDOW 15 /* milliseconds */
+ 
+ struct gbm_buffer_backend_c_interface *gbm_buffer_backend;
+ 

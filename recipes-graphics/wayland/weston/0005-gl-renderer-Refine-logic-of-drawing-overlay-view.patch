@@ -1,0 +1,88 @@
+From b62ceb629d1792a2527d4c13474518b673f95c74 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <quic_xiahua@quicinc.com>
+Date: Tue, 11 Mar 2025 16:42:07 +0800
+Subject: [PATCH] gl-renderer: Refine logic of drawing overlay view
+
+Issue observed on weston-10 and later, that when 2 views running on
+screen and one of them got killed, if the remaining one goes through
+overlay, flicker would happen. Fix code logic in gl-renderer to
+solve this problem.
+
+1, Remove check of "have_primary_view" before doing clear view for
+overlay surface. From weston-10, since we won't do glClear for each GPU
+target frame, need to clear the target by clear_paint_node. Remove this
+variable since it's now useless;
+
+2, When calculating &rb->base.damage, take overlay surface region(s)
+into account. Because we need to paint them as transparant on GPU render
+target later, so they should also be seen as damage region;
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: I52c4d9f805a6b29d83fb066350720c42b4a6457d
+Signed-off-by: Xiaoyu Huang <quic_xiahua@quicinc.com>
+(cherry picked from commit b7f2db563261addf19edf21cee158d709bef81fe)
+---
+ libweston/renderer-gl/gl-renderer.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/libweston/renderer-gl/gl-renderer.c b/libweston/renderer-gl/gl-renderer.c
+index df24b8f..5ecadbf 100644
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -1467,8 +1467,7 @@ out_clear_paint_node:
+ }
+ 
+ static void
+-draw_paint_node_overlay(struct weston_paint_node *pnode, pixman_region32_t *damage,
+-				bool have_primary_view)
++draw_paint_node_overlay(struct weston_paint_node *pnode, pixman_region32_t *damage)
+ {
+ 	pixman_region32_t r;
+ 	bool is_yuv;
+@@ -1500,13 +1499,11 @@ draw_paint_node_overlay(struct weston_paint_node *pnode, pixman_region32_t *dama
+ 	else if (dmabuf = linux_dmabuf_buffer_get(ec, buffer->resource))
+ 		is_yuv = gbm_buffer_backend->is_yuv_format(dmabuf->attributes.format);
+ 
+-	/* only can clear view by meeting all the three conditions:
+-	 * 1, have views on primary plane. If none of views composed by gpu,
+-	 * don't clear framebuffer becuase it had been cleared before.
+-	 * 2, the whole surface region is opaque or it's yuv region.
+-	 * 3, global alpha value is 1.
++	/* only can clear view by meeting both conditions:
++	 * 1, the whole surface region is opaque or it's yuv region.
++	 * 2, global alpha value is 1.
+ 	 */
+-	if (have_primary_view && (!pixman_region32_not_empty(&r) || is_yuv) &&
++	if ((!pixman_region32_not_empty(&r) || is_yuv) &&
+ 			(pnode->view->alpha == 1)) {
+ 	/* clear framebuffer with transparent pixels where this layer would be*/
+ 		clear_paint_node(pnode, damage);
+@@ -1534,7 +1531,7 @@ repaint_views(struct weston_output *output, pixman_region32_t *damage)
+ 			have_primary_view = true;
+ 			draw_paint_node(pnode, damage);
+ 		} else {
+-			draw_paint_node_overlay(pnode, damage, have_primary_view);
++			draw_paint_node_overlay(pnode, damage);
+ 		}
+ 	}
+ 
+@@ -2062,6 +2059,18 @@ gl_renderer_repaint_output(struct weston_output *output,
+ 				get_surface_state(pnode->view->surface);
+ 			gs->used_in_output_repaint = false;
+ 		}
++		/* Skip screen capture buffer during damage calculation */
++		if (screen_capture_backend->is_screen_capture_view(pnode->view))
++			continue;
++		if (pnode->view->is_completely_covered)
++			continue;
++		/* damage of overlay views hasn't been considered by compositor, but
++		 * since we need to paint them as transparant on GPU render target later,
++		 * merge those regions into &rb->base.damage. */
++		if (pnode->plane != &output->primary_plane) {
++			pixman_region32_union(&rb->base.damage, &rb->base.damage,
++					&pnode->view->transform.boundingbox);
++		}
+ 	}
+ 
+ 	timeline_begin_render_query(gr, go->render_query);
