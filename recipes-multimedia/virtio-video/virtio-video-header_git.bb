@@ -1,8 +1,8 @@
 SUMMARY = "Install virtio-video uapi headers"
 DESCRIPTION = "This contains headers userspace API"
 HOMEPAGE = "https://git.codelinaro.org"
-LICENSE = "GPL-2.0-only"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
+LICENSE = "GPLv2.0-with-linux-syscall-note"
+LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=8afb6abdac9a14cb18a0d6c9c151e9b4"
 
 SRC_URI = "\
     ${PATH_TO_REPO}/vendor/qcom/opensource/virtio-video/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/virtio-video;usehead=1 \
