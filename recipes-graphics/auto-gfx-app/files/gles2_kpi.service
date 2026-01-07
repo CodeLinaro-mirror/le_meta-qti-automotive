@@ -1,0 +1,21 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# An OpenGLES app for kpi
+#
+
+[Unit]
+Description=[Graphics] gles early client
+Wants=openwfd_server_@0.service
+After=openwfd_server_@0.service
+Conflicts=shutdown.target
+Before=shutdown.target
+DefaultDependencies=no
+
+[Service]
+User=root
+ExecStart=gles2-kpi -frames 1 -wm 0
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
