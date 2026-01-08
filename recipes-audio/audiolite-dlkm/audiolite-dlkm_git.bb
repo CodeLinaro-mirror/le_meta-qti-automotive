@@ -20,10 +20,12 @@ inherit qti-techpack
 do_install:append() {
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/
     install -d ${D}${libdir}/modules-load.d/
-    install -m 0755 ${WORKDIR}/vendor/qcom/opensource/audiolite/test_drivers/pvm/audiolite-dlkm.conf -D ${D}${libdir}/modules-load.d/audiolite-dlkm.conf
+    install -m 0755 ${S}/audiolite-dlkm.conf -D ${D}${libdir}/modules-load.d/audiolite-dlkm.conf
+    install -m 0644 ${S}/msm-audio-node.rules -D ${D}${sysconfdir}/udev/rules.d/msm-audio-node.rules
 }
 
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/*"
 FILES:${PN} += "${libdir}/modules-load.d/*"
+FILES:${PN} += "${sysconfdir}/udev/rules.d/*"
 
 RPROVIDES:${PN} += "${@'kernel-module-ipcc-shmem-test-module-${KERNEL_VERSION}'.replace('_', '-')}"
