@@ -36,7 +36,7 @@ CXXFLAGS += "\
 
 EXTRA_OECMAKE += "\
     -DAGL_LINUX:BOOL=ON \
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', '-DSUPPORT_DMABUF_HEAP:BOOL=ON', d)} \
+    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', '-DSUPPORT_DMABUF_HEAP:BOOL=ON', d)} \
 "
 EXTRA_OECMAKE:append:quin-gvm-lemans = " -DLOAD_CORE_LIB:BOOL=ON"
 EXTRA_OECMAKE:append:quin-gvm-monaco = " -DLOAD_CORE_LIB:BOOL=ON"

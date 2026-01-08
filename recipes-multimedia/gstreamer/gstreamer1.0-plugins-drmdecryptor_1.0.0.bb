@@ -26,11 +26,11 @@ CXXFLAGS += "\
     -I${STAGING_INCDIR}/glib-2.0 \
     -I${STAGING_INCDIR}/gstreamer-1.0 \
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} \
-    -I${STAGING_INCDIR}/${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', 'ion_headers', '', d)} \
+    -I${STAGING_INCDIR}/${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', 'ion_headers', '', d)} \
 "
 
 EXTRA_OEMESON += "\
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', '-Dusedmaheap=true', d)} \
+    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', '-Dusedmaheap=true', d)} \
 "
 
 SOLIBS = ".so"
@@ -38,4 +38,4 @@ FILES_SOLIBSDEV = ""
 
 FILES:${PN} += "${libdir}/gstreamer-1.0/*.so"
 
-RDEPENDS:${PN} += "${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', 'libion', 'libdmabufheap', d)}"
+RDEPENDS:${PN} += "${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', 'libion', 'libdmabufheap', d)}"
