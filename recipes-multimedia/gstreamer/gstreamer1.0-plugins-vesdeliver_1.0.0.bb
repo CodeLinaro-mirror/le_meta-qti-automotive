@@ -10,7 +10,7 @@ DEPENDS += "\
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
     virtual/kernel-headers \
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', 'libdmabufheap libvmmem-headers', d)} \
+    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', 'libdmabufheap libvmmem-headers', d)} \
 "
 
 SRC_URI = "${PATH_TO_REPO}/gstreamer/gst-plugins-qti-oss/.git;protocol=${PROTO};destsuffix=gstreamer/gst-plugins-qti-oss;usehead=1"
@@ -25,11 +25,11 @@ CFLAGS += "\
     -I${STAGING_INCDIR}/glib-2.0/glib \
     -I${STAGING_INCDIR}/gstreamer-1.0 \
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} \
-    -I${STAGING_INCDIR}/${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', 'ion_headers', 'vmmem', d)} \
+    -I${STAGING_INCDIR}/${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', 'ion_headers', 'vmmem', d)} \
 "
 
 EXTRA_OEMESON += "\
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', '', '-Dusedmaheap=true', d)} \
+    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', '-Dusedmaheap=true', d)} \
 "
 
 EXTRA_OEMESON += "\
@@ -41,4 +41,4 @@ FILES_SOLIBSDEV = ""
 
 FILES:${PN} += "${libdir}/gstreamer-1.0/*.so"
 
-RDEPENDS:${PN} += "${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.4', 'libion', 'libdmabufheap libvmmem', d)}"
+RDEPENDS:${PN} += "${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', 'libion', 'libdmabufheap libvmmem', d)}"
