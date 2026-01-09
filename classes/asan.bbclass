@@ -36,10 +36,17 @@ python __anonymous() {
     if recipe_name in ['camera-qcx', 'qcrosvm', 'cntvct-log', 'system-core-adbd', 'wayland-ivi-extension']:
         return
 
-    if recipe_name in ['libkiumd', 'libsoftsku', 'libtpp', 'compute-resmgr', 'compute-osal']:
+    if recipe_name in ['libkiumd', 'libsoftsku', 'libtpp', 'compute-resmgr', 'compute-osal', 'qlf-client']:
         return
 
     d.appendVar('DEPENDS', ' gcc-sanitizers')
+
+    # asan is a runtime library that may conflict with "-Wl,--as-needed", causing linking failures, so temporarily remove it.
+    if recipe_name in ['pcie-c2c', 'wpa-supplicant']:
+        ldflags = d.getVar('LDFLAGS')
+        ldflags = ldflags.replace("-Wl,--as-needed", "")
+        d.setVar('LDFLAGS', ldflags)
+
     d.appendVar('LDFLAGS', ' -lasan')
 
     # Inherit meson, needs add compile flags at meson-configure file additionally
@@ -54,9 +61,8 @@ python __anonymous() {
     d.appendVar('CFLAGS', ' -fsanitize=address')
     d.appendVar('CPPFLAGS', ' -fsanitize=address')
 
-
-    # Using CMakefile.txt, needs add link library additionally
-    if recipe_name in ['safetylibs', 'camera-qcx', 'safetymonitor', 'compute-resmon', 'fadas', 'sv-auto-noship', 'apss-stl']:
+    # Using CMakefile.txt, needs add link library additionally, later will try to delete these recipe's source modification.
+    if recipe_name in ['softsku-daemon', 'safetylibs', 'camera-qcx', 'safetymonitor', 'compute-resmon', 'fadas', 'sv-auto-noship', 'apss-stl']:
         d.appendVar('EXTRA_OECMAKE', ' -DASAN=ON')
 }
 
@@ -65,6 +71,7 @@ ROOTFS_POSTPROCESS_COMMAND:append = " ${@bb.utils.contains("DISTRO_FEATURES", "a
 add_asan_preload() {
 service_etc_list="\
  safetymonitor.service \
+ apss_stl.service \
 "
 service_lib_list="\
  ab-updater.service \
@@ -80,6 +87,11 @@ service_lib_list="\
  ana-syslog-mgr.service \
  compute-resmgr.service \
  sv_hyp.service \
+ display-be.service \
+ eva.service \
+ evastl.service \
+ kgsl.service \
+ qcarcam_rvc.service \
 "
 
     for service_etc in $service_etc_list; do

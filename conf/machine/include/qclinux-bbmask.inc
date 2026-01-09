@@ -90,5 +90,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-vdec-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-venc-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/secure-video-app_1.0.0.bb \
+    meta-qti-automotive/recipes-rideware/qcnode/qcnode_2.0.bb \
 "
 
