@@ -52,7 +52,12 @@ do_install:append:sa8775() {
 }
 
 do_install:append:gen5() {
-    install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'true', 'false', d)}; then
+        install -m 0755 ${S}/vfio-device-probe/seca_dev.conf -D ${D}${libdir}/vfio-bind.d/seca_dev.conf
+    fi
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'false', 'true', d)}; then
+        install -m 0755 ${S}/vfio-device-probe/sa8797_dev.conf -D ${D}${libdir}/vfio-bind.d/sa8797_dev.conf
+    fi
 }
 
 FILES:${PN} += "${libdir}/modules-load.d/*"
