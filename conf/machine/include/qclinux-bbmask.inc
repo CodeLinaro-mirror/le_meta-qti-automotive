@@ -20,6 +20,14 @@ BBMASK:append = " meta-qti-realtime/recipes-products/images/qcom-guestvm-image.b
 # BBMASK drops some recipe that checksum file not found
 BBMASK:append = " ${MISSING_RECIPE_SRCLIST}"
 
+# List of recipes to be masked for sa8797dc
+LEDC10_MASK_RECIPES += "\
+                       meta-qti-bsp/recipes-kernel/perf/perf.bbappend \
+                       meta-qti-automotive/recipes-security/ \
+"
+
+BBMASK:append:sa8797dc = " ${LEDC10_MASK_RECIPES} "
+
 MISSING_RECIPE_SRCLIST:append:gen5 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY011}"
 MISSING_RECIPE_SRCLIST:append:sa8775 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY020}"
 MISSING_RECIPE_SRCLIST:append:sa7255 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY020}"
