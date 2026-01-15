@@ -18,6 +18,7 @@ RDEPENDS:${PN} += "\
     kernel-modules \
     system-core-adbd \
     system-core-leprop \
+    ${@bb.utils.contains("MACHINE_FEATURES", "qti-hypervisor", "", "system-core-disksymlink", d)} \
     system-core-post-boot \
     system-core-usb \
     system-prop \
