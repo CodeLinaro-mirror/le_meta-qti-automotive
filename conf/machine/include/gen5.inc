@@ -85,5 +85,7 @@ MACHINE_FEATURES += "\
 MACHINE_FEATURES:remove = "${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)}"
 SECTOOLS_VERSION = "sectools-v2"
 SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"
+NORD_SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"
+SECA_SECTOOLS_SECURITY_PROFILE = "seca_tz_security_profile.xml"
 
 MACHINE_FEATURES:append = " qti-qcnode"
