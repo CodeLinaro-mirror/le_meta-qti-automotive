@@ -77,12 +77,21 @@ Usage:
 
         /etc/initscripts/setup_eth.sh /etc/initscripts/config.ini default_qos/perf_qos <dev>
 
+Note:
+	During the 'del' operation, the VLAN interface (e.g., eth0.2) will be DELETED.
+	It will be recreated automatically when you install 'perf_qos' or 'default_qos' back.
     "
 }
 
 del_tc_eth0() {
 	local interface="$1"
 
+	if [ "$eavb_vlan_id0" -ne 0 ]; then
+		# Bring the VLAN interface down
+		ifconfig $interface.$eavb_vlan_id0 down
+		# Remove the VLAN configuration
+		vconfig rem $interface.$eavb_vlan_id0
+	fi
 	tc qdisc delete dev $interface handle $mqprio_handle0: parent root mqprio
 	exit_status=$?
 	if [ $exit_status -ne 0 ]
@@ -111,6 +120,13 @@ del_tc_eth0() {
 del_tc_eth1() {
 	local interface="$1"
 
+	if [ "$eavb_vlan_id1" -ne 0 ];
+	then
+		# Bring the interface down first
+		ifconfig $interface.$eavb_vlan_id1 down
+		# Remove the VLAN interface
+		vconfig rem $interface.$eavb_vlan_id1
+	fi
 	tc qdisc delete dev $interface handle $mqprio_handle1: parent root mqprio
 	exit_status=$?
 	if [ $exit_status -ne 0 ]
@@ -298,6 +314,11 @@ add_perf_tc_eth0() {
 		tc qdisc replace dev $interface handle $q5_etf_handle0 parent $q5_q6_cbs_handle0:6 etf clockid CLOCK_TAI delta $q5_delta0 offload skip_sock_check deadline_mode
 		tc qdisc replace dev $interface handle $q6_etf_handle0 parent $mqprio_handle0:7 etf clockid CLOCK_TAI delta $q6_delta0 offload skip_sock_check deadline_mode
 	fi
+	if [ "$eavb_vlan_id0" -ne 0 ];
+	then
+		vconfig add $interface $eavb_vlan_id0
+		ifconfig $interface.$eavb_vlan_id0 up
+	fi
 	if [ $l4_port0 -ne 0 ] && [ -n "$protocol0" ];
 	then
 		if [ $is_src0 -eq 1 ];
@@ -345,6 +366,11 @@ add_perf_tc_eth1() {
 	then
 		tc qdisc replace dev $interface handle $q5_etf_handle1 parent $q5_q6_cbs_handle1:6 etf clockid CLOCK_TAI delta $q5_delta1 offload skip_sock_check deadline_mode
 		tc qdisc replace dev $interface handle $q6_etf_handle1 parent $mqprio_handle1:7 etf clockid CLOCK_TAI delta $q6_delta1 offload skip_sock_check deadline_mode
+	fi
+	if [ "$eavb_vlan_id1" -ne 0 ];
+	then
+		vconfig add $interface $eavb_vlan_id1
+		ifconfig $interface.$eavb_vlan_id1 up
 	fi
 	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
 	then
