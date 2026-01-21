@@ -47,9 +47,9 @@ do_make_dtb() {
     merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
 
     # Apply overlay for flex dtb
-    if ! [[ -z "$(ls -A "$flex_directory")" || -z "$(ls -A "$ddrdtbosflex_dir")" ]]; then
+    if ! [ -z "$(ls -A "$flex_directory")" ] && ! [ -z "$(ls -A "$ddrdtbosflex_dir")" ]; then
         merge_ddr_dtbos_single $flex_directory $ddrdtbosflex_dir $out_directory
-    elif ! [[ -z "$(ls -A "$flex_directory")" ]]; then
+    elif ! [ -z "$(ls -A "$flex_directory")" ]; then
         cp -r "$flex_directory"/* "$out_directory"/
     fi
 
