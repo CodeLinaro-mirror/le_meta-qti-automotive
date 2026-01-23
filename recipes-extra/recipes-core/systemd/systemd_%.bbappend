@@ -7,7 +7,7 @@ SRC_URI:append = " \
              file://0001-journald-disable-audit-support-completely-from-the-j.patch \
              file://0036-systemd-journald-optimize-kmsg-reading-performance.patch \
              file://0001-udev-make-symlink-related-rules-be-triggered-earlier.patch \
-             ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', '', 'file://qti_sleep.sh', d)} \
+             file://qti_sleep.sh \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0037-systemd-Add-wdt_ping-in-dispatch_runqueue.patch', '', d)} \
              ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'file://0031-udev-trigger-only-enable-must-part-while-leave-other.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0001-systemd-sleep-change-suspend-state-list.patch', '', d)} \
@@ -19,8 +19,6 @@ SRC_URI:append = " \
 "
 
 do_install:append() {
-   if ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'false', 'true', d)} ; then
-      install -d ${D}/${base_libdir}/systemd/system-sleep
-      install -m 0755 ${WORKDIR}/qti_sleep.sh -D ${D}/${base_libdir}/systemd/system-sleep/qti_sleep.sh
-   fi
+   install -d ${D}/${base_libdir}/systemd/system-sleep
+   install -m 0755 ${WORKDIR}/qti_sleep.sh -D ${D}/${base_libdir}/systemd/system-sleep/qti_sleep.sh
 }
