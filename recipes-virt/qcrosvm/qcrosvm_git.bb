@@ -75,5 +75,7 @@ do_install:append:sa8255-ivi() {
 do_install:append:sa8775-flex() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    install -m 0644 ${S}/vm_config_xml/vm_config_la.xml ${D}${sysconfdir}/vm_config_la.xml
+    install -m 0644 ${S}/vm_config_xml/vm_config_lalv.xml ${D}${sysconfdir}/vm_config_lalv.xml
 }
 
