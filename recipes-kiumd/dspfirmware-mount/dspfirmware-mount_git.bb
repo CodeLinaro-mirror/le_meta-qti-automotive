@@ -78,7 +78,9 @@ do_install:append() {
         install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
         install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
         install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
+    fi
 
+    if ${@bb.utils.contains_any('SOC_FAMILY', 'sa7255', 'true', 'false', d)}; then
         if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
             install -d -p ${D}/firmware/vm/boot/autoghgvmlv
             install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv.automount

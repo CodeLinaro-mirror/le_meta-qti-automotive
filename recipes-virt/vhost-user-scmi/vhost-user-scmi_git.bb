@@ -6,7 +6,6 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 
 SYSTEMD_SERVICE:${PN} = "vhost-user-scmi.service"
 SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " vhost-user-scmi-lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " vhost-user-scmi-lv.service"
 
 DEPENDS += "safelinux-cfg-modules vhost-user-lib"
 
@@ -31,11 +30,6 @@ do_install:append:sa7255() {
 }
 
 do_install:append:sa8255-ivi() {
-    install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${S}/vhost-user-scmi-lv.service ${D}/${systemd_unitdir}/system/vhost-user-scmi-lv.service
-}
-
-do_install:append:sa8775-flex() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/vhost-user-scmi-lv.service ${D}/${systemd_unitdir}/system/vhost-user-scmi-lv.service
 }

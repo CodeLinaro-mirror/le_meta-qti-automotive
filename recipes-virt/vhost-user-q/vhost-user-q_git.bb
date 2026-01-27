@@ -58,7 +58,6 @@ SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = "\
 
 SYSTEMD_SERVICE:${PN}:append:sa8775-flex = "\
     ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
-    ${LV_SERVICES_LIST} \
 "
 
 SYSTEMD_SERVICE:${PN}:append:gen5 = "\
@@ -120,10 +119,6 @@ do_install:append:sa8255-ivi() {
 
 do_install:append:sa8775-flex() {
     for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LV_SERVICES_LIST}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 }
