@@ -8,6 +8,10 @@ inherit core-image
 
 require automotive-image.inc
 
+# Set up for handling the generation of the /usr image
+# partition...
+require recipes-products/images/automotive-usr-image.inc
+
 KERNEL_VERSION = "${@oe.utils.read_file('${STAGING_KERNEL_BUILDDIR}/kernel-abiversion')}"
 
 add_extra_modules() {
