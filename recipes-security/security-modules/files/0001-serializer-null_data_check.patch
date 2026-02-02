@@ -1,0 +1,41 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) 2025 Qualcomm Technologies, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 9961491932778154783e4dd4f42c8c131e097e97 Mon Sep 17 00:00:00 2001
+From: Saheli Saha <sahesaha@qti.qualcomm.com>
+Date: Mon, 2 Feb 2026 12:36:59 +0530
+Subject: [PATCH] securemsm: libckteec: Added a null data check in serialize
+ function to prevent client crash by memcpy.
+
+The client application of pkcs11 was crashing when data is passed as null in memcpy inside serialize function for HKDF use_case.
+
+The null checks introduced ensure no crashing due to null parameters in realloc or memcpy.
+
+Change-Id: I0eb0b721f377229c72dc77b6d323037cf73ee6f6
+Signed-off-by: Saheli Saha <sahesaha@qti.qualcomm.com>
+---
+ libckteec/src/serializer.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/libckteec/src/serializer.c b/libckteec/src/serializer.c
+index d94932ba7..26f68e172 100644
+--- a/libckteec/src/serializer.c
++++ b/libckteec/src/serializer.c
+@@ -44,6 +44,13 @@ void release_serial_object(struct serializer *obj)
+  */
+ static CK_RV serialize(char **bstart, size_t *blen, void *data, size_t len)
+ {
++	if (!bstart || !blen)
++		return CKR_ARGUMENTS_BAD;
++
++	if (!data && len > 0)
++		return CKR_ARGUMENTS_BAD;
++
++
+ 	size_t nlen = *blen + len;
+ 	char *buf = realloc(*bstart, nlen);
+ 
+-- 
+2.34.1
+

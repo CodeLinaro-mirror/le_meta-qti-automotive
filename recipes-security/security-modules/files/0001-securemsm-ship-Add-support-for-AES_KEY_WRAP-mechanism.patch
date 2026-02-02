@@ -1,0 +1,39 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) 2025 Qualcomm Technologies, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 0f67d38230e1fb3ec61a588276f514f75329f353 Mon Sep 17 00:00:00 2001
+From: Saurabh Gupta <saursaur@qti.qualcomm.com>
+Date: Wed, 4 Feb 2026 15:51:45 +0530
+Subject: [PATCH] AES key wrap support in libckteec library.
+
+Change-Id: I5be6a2377e5995fe12712e1694e780b82cf49af8
+Signed-off-by: Saurabh Gupta <saursaur@qti.qualcomm.com>
+---
+ libckteec/src/serialize_ck.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/libckteec/src/serialize_ck.c b/libckteec/src/serialize_ck.c
+index 8ad7609eb..d2242b8f7 100644
+--- a/libckteec/src/serialize_ck.c
++++ b/libckteec/src/serialize_ck.c
+@@ -841,6 +841,16 @@ CK_RV serialize_ck_mecha_params(struct serializer *obj,
+ 	case CKM_RSA_AES_KEY_WRAP:
+ 		return serialize_mecha_rsa_aes_key_wrap(obj, &mecha);
+ 
++        case CKM_AES_KEY_WRAP:
++		if (mechanism->ulParameterLen)
++			return CKR_MECHANISM_PARAM_INVALID;
++
++		rv = serialize_32b(obj, obj->type);
++		if (rv)
++			return rv;
++
++		return serialize_32b(obj, 0);
++
+ 	default:
+ 		return CKR_MECHANISM_INVALID;
+ 	}
+-- 
+2.34.1
+
