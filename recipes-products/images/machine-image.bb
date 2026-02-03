@@ -12,6 +12,9 @@ require automotive-image.inc
 # partition...
 require recipes-products/images/automotive-usr-image.inc
 
+# Set up for handling the generation of the /persist image
+require recipes-products/images/automotive-persist-image.inc
+
 KERNEL_VERSION = "${@oe.utils.read_file('${STAGING_KERNEL_BUILDDIR}/kernel-abiversion')}"
 
 add_extra_modules() {

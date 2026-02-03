@@ -7,3 +7,7 @@ IMAGE_FEATURES:append = " ${@bb.utils.contains('VARIANT', 'debug', 'debug-tweaks
 # Set up for handling the generation of the /usr image
 # partition...
 require recipes-products/images/automotive-usr-image.inc
+
+# Set up for handling the generation of the /persist image
+require recipes-products/images/automotive-persist-image.inc
+
