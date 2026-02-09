@@ -27,7 +27,10 @@ RDEPENDS:${PN} = "\
     vmm-boot-lcm \
 "
 
-RDEPENDS:${PN}:append:gen5 = " virtiofsd"
+RDEPENDS:${PN}:append:gen5 = " \
+    virtiofsd \
+    vhost-device-gpio \
+"
 RDEPENDS:${PN}:remove:gen5 = "\
     gvm-net-config \
 "
