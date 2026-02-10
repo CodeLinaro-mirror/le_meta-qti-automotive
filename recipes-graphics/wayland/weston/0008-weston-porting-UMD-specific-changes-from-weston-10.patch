@@ -1,0 +1,170 @@
+From 897ecec9fbf5fe846e28bb2e05ea0a5c6eccf048 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <quic_xiahua@quicinc.com>
+Date: Wed, 16 Apr 2025 19:17:10 +0800
+Subject: [PATCH] weston: porting UMD specific changes from weston-10
+
+1, Bring up weston-simple-dmabuf-egl on UMD
+2, Allow weston_output_finish_frame to accept repaint status other than
+REPAINT_AWAITING_COMPLETION to avoid crash under ivi-shell
+3, Support KPI markers for weston on UMD
+
+This change is ported from 4793682, 4629880 and 5086088
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: I356efb865af7a92d83ec2ff398e5b2802a48addc
+Signed-off-by: Xiaoyu Huang <quic_xiahua@quicinc.com>
+---
+ clients/simple-dmabuf-egl.c         | 10 ++++++++--
+ compositor/main.c                   |  6 ++++--
+ libweston/compositor.c              |  6 +++++-
+ libweston/renderer-gl/gl-renderer.c | 25 +++++++++++++++++--------
+ 4 files changed, 34 insertions(+), 13 deletions(-)
+
+diff --git a/clients/simple-dmabuf-egl.c b/clients/simple-dmabuf-egl.c
+index 7757312..6e52fad 100644
+--- a/clients/simple-dmabuf-egl.c
++++ b/clients/simple-dmabuf-egl.c
+@@ -23,6 +23,12 @@
+  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  * SOFTWARE.
++ *
++ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
++ *
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ *
+  */
+ 
+ #include "config.h"
+@@ -1365,7 +1371,7 @@ error:
+ static bool
+ display_set_up_gbm(struct display *display, char const* drm_render_node)
+ {
+-	display->gbm.drm_fd = open(drm_render_node, O_RDWR);
++	display->gbm.drm_fd = drmOpen(drm_render_node, NULL);
+ 	if (display->gbm.drm_fd < 0) {
+ 		fprintf(stderr, "Failed to open drm render node %s\n",
+ 			drm_render_node);
+@@ -1512,7 +1518,7 @@ main(int argc, char **argv)
+ 	struct window *window;
+ 	uint32_t format = DRM_FORMAT_XRGB8888;
+ 	int opts = 0;
+-	char const *drm_render_node = "/dev/dri/renderD128";
++	char const *drm_render_node = "msm_drm";
+ 	int c, option_index, ret = 0;
+ 	int window_size = 256;
+ 
+diff --git a/compositor/main.c b/compositor/main.c
+index 4cf54d7..d43bebf 100644
+--- a/compositor/main.c
++++ b/compositor/main.c
+@@ -29,7 +29,7 @@
+  *
+  * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+  *
+- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+@@ -75,6 +75,7 @@
+ #include <libweston/weston-log.h>
+ #include <libweston/remoting-plugin.h>
+ #include <libweston/pipewire-plugin.h>
++#include "bootkpi/logging.h"
+ 
+ #define WINDOW_TITLE "Weston Compositor"
+ /* flight recorder size (in bytes) */
+@@ -4088,7 +4089,8 @@ wet_main(int argc, char *argv[], const struct weston_testsuite_data *test_data)
+ 		{ WESTON_OPTION_STRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
+ 	};
+ 
+-	weston_place_marker("W - weston main begin");
++	bootkpi_log_init();
++	bootkpi_log_line("W - weston main begin");
+ 
+ 	wl_list_init(&wet.layoutput_list);
+ 	wl_list_init(&wet.backend_list);
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index cd8f5ca..e1fc97b 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -3753,7 +3753,11 @@ weston_output_finish_frame(struct weston_output *output,
+ 	int64_t msec_rel;
+ 
+ 	ATRACE_BEGIN("%s", __func__);
+-	assert(output->repaint_status == REPAINT_AWAITING_COMPLETION);
++	//assert(output->repaint_status == REPAINT_AWAITING_COMPLETION);
++
++	if (REPAINT_AWAITING_COMPLETION != output->repaint_status) {
++		return;
++	}
+ 
+ 	/*
+ 	 * If timestamp of latest vblank is given, it must always go forwards.
+diff --git a/libweston/renderer-gl/gl-renderer.c b/libweston/renderer-gl/gl-renderer.c
+index 5ecadbf..28c18a5 100644
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -71,6 +71,7 @@
+ #include "gbm_priv.h"
+ #include "gbm-buffer-backend.h"
+ #include "screen-capture.h"
++#include "bootkpi/logging.h"
+ 
+ #define BUFFER_DAMAGE_COUNT 2
+ 
+@@ -4377,8 +4378,10 @@ gl_renderer_create_window_surface(struct gl_renderer *gr,
+ 	EGLint attribs[3];
+ 	int is_secure_surface = 0;
+ 
+-	if (firstCreateWin) {
+-		weston_place_marker("G - first create window start");
++	if (firstCreateWin)
++	{
++		bootkpi_log_init();
++		bootkpi_log_line("G - first create window start");
+ 	}
+ 
+ 	gbm_perform(GBM_PERFORM_GET_SURFACE_SECURE_STATUS, (struct gbm_surface *)window_for_platform, &is_secure_surface);
+@@ -4405,8 +4408,10 @@ gl_renderer_create_window_surface(struct gl_renderer *gr,
+ 						     egl_config,
+ 						     window_for_legacy, attribs);
+ 
+-	if (firstCreateWin) {
+-		weston_place_marker("G - first create window end");
++	if (firstCreateWin)
++	{
++		bootkpi_log_init();
++		bootkpi_log_line("G - first create window end");
+ 		firstCreateWin = false;
+ 	}
+ 
+@@ -4644,8 +4649,10 @@ gl_renderer_display_create(struct weston_compositor *ec,
+ 						LIBWESTON_MODULEDIR);
+ 	assert(screen_capture_backend);
+ 
+-	if (firstCreateDisplay) {
+-		weston_place_marker("G - setup egl start");
++	if (firstCreateDisplay)
++	{
++		bootkpi_log_init();
++		bootkpi_log_line("G - setup egl start");
+ 	}
+ 
+ 	gr = zalloc(sizeof *gr);
+@@ -4714,8 +4721,10 @@ gl_renderer_display_create(struct weston_compositor *ec,
+ 		}
+ 	}
+ 
+-	if (firstCreateDisplay) {
+-		weston_place_marker("G - setup egl end");
++	if (firstCreateDisplay)
++	{
++		bootkpi_log_init();
++		bootkpi_log_line("G - setup egl end");
+ 		firstCreateDisplay = false;
+ 	}
+ 

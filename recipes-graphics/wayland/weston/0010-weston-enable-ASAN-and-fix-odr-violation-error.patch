@@ -1,0 +1,83 @@
+From dbe2a88004fa67342a64d070738ff8b878191de8 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+Date: Tue, 30 Sep 2025 18:12:59 +0800
+Subject: [PATCH] weston: enable ASAN and fix odr-violation error
+
+1, Added ASAN in meson_options and use it to control sanitize argument
+enablement in meson.build
+
+2, Fix odr-violation error detected by ASAN as below:
+==78270==ERROR: AddressSanitizer: odr-violation (0xffff94f78880):
+  [1] size=8 'gbm_buffer_backend'
+../vendor/qcom/opensource/display/weston/libweston/renderer-gl/gl-renderer.c:220:40
+  [2] size=8 'gbm_buffer_backend'
+../vendor/qcom/opensource/display/weston/libweston/compositor.c:105:40
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: Ia946cb1f0bc746137671161e97c434b8a023ba84
+Signed-off-by: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+---
+ libweston/compositor.c              | 2 +-
+ libweston/renderer-gl/gl-renderer.c | 4 ++--
+ meson.build                         | 4 ++++
+ meson_options.txt                   | 6 ++++++
+ 4 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index e1fc97b..f806986 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -102,7 +102,7 @@
+ 
+ #define DEFAULT_REPAINT_WINDOW 15 /* milliseconds */
+ 
+-struct gbm_buffer_backend_c_interface *gbm_buffer_backend;
++static struct gbm_buffer_backend_c_interface *gbm_buffer_backend;
+ 
+ static void
+ weston_output_transform_scale_init(struct weston_output *output,
+diff --git a/libweston/renderer-gl/gl-renderer.c b/libweston/renderer-gl/gl-renderer.c
+index ea74a69..d9f4205 100644
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -217,8 +217,8 @@ struct timeline_render_point {
+ 	struct wl_event_source *event_source;
+ };
+ 
+-struct gbm_buffer_backend_c_interface *gbm_buffer_backend;
+-struct screen_capture_c_interface *screen_capture_backend;
++static struct gbm_buffer_backend_c_interface *gbm_buffer_backend;
++static struct screen_capture_c_interface *screen_capture_backend;
+ 
+ static uint32_t
+ gr_gl_version(uint16_t major, uint16_t minor)
+diff --git a/meson.build b/meson.build
+index 08ea58b..7d5e332 100644
+--- a/meson.build
++++ b/meson.build
+@@ -72,6 +72,10 @@ global_args = cc.get_supported_arguments(
+ )
+ add_project_arguments(global_args, language: 'c')
+ 
++if get_option('ASAN')
++	add_project_arguments('-fsanitize=address', language: 'c')
++endif
++
+ if cc.has_header_symbol('sys/sysmacros.h', 'major')
+ 	config_h.set('MAJOR_IN_SYSMACROS', 1)
+ elif cc.has_header_symbol('sys/mkdev.h', 'major')
+diff --git a/meson_options.txt b/meson_options.txt
+index ac355f1..4bbe029 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -220,3 +220,9 @@ option(
+ 	value: false,
+ 	description: 'Generate documentation'
+ )
++option(
++	'ASAN',
++	type: 'boolean',
++	value: false,
++	description: 'Enable address sanitizers tool'
++)

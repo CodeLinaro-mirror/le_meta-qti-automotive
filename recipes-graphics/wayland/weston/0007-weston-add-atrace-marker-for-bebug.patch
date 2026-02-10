@@ -1,0 +1,193 @@
+From 7532d9ef703c5532cc35cd7c01c6879a84f3124d Mon Sep 17 00:00:00 2001
+From: huiyang <quic_huiyang@quicinc.com>
+Date: Tue, 18 Jul 2023 19:48:03 +0800
+Subject: [PATCH] weston: add atrace marker for bebug
+
+Add atrace marker for debug.
+How to enable the trace:
+1. add 'Environment="WESTON_TRACE=1"' to the file
+weston.service
+2. systemctl daemon-reload to update configuration
+3. systemctl restart weston to enable the trace
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: I09ba0b3bce18e7ed18979f6b0f5e640871cff3cc
+Signed-off-by: huiyang <quic_huiyang@quicinc.com>
+Signed-off-by: Min Cheng <quic_miche@quicinc.com>
+(cherry picked from commit 2127f8d37916d54fc80eaa344153c8674f410d7b)
+---
+ include/libweston/libweston.h | 26 +++++++++++++++++++++++++-
+ libweston/compositor.c        | 10 +++++++++-
+ libweston/log.c               | 33 ++++++++++++++++++++++++++++++++-
+ 3 files changed, 66 insertions(+), 3 deletions(-)
+
+diff --git a/include/libweston/libweston.h b/include/libweston/libweston.h
+index 94d6dd0..3e8819c 100644
+--- a/include/libweston/libweston.h
++++ b/include/libweston/libweston.h
+@@ -26,7 +26,7 @@
+  *
+  * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+  *
+- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+@@ -2411,6 +2411,30 @@ weston_log_paced(struct weston_log_pacer *pacer, unsigned int max_burst,
+ void
+ weston_place_marker(const char *name);
+ 
++bool
++weston_atrace_enable(void);
++
++void
++weston_atrace_marker(const char *type, const char *name);
++
++#define ATRACE_BEGIN(fmt_str, ...) \
++	do { \
++		if (weston_atrace_enable()) { \
++			char buf_begin[256]; \
++			snprintf(buf_begin, 256, fmt_str, ##__VA_ARGS__); \
++			weston_atrace_marker("B", buf_begin); \
++		} \
++	} while (0)
++
++#define ATRACE_END(fmt_str, ...) \
++	do { \
++		if (weston_atrace_enable()) { \
++			char buf_end[256]; \
++			snprintf(buf_end, 256, fmt_str, ##__VA_ARGS__); \
++			weston_atrace_marker("E", buf_end); \
++		} \
++	} while (0)
++
+ enum weston_screenshooter_outcome {
+ 	WESTON_SCREENSHOOTER_SUCCESS,
+ 	WESTON_SCREENSHOOTER_NO_MEMORY,
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index b41a03a..cd8f5ca 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -28,7 +28,7 @@
+ /*
+  * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+  *
+- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+@@ -3451,6 +3451,7 @@ weston_output_repaint(struct weston_output *output)
+ 		return 0;
+ 
+ 	TL_POINT(ec, "core_repaint_begin", TLP_OUTPUT(output), TLP_END);
++	ATRACE_BEGIN("%s", __func__);
+ 
+ 	/* Rebuild the surface list and update surface transforms up front. */
+ 	if (ec->view_list_needs_rebuild)
+@@ -3537,6 +3538,7 @@ weston_output_repaint(struct weston_output *output)
+ 	weston_output_capture_info_repaint_done(output->capture_info);
+ 
+ 	TL_POINT(ec, "core_repaint_posted", TLP_OUTPUT(output), TLP_END);
++	ATRACE_END("%s", __func__);
+ 
+ 	return r;
+ }
+@@ -3750,6 +3752,7 @@ weston_output_finish_frame(struct weston_output *output,
+ 	struct timespec vblank_monotonic;
+ 	int64_t msec_rel;
+ 
++	ATRACE_BEGIN("%s", __func__);
+ 	assert(output->repaint_status == REPAINT_AWAITING_COMPLETION);
+ 
+ 	/*
+@@ -3822,6 +3825,7 @@ weston_output_finish_frame(struct weston_output *output,
+ out:
+ 	output->repaint_status = REPAINT_SCHEDULED;
+ 	output_repaint_timer_arm(compositor);
++	ATRACE_END("%s", __func__);
+ }
+ 
+ 
+@@ -4675,6 +4679,7 @@ surface_commit(struct wl_client *client, struct wl_resource *resource)
+ 		return;
+ 	}
+ 
++	ATRACE_BEGIN("%s", __func__);
+ 	if (sub) {
+ 		status = weston_subsurface_commit(sub);
+ 	} else {
+@@ -4685,6 +4690,7 @@ surface_commit(struct wl_client *client, struct wl_resource *resource)
+ 		}
+ 		status |= weston_surface_commit(surface);
+ 	}
++	ATRACE_END("%s", __func__);
+ 
+ 	if (status & WESTON_SURFACE_DIRTY_SUBSURFACE_CONFIG)
+ 		surface->compositor->view_list_needs_rebuild = true;
+@@ -4986,6 +4992,7 @@ weston_subsurface_commit(struct weston_subsurface *sub)
+ 	enum weston_surface_status status = WESTON_SURFACE_CLEAN;
+ 	struct weston_subsurface *tmp;
+ 
++	ATRACE_BEGIN("%s", __func__);
+ 	/* Recursive check for effectively synchronized. */
+ 	if (weston_subsurface_is_synchronized(sub)) {
+ 		weston_subsurface_commit_to_cache(sub);
+@@ -5003,6 +5010,7 @@ weston_subsurface_commit(struct weston_subsurface *sub)
+ 				status |= weston_subsurface_parent_commit(tmp, 0);
+ 		}
+ 	}
++	ATRACE_END("%s", __func__);
+ 
+ 	return status;
+ }
+diff --git a/libweston/log.c b/libweston/log.c
+index fd9d6e9..5e3b10b 100644
+--- a/libweston/log.c
++++ b/libweston/log.c
+@@ -24,7 +24,7 @@
+  *
+  * Changes from Qualcomm Technologies, Inc. are provided under the following license:
+  *
+- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+@@ -270,3 +270,34 @@ weston_place_marker(const char *name)
+ 		close(fd);
+ 	}
+ }
++
++WL_EXPORT bool
++weston_atrace_enable(void)
++{
++	static bool weston_trace = false;
++	static bool weston_trace_flag = false;
++
++	if (!weston_trace) {
++		weston_trace = true;
++		if (getenv("WESTON_TRACE") && !strcmp(getenv("WESTON_TRACE"), "1")) {
++			weston_trace_flag = true;
++		}
++	}
++
++	return weston_trace_flag;
++}
++
++WL_EXPORT void
++weston_atrace_marker(const char *type, const char *name)
++{
++	char buf[512];
++	size_t len;
++	int fd = -1;
++
++	fd = open("/sys/kernel/debug/tracing/trace_marker", O_WRONLY);
++	if (fd > 0) {
++		len = snprintf(buf, 512, "%s|%d|%s", type, getpid(), name);
++		write(fd, buf, len);
++		close(fd);
++	}
++}

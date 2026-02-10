@@ -1,0 +1,72 @@
+From a1c46b35a7e2b4b3a587a7edb0eaf13e4db247b8 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <quic_xiahua@quicinc.com>
+Date: Tue, 17 Dec 2024 10:12:53 +0000
+Subject: [PATCH] compositor: Add interface to load gbm buffer backend
+
+Instead of loading gbm buffer backend along with gl-renderer,
+Provide an API for sdm backend to load it.
+
+This is to support early-boot weston, for which there's no
+gl-renderer but gbm buffer backend is necessary.
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: Ida4e24ac17f437089afa089cd06c3b1262ad4f7d
+Signed-off-by: Xiaoyu Huang <quic_xiahua@quicinc.com>
+(cherry picked from commit 2372056efec16c2a7423c6e4d2c763f67bbd790c)
+---
+ include/libweston/libweston.h |  3 +++
+ libweston/compositor.c        | 19 ++++++++++++++-----
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/include/libweston/libweston.h b/include/libweston/libweston.h
+index accca79..94d6dd0 100644
+--- a/include/libweston/libweston.h
++++ b/include/libweston/libweston.h
+@@ -2515,6 +2515,9 @@ weston_keyboard_send_keymap(struct weston_keyboard *kbd,
+ int
+ weston_compositor_load_xwayland(struct weston_compositor *compositor);
+ 
++int
++weston_compositor_load_gbm_buffer_backend();
++
+ int
+ weston_compositor_load_color_manager(struct weston_compositor *compositor);
+ 
+diff --git a/libweston/compositor.c b/libweston/compositor.c
+index c047a2a..26413f4 100644
+--- a/libweston/compositor.c
++++ b/libweston/compositor.c
+@@ -9778,11 +9778,6 @@ weston_compositor_init_renderer(struct weston_compositor *compositor,
+ 		compositor->renderer->gl = gl_renderer;
+ 		weston_log("Using GL renderer\n");
+ 
+-		gbm_buffer_backend = weston_load_module("gbm-buffer-backend.so",
+-						"gbm_buffer_backend_c_interface",
+-						LIBWESTON_MODULEDIR);
+-		assert(gbm_buffer_backend);
+-
+ 		break;
+ 	case WESTON_RENDERER_PIXMAN:
+ 		ret = pixman_renderer_init(compositor);
+@@ -9815,6 +9810,20 @@ weston_compositor_load_xwayland(struct weston_compositor *compositor)
+ 	return 0;
+ }
+ 
++/** weston_compositor_load_gbm_buffer_backend
++ */
++WL_EXPORT int
++weston_compositor_load_gbm_buffer_backend()
++{
++		gbm_buffer_backend = weston_load_module("gbm-buffer-backend.so",
++						"gbm_buffer_backend_c_interface",
++						LIBWESTON_MODULEDIR);
++		if (!gbm_buffer_backend)
++			return -1;
++
++		return 0;
++}
++
+ /** Load Little CMS color manager plugin
+  *
+  * Calling this function before loading any backend sets Little CMS
