@@ -293,7 +293,7 @@ add_perf_tc_eth0() {
 	fi
 	# Configure TX interrupt coalescing on eth0 to generate an interrupt
 	# after up to 128 packets are transmitted, reducing interrupt rate/CPU load
-	ethtool -C $interface tx-frames 128
+	ethtool -C $interface tx-frames 128 > /dev/null 2>&1
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4
