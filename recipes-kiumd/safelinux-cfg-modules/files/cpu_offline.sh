@@ -1,7 +1,7 @@
+#!/bin/sh
 # Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
-#!/bin/sh
 # $1 = first CPU, $2 = last CPU
 FIRST=$1
 LAST=$2
