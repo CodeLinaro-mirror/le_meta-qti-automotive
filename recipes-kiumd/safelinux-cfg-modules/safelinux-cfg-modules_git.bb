@@ -18,18 +18,13 @@ UMD_LOAD_CONF ?= "umd_load_sa8797.conf"
 UMD_LOAD_CONF:sa8775 = "umd_load_sa8775.conf"
 UMD_LOAD_CONF:sa7255 = "umd_load_sa8775.conf"
 
-SRC_URI:append = " file://cpu_offline.sh"
-SRC_URI:append = " file://cpu_config.service"
-
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules"
 
 TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iommu_qcom.ko iommu_iova_map.ko kiumd.ko qcom_uscmi.ko kryo_arm64_edac.ko kiumd_kgsl.ko mhi_ep_net.ko profiler.ko arm-smmu-qcom-fusa.ko pinctrl_fusa.ko qcom_vdev.ko dmabuf_share.ko iommu_faults.ko"
 
-inherit qti-techpack systemd
-
-SYSTEMD_SERVICE:${PN}:append:gen5 = " cpu_config.service"
+inherit qti-techpack
 
 TECHPACK_MODULES:append:gen5 = " vendor_uscmi.ko"
 TECHPACK_MODULES:append:sa8775 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
@@ -57,10 +52,6 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/scm_user_intf.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_uscmi.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/vendor_uscmi.h ${D}${includedir}/uapi/misc
-    install -d ${D}${bindir}
-    install -m 0755 ${WORKDIR}/cpu_offline.sh ${D}${bindir}/cpu_offline.sh
-    install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${WORKDIR}/cpu_config.service ${D}${systemd_unitdir}/system/cpu_config.service
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_l3_cache_config.h ${D}${includedir}/uapi/misc
     install -m 0755 ${WORKDIR}/${UMD_LOAD_CONF} -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
 }
@@ -89,8 +80,5 @@ RPROVIDES:${PN} += "kernel-module-iommu-faults-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-ethqos-filter-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-l3-cache-config-${KERNEL_VERSION}"
 
-FILES:${PN} += "${sysconfdir}/modules-load.d/* \
-                ${bindir}/cpu_offline.sh \
-                ${systemd_unitdir}/* \"
-
+FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"
