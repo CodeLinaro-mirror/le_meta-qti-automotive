@@ -15,6 +15,8 @@ inherit systemd
 
 SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
 
+SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm.automount firmware-vm-boot-autoghgvm.mount', '', d)}"
+
 do_compile[noexec] = "1"
 
 do_install:append() {
@@ -45,10 +47,6 @@ do_install:append() {
             sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount
         fi
 
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvm.automount
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvm.mount
     fi
 
     if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
@@ -112,8 +110,9 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass0_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_compute_cfg
     install -m 0755 ${S}/sa8797_hpass1_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_compute_cfg
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
+    install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.automount
+    install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.mount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount
 }
-
 FILES:${PN} += "${systemd_unitdir}/*"
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${libdir}/modules-load.d/*"
