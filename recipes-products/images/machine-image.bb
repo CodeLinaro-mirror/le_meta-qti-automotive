@@ -8,6 +8,13 @@ inherit core-image
 
 require automotive-image.inc
 
+# Set up for handling the generation of the /usr image
+# partition...
+require recipes-products/images/automotive-usr-image.inc
+
+# Set up for handling the generation of the /persist image
+require recipes-products/images/automotive-persist-image.inc
+
 KERNEL_VERSION = "${@oe.utils.read_file('${STAGING_KERNEL_BUILDDIR}/kernel-abiversion')}"
 
 add_extra_modules() {
@@ -32,3 +39,27 @@ INCOMPATIBLE_LICENSE = "GPL-3.0* LGPL-3.0* AGPL-3.0*"
 # Add libgomp support
 IMAGE_INSTALL += "libgomp"
 
+do_rootfs[postfuncs] += "prune_busybox_unused"
+
+prune_busybox_unused () {
+    ROOT="${IMAGE_ROOTFS}"
+    BB_DIRS="usr/lib/busybox/usr/bin usr/lib/busybox/usr/sbin"
+    PATHS="usr/bin usr/sbin"
+
+    for d in $BB_DIRS; do
+        for f in "${ROOT}/${d}"/*; do
+            [ -e "$f" ] || continue
+            name=$(basename "$f")
+            used="no"
+
+            for p in $PATHS; do
+                tgt="${ROOT}/${p}/${name}"
+                [ -L "$tgt" ] || continue
+                r=$(readlink "$tgt" || true)
+                case "$r" in */busybox*|/usr/lib/busybox/*) used="yes";; esac
+            done
+
+            [ "$used" = "yes" ] || { echo "DELETE unused busybox applet: $d/$name"; rm -f "$f"; }
+        done
+    done
+}

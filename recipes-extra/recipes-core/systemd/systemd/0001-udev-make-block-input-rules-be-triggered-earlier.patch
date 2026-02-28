@@ -1,0 +1,27 @@
+From 301d688bc8caf18347dabe398390883279dd1837 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Mon, 26 Jan 2026 17:49:42 +0800
+Subject: [PATCH] udev:make block&input rules be triggered earlier
+
+Make block&input rules be triggered earlier in systemd-v255.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ units/systemd-udev-trigger.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/systemd-udev-trigger.service b/units/systemd-udev-trigger.service
+index cb1e4f9fea..0e74015db1 100644
+--- a/units/systemd-udev-trigger.service
++++ b/units/systemd-udev-trigger.service
+@@ -19,4 +19,4 @@ ConditionPathIsReadWrite=/sys
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=-udevadm trigger --type=all --action=add --prioritized-subsystem=module,block,tpmrm,net,tty,input
++ExecStart=-udevadm trigger --type=all --action=add --prioritized-subsystem=input,block,module,tpmrm,net,tty
+-- 
+2.34.1
+

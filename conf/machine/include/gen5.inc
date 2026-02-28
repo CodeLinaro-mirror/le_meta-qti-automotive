@@ -11,7 +11,7 @@ PREFERRED_VERSION_linux-qcom-custom-rt = "6.6"
 
 #grep use GPL-2.0-only version from meta-gplv2/recipes-extended/grep
 PREFERRED_VERSION_grep = "2.5%"
-PREFERRED_VERSION_libgpiod = "1.6.4"
+PREFERRED_VERSION_libgpiod = "2.1.2"
 preferred-kernel = "PREFERRED_VERSION_linux-qcom-custom-rt"
 kernel-version = "6.6"
 # Prefer gbm
@@ -85,5 +85,7 @@ MACHINE_FEATURES += "\
 MACHINE_FEATURES:remove = "${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)}"
 SECTOOLS_VERSION = "sectools-v2"
 SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"
+NORD_SECTOOLS_SECURITY_PROFILE = "nord_tz_security_profile.xml"
+SECA_SECTOOLS_SECURITY_PROFILE = "seca_tz_security_profile.xml"
 
 MACHINE_FEATURES:append = " qti-qcnode"

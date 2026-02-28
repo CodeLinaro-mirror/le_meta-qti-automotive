@@ -1,6 +1,5 @@
 # To use this class, inherit the class AFTER inheriting systemd class.
 
-
 # Purpose of this bitbake class:
 #
 # Hacky solution to get systemd.bbclass's systemd_check_services function to play nice
@@ -9,7 +8,6 @@
 #
 # Without this solution, systemd_check_services causes the do_package to fail because it can not
 # find the systemd base service file sleep-notify@.service
-
 
 # How this class works to fix the problem:
 #
@@ -48,8 +46,5 @@ rm_sleep_notify_template_hack() {
     rm ${D}${systemd_system_unitdir}/sleep-notify@.service
 }
 
-
-
-
-PACKAGESPLITFUNCS:prepend = " add_sleep_notify_template_hack "
+PACKAGESPLITFUNCS:prepend = "add_sleep_notify_template_hack "
 PACKAGESPLITFUNCS:append = " rm_sleep_notify_template_hack "

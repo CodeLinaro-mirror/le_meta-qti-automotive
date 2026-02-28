@@ -16,6 +16,9 @@ SRC_URI:append = " file://flex.target"
 SRC_URI:append = " file://slt.target"
 SRC_URI:append = " file://single-gvm.target"
 SRC_URI:append = " file://multi-gvm.target"
+SRC_URI:append = " file://dual-la-gvm.target"
+SRC_URI:append = " file://dual-lv-gvm.target"
+SRC_URI:append = " file://single-lv-gvm.target"
 
 S = "${WORKDIR}"
 
@@ -30,6 +33,15 @@ SYSTEMD_SERVICE:${PN} = "\
     single-gvm.target \
     multi-gvm.target \
 "
+
+# Below targets are for GVM combinations extension
+# By default, only (LA-GVM) and (LA-GVM + LV-GVM) are supported
+SYSTEMD_SERVICE:${PN}:append = "\
+    dual-la-gvm.target \
+    dual-lv-gvm.target \
+    single-lv-gvm.target \
+"
+
 SYSTEMD_AUTO_ENABLE:${PN} = "disable"
 
 FILES:${PN} += "${systemd_unitdir}/system-generators/targets-generator"
@@ -44,6 +56,9 @@ do_install:append() {
     install -m 0644 ${S}/slt.target ${D}/${systemd_unitdir}/system/slt.target
     install -m 0644 ${S}/single-gvm.target ${D}/${systemd_unitdir}/system/single-gvm.target
     install -m 0644 ${S}/multi-gvm.target ${D}/${systemd_unitdir}/system/multi-gvm.target
+    install -m 0644 ${S}/dual-la-gvm.target ${D}/${systemd_unitdir}/system/dual-la-gvm.target
+    install -m 0644 ${S}/dual-lv-gvm.target ${D}/${systemd_unitdir}/system/dual-lv-gvm.target
+    install -m 0644 ${S}/single-lv-gvm.target ${D}/${systemd_unitdir}/system/single-lv-gvm.target
     install -d ${D}/${systemd_unitdir}/system-generators
     install -m 0755 ${S}/targets-generator.sh ${D}/${systemd_unitdir}/system-generators/targets-generator
     install -m 0755 ${S}/services-enabler.sh ${D}/${systemd_unitdir}/system-generators/services-enabler

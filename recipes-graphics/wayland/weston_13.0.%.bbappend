@@ -14,17 +14,17 @@ DEPENDS += "gbm gbm-headers \
 REQUIRED_DISTRO_FEATURES:remove = "opengl"
 
 FILESEXTRAPATHS:append := " :${THISDIR}/weston/"
-CODE_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display/weston", "graphics/weston", d)}"
-CODE_DIR:sa8775 = "graphics/weston"
-CODE_DIR:sa7255 = "graphics/weston"
-SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1 \
-           file://weston.png \
-           file://weston.desktop \
-           file://xwayland.weston-start \
-           file://systemd-notify.weston-start \
+SRC_URI += "file://0001-Weston-support-SDM-backend-on-weston-13.0.1.patch \
+            file://0002-pixel-formats-Add-QC-specific-format-TP10_UBWC.patch \
+            file://0003-compositor-Add-interface-to-load-gbm-buffer-backend.patch \
+            file://0004-gl-renderer-add-support-for-rendering-protected-cont.patch \
+            file://0005-gl-renderer-Refine-logic-of-drawing-overlay-view.patch \
+            file://0006-backend-change-default-repaint-window-value-to-15.patch \
+            file://0007-weston-add-atrace-marker-for-bebug.patch \
+            file://0008-weston-porting-UMD-specific-changes-from-weston-10.patch \
+            file://0009-gl-renderer-Make-YUV-format-choose-EXTERNAL_OES-text.patch \
+            file://0010-weston-enable-ASAN-and-fix-odr-violation-error.patch \
 "
-SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/${CODE_DIR}"
 
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
 

@@ -7,6 +7,7 @@ LIC_FILES_CHKSUM = "\
     file://LICENSE-BSD-3-Clause;md5=2489db1359f496fff34bd393df63947e \
 "
 SYSTEMD_SERVICE:${PN} = "vhost-device-ssr.service"
+SYSTEMD_SERVICE:${PN}:append:gen5 = " vhost-device-ssr_lv.service"
 DEPENDS += "libssr-client"
 
 SRC_URI = "${PATH_TO_REPO}/external/vhost-device/.git;protocol=${PROTO};destsuffix=external/vhost-device;usehead=1"
@@ -26,6 +27,7 @@ do_install:append() {
 do_install:append:gen5() {
     install -d ${D}/${systemd_unitdir}/system/
     install -m 0644 ${S}/vhost-device-ssr/vhost-device-ssr_sa8797.service ${D}/${systemd_unitdir}/system/vhost-device-ssr.service
+    install -m 0644 ${S}/vhost-device-ssr/vhost-device-ssr_sa8797_lv.service ${D}/${systemd_unitdir}/system/vhost-device-ssr_lv.service
 }
 
 include vhost-device-crates.inc
