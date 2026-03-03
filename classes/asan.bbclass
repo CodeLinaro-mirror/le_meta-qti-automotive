@@ -71,7 +71,6 @@ ROOTFS_POSTPROCESS_COMMAND:append = " ${@bb.utils.contains("DISTRO_FEATURES", "a
 add_asan_preload() {
 service_etc_list="\
  safetymonitor.service \
- apss_stl.service \
 "
 service_lib_list="\
  ab-updater.service \
@@ -87,11 +86,16 @@ service_lib_list="\
  ana-syslog-mgr.service \
  compute-resmgr.service \
  sv_hyp.service \
- display-be.service \
+ display-be@.service \
  eva.service \
  evastl.service \
  kgsl.service \
  qcarcam_rvc.service \
+ apss_stl.service \
+ weston.service \
+ gptp.service \
+ vhost-device-ssr_lv.service \
+ qcx_be_server.service \
 "
 
     for service_etc in $service_etc_list; do
