@@ -34,6 +34,8 @@ MISSING_RECIPE_SRCLIST:append:sa7255 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY020
 
 # Missing recipes globally
 MISSING_RECIPE_SRCLIST += "\
+    meta-qti-automotive/recipes-bsp/abctl/abctl_1.0.bb \
+    meta-qti-automotive/recipes-bsp/libgpt/libgpt_1.0.bb \
     meta-qti-automotive/recipes-audio/agm/agm_git.bb \
     meta-qti-automotive/recipes-audio/agm-alsa-plugin/agm-alsa-plugin_git.bb \
     meta-qti-automotive/recipes-audio/agm_client/agm-client_git.bb \
