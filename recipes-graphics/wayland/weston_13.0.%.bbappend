@@ -24,6 +24,7 @@ SRC_URI += "file://0001-Weston-support-SDM-backend-on-weston-13.0.1.patch \
             file://0008-weston-porting-UMD-specific-changes-from-weston-10.patch \
             file://0009-gl-renderer-Make-YUV-format-choose-EXTERNAL_OES-text.patch \
             file://0010-weston-enable-ASAN-and-fix-odr-violation-error.patch \
+            file://0011-gl-renderer-disable-partial-update.patch \
 "
 
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
