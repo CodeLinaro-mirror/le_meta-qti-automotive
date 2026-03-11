@@ -1,0 +1,5 @@
+system-prop (1.0.0) noble; urgency=medium
+
+  * Initial Debian packaging converted from Yocto recipe.
+
+ -- Kai Meng <kmeng@qti.qualcomm.com>  Tue, 11 Mar 2026 03:14:00 +0000

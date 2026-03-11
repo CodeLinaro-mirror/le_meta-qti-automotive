@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Create group 'leprop' if it doesn't exist
+        if ! getent group leprop > /dev/null 2>&1; then
+            addgroup --system leprop
+        fi
+
+        # Create user 'leprop' if it doesn't exist
+        if ! getent passwd leprop > /dev/null 2>&1; then
+            adduser --system \
+                    --ingroup leprop \
+                    --no-create-home \
+                    --shell /bin/false \
+                    leprop
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

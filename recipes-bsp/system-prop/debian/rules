@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# No build system - nothing to configure
+
+override_dh_auto_build:
+	# No build system - nothing to compile
+
+override_dh_auto_install:
+	# Install system.prop as /build.prop, stripping comments and empty lines
+	install -d debian/system-prop
+	install -m 0644 files/system.prop debian/system-prop/build.prop
+	sed -i -e 's/#.*$$//' -e '/^$$/d' debian/system-prop/build.prop
+
+	# Install persist-prop.sh to /sbin/
+	install -D -m 0755 files/persist-prop.sh debian/system-prop/sbin/persist-prop.sh
+
+	# Install systemd service unit
+	install -D -m 0644 files/persist-prop.service \
+		debian/system-prop/lib/systemd/system/persist-prop.service

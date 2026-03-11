@@ -1,0 +1,15 @@
+Source: system-prop
+Section: misc
+Priority: optional
+Maintainer: Kai Meng <kmeng@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+
+Package: system-prop
+Architecture: arm64
+Depends: ${misc:Depends}, adduser
+Description: Script and service to populate system properties
+ Android system properties are a global dictionary of string key/value pairs,
+ used to share system-wide configuration information. The build.prop file
+ contains persist system properties.
