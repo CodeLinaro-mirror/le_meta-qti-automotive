@@ -1,0 +1,16 @@
+Source: memory-hotplug
+Section: devel
+Priority: optional
+Maintainer: xrao <xrao@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+
+Package: memory-hotplug
+Architecture: arm64
+Depends: systemd, bash
+Description: Memory Hotplug Service
+ During linux booting, we only leave enough memory for booting and remove other
+ memory to reduce memory init time, thus linux kernel boot time. After linux
+ fully boots up, this memory hotplug service needs to return all the removed
+ memory back to linux.

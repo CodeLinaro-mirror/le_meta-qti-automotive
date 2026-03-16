@@ -1,0 +1,5 @@
+memory-hotplug (1.0.0) unstable; urgency=medium
+
+  * Converted from RPM spec file.
+
+ -- xrao <xrao@qti.qualcomm.com>  Mon, 16 Mar 2026 02:27:38 +0000

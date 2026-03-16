@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+
+override_dh_install:
+	install -D -m 0755 files/memory-hotplug.sh debian/memory-hotplug/usr/bin/memory-hotplug.sh
+	install -D -m 0644 files/memory-hotplug.service debian/memory-hotplug/usr/lib/systemd/system/memory-hotplug.service
+
