@@ -23,6 +23,7 @@ LA_EXTRA_SERVICES_LIST_GEN5 = "\
     vhost-user-soccp.service \
     vhost-user-dprx.service \
     vhost-user-eva.service \
+    vhost-user-hsi2s.service \
 "
 
 LV_SERVICES_LIST = "\
