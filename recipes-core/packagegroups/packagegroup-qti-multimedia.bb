@@ -30,3 +30,12 @@ RDEPENDS:${PN}:remove:gen5 = "\
         videodlkm \
 "
 
+# Remove gstreamer components that are not required for qcvirtio-video
+RDEPENDS:${PN}:remove = "\
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-qvconv', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-qcarcamsrc', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-ugly', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-good', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-extpoolsink', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'videodlkm', '', d)} \
+"

@@ -22,6 +22,10 @@ IMAGE_INSTALL += "\
 
 IMAGE_INSTALL:append:gen5 = " packagegroup-qti-multimedia"
 
+IMAGE_INSTALL += "\
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'packagegroup-qti-multimedia', '', d)} \
+"
+
 IMAGE_LINGUAS = ""
 
 EXTRA_IMAGECMD:ext4 = "-i 4096 -b 4096"
