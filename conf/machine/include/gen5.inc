@@ -63,6 +63,7 @@ EXTRA_IMAGEDEPENDS += "qcom-image-boot:do_sign_boot_img"
 IMAGE_FEATURES:append = " read-only-rootfs"
 
 MACHINE_FEATURES += "\
+    bluetooth \
     qti-bluetooth \
     qti-core \
     qti-tools \
