@@ -10,4 +10,7 @@ ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
     bt-dlkm \
+    bt-module-load \
+    packagegroup-base-bluetooth \
+    packagegroup-tools-bluetooth \
     "
