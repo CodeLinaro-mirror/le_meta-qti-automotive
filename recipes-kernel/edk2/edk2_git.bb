@@ -35,6 +35,7 @@ SCMI_UPDATES_NEEDED:sa7255 = "1"
 SCMI_UPDATES_NEEDED:sa8775 = "1"
 SCMI_UPDATES_NEEDED:sa8797dc = "1"
 SCMI_UPDATES_NEEDED:gen5 = "1"
+FLASHING_LOCK_WITHOUT_MISC_PART ?= "0"
 PVM_SKIP_DTBO = "${@bb.utils.contains('MACHINE_FEATURES', 'dt-overlay', '0', '1', d)}"
 
 EXTRA_OEMAKE = "'CLANG_BIN=${STAGING_BINDIR_NATIVE}/' \
@@ -57,6 +58,7 @@ EXTRA_OEMAKE = "'CLANG_BIN=${STAGING_BINDIR_NATIVE}/' \
                 'TARGET_BOARD_TYPE_AUTO=1' \
                 'SCMI_UPDATES_NEEDED=${SCMI_UPDATES_NEEDED}' \
                 'PVM_SKIP_DTBO=${PVM_SKIP_DTBO}' \
+                'FLASHING_LOCK_WITHOUT_MISC_PART=${FLASHING_LOCK_WITHOUT_MISC_PART}' \
                 ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'VERIFIED_BOOT_ENABLED=1', '', d)} \
                 ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'VERIFIED_BOOT_2=1', '', d)} "
 
@@ -71,7 +73,8 @@ EXTRA_OEMAKE:append:gen5 = " 'SUPPORT_AB_BOOT_LXC=1' \
                                'ENABLE_SAIL_FLASHING=1' \
                                'ENABLE_SAIL_BOOT=1' \
                                'BOOTIMAGE_LOAD_VERIFY_IN_PARALLEL=1' \
-                               'LOAD_TWO_KM_TAS=1' "
+                               'LOAD_TWO_KM_TAS=1' \
+                               'FLASHING_LOCK_WITHOUT_MISC_PART=1' "
 
 EXTRA_OEMAKE:append:sa7255 = " 'SUPPORT_AB_BOOT_LXC=1' \
                                'AB_RETRYCOUNT_DISABLE=1' \
