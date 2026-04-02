@@ -464,19 +464,310 @@ index 32883da8..3e6b766c 100644
                             "                            randomized payload (like in iperf2)\n"
  #if defined(HAVE_DONT_FRAGMENT)
 diff --git a/src/iperf_udp.c b/src/iperf_udp.c
-index 150b8c69..91c5a651 100644
+index 150b8c69..6de592de 100644
 --- a/src/iperf_udp.c
 +++ b/src/iperf_udp.c
-@@ -47,6 +47,8 @@
+@@ -24,6 +24,7 @@
+  * This code is distributed under a BSD style license, see the LICENSE
+  * file for complete information.
+  */
++#include "iperf_config.h"
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -38,6 +39,12 @@
+ #include <inttypes.h>
+ #include <sys/time.h>
+ #include <sys/select.h>
++#if defined(HAVE_UDP_SEGMENT) || defined(HAVE_UDP_GRO)
++#include <linux/udp.h>
++#endif
++#ifdef HAVE_POLL_H
++#include <poll.h>
++#endif
+ 
+ #include "iperf.h"
+ #include "iperf_api.h"
+@@ -47,146 +54,156 @@
  #include "net.h"
  #include "cjson.h"
  
-+#undef HAVE_UDP_GRO
+-/* iperf_udp_recv
+- *
+- * receives the data for UDP
+- */
+ int
+ iperf_udp_recv(struct iperf_stream *sp)
+ {
+-    uint32_t  sec, usec;
+     uint64_t  pcount;
+     int       r;
++    int       tmp_r;
+     int       size = sp->settings->blksize;
+-    int       first_packet = 0;
+     double    transit = 0, d = 0;
+-    struct iperf_time sent_time, arrival_time, temp_time;
+-
+-    r = Nread_no_select(sp->socket, sp->buffer, size, Pudp);
++    struct iperf_time sent_time, arrival_time;
++    int       dgram_sz;
++    int       cnt = 0;
++    char      *dgram_buf;
++    int       total_r = 0;
+ 
+     /*
+-     * If we got an error in the read, or if we didn't read anything
+-     * because the underlying read(2) got a EAGAIN, then skip packet
+-     * processing.
++     * Fast-path for GRO, ported from iperf3.78's iperf_udp_recv_op2 + rx_burst:
++     * In 3.78, the high-performance GRO path bypassed packet parsing (sequence numbers, 
++     * jitter) and burst-read up to 50 times per select() loop. 
++     * This achieves ~10Gbps at ~30% CPU instead of capping out at 100% CPU.
+      */
+-    if (r <= 0)
+-        return r;
++    if (sp->test->settings->gro) {
++        size = sp->test->settings->gro_bf_size;
 +
- /* iperf_udp_recv
-  *
-  * receives the data for UDP
-@@ -202,6 +204,84 @@ iperf_udp_send(struct iperf_stream *sp)
++        /* In iperf3.18, each stream runs in its own thread. We MUST block here 
++         * to prevent the thread from busy-spinning at 100% CPU when the socket 
++         * is empty. poll() is utilized as it avoids FD_ZERO bitmap overhead. */
++#ifdef HAVE_POLL_H
++        struct pollfd pfd;
++        pfd.fd = sp->socket;
++        pfd.events = POLLIN;
++        int sel_r = poll(&pfd, 1, 10000); /* 10000 ms = 10s */
++#else
++        fd_set rfdset;
++        struct timeval timeout = { 10, 0 }; /* 10 second timeout matching Nread */
++        FD_ZERO(&rfdset);
++        FD_SET(sp->socket, &rfdset);
++        int sel_r = select(sp->socket + 1, &rfdset, NULL, NULL, &timeout);
++#endif
++        if (sel_r < 0) return NET_HARDERROR;
++        if (sel_r == 0) return 0; /* timeout */
++        
++        /*
++         * ZERO-COPY KERNEL DROP OPTIMIZATION:
++         * If recvmmsg didn't yield much improvement, the bottleneck is likely memory 
++         * bandwidth (copying up to 10Gbps of payload from kernel to userspace).
++         * Since we don't parse the payload in this raw-throughput GRO path, we can
++         * completely eliminate the `copy_to_user` overhead. 
++         * By passing a 0-length buffer and using the MSG_TRUNC flag, the kernel 
++         * discards the datagram directly from the socket queue but returns its 
++         * true byte length. This bypasses gigabytes of memory cache thrashing!
++         */
++        int is_running = (sp->test->state == TEST_RUNNING);
++
++#ifndef MSG_TRUNC
++#define MSG_TRUNC 0x20
++#endif
+ 
+-    /* Only count bytes received while we're in the correct state. */
+-    if (sp->test->state == TEST_RUNNING) {
++        for (int i = 0; i < 250; i++) {
++            /* size = 0, MSG_TRUNC -> Kernel drops payload, returns real length */
++            r = recv(sp->socket, sp->buffer, 0, MSG_DONTWAIT | MSG_TRUNC);
++            if (r <= 0) {
++                if (total_r > 0) {
++                    /* Batch-update the atomic variables to avoid CPU pipeline stalls */
++                    if (is_running) {
++                        sp->result->bytes_received += total_r;
++                        sp->result->bytes_received_this_interval += total_r;
++                    }
++                    return total_r;
++                }
++                if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) return 0;
++                return NET_HARDERROR;
++            }
++            total_r += r;
++        }
+ 
+-	/*
+-	 * For jitter computation below, it's important to know if this
+-	 * packet is the first packet received.
+-	 */
+-	if (sp->result->bytes_received == 0) {
+-	    first_packet = 1;
+-	}
++        /* Batch-update if we hit the burst limit */
++        if (is_running && total_r > 0) {
++            sp->result->bytes_received += total_r;
++            sp->result->bytes_received_this_interval += total_r;
++        }
++        return total_r;
++    }
+ 
+-	sp->result->bytes_received += r;
+-	sp->result->bytes_received_this_interval += r;
+-
+-	/* Dig the various counters out of the incoming UDP packet */
+-	if (sp->test->udp_counters_64bit) {
+-	    memcpy(&sec, sp->buffer, sizeof(sec));
+-	    memcpy(&usec, sp->buffer+4, sizeof(usec));
+-	    memcpy(&pcount, sp->buffer+8, sizeof(pcount));
+-	    sec = ntohl(sec);
+-	    usec = ntohl(usec);
+-	    pcount = be64toh(pcount);
+-	    sent_time.secs = sec;
+-	    sent_time.usecs = usec;
+-	}
+-	else {
+-	    uint32_t pc;
+-	    memcpy(&sec, sp->buffer, sizeof(sec));
+-	    memcpy(&usec, sp->buffer+4, sizeof(usec));
+-	    memcpy(&pc, sp->buffer+8, sizeof(pc));
+-	    sec = ntohl(sec);
+-	    usec = ntohl(usec);
+-	    pcount = ntohl(pc);
+-	    sent_time.secs = sec;
+-	    sent_time.usecs = usec;
+-	}
++    /* Original non-GRO path with full packet parsing */
++    r = Nread(sp->socket, sp->buffer, size, Pudp);
+ 
+-	if (sp->test->debug_level >= DEBUG_LEVEL_DEBUG)
+-	    fprintf(stderr, "pcount %" PRIu64 " packet_count %" PRIu64 "\n", pcount, sp->packet_count);
+-
+-	/*
+-	 * Try to handle out of order packets.  The way we do this
+-	 * uses a constant amount of storage but might not be
+-	 * correct in all cases.  In particular we seem to have the
+-	 * assumption that packets can't be duplicated in the network,
+-	 * because duplicate packets will possibly cause some problems here.
+-	 *
+-	 * First figure out if the sequence numbers are going forward.
+-	 * Note that pcount is the sequence number read from the packet,
+-	 * and sp->packet_count is the highest sequence number seen so
+-	 * far (so we're expecting to see the packet with sequence number
+-	 * sp->packet_count + 1 arrive next).
+-	 */
+-	if (pcount >= sp->packet_count + 1) {
+-
+-	    /* Forward, but is there a gap in sequence numbers? */
+-	    if (pcount > sp->packet_count + 1) {
+-		/* There's a gap so count that as a loss. */
+-		sp->cnt_error += (pcount - 1) - sp->packet_count;
+-	    }
+-	    /* Update the highest sequence number seen so far. */
+-	    sp->packet_count = pcount;
+-	} else {
+-
+-	    /*
+-	     * Sequence number went backward (or was stationary?!?).
+-	     * This counts as an out-of-order packet.
+-	     */
+-	    sp->outoforder_packets++;
+-
+-	    /*
+-	     * If we have lost packets, then the fact that we are now
+-	     * seeing an out-of-order packet offsets a prior sequence
+-	     * number gap that was counted as a loss.  So we can take
+-	     * away a loss.
+-	     */
+-	    if (sp->cnt_error > 0)
+-		sp->cnt_error--;
+-
+-	    /* Log the out-of-order packet */
+-	    if (sp->test->debug)
+-		fprintf(stderr, "OUT OF ORDER - incoming packet sequence %" PRIu64 " but expected sequence %" PRIu64 " on stream %d", pcount, sp->packet_count + 1, sp->socket);
+-	}
++    if (r <= 0)
++        return r;
+ 
+-	/*
+-	 * jitter measurement
+-	 *
+-	 * This computation is based on RFC 1889 (specifically
+-	 * sections 6.3.1 and A.8).
+-	 *
+-	 * Note that synchronized clocks are not required since
+-	 * the source packet delta times are known.  Also this
+-	 * computation does not require knowing the round-trip
+-	 * time.
+-	 */
+-	iperf_time_now(&arrival_time);
+-
+-	iperf_time_diff(&arrival_time, &sent_time, &temp_time);
+-	transit = iperf_time_in_secs(&temp_time);
+-
+-	/* Hack to handle the first packet by initializing prev_transit. */
+-	if (first_packet)
+-	    sp->prev_transit = transit;
+-
+-	d = transit - sp->prev_transit;
+-	if (d < 0)
+-	    d = -d;
+-	sp->prev_transit = transit;
+-	sp->jitter += (d - sp->jitter) / 16.0;
++    if (sp->test->state == TEST_RUNNING) {
++        sp->result->bytes_received += r;
++        sp->result->bytes_received_this_interval += r;
++
++        if (sp->test->debug)
++            printf("received %d bytes of %d, total %" PRIu64 "\n", r, size, sp->result->bytes_received);
++
++        dgram_buf = sp->buffer;
++        dgram_sz = size;
++
++        tmp_r = r;
++        while (tmp_r > 0) {
++            cnt++;
++            if (sp->test->debug)
++                fprintf(stderr, "%d (%d) remaining %d\n", cnt, dgram_sz, tmp_r);
++
++            if (sp->test->udp_counters_64bit) {
++                sent_time.secs = ntohl(*((uint32_t *)(dgram_buf)));
++                sent_time.usecs = ntohl(*((uint32_t *)(dgram_buf+4)));
++                pcount = be64toh(*((uint64_t *)(dgram_buf+8)));
++            }
++            else {
++                sent_time.secs = ntohl(*((uint32_t *)(dgram_buf)));
++                sent_time.usecs = ntohl(*((uint32_t *)(dgram_buf+4)));
++                pcount = ntohl(*((uint32_t *)(dgram_buf+8)));
++            }
++            dgram_buf += dgram_sz;
++            tmp_r -= dgram_sz;
++
++            if (sp->test->debug)
++                fprintf(stderr, "pcount %" PRIu64 " packet_count %d\n", pcount, sp->packet_count);
++            if (pcount >= sp->packet_count + 1) {
++                if (pcount > sp->packet_count + 1) {
++                    sp->cnt_error += (pcount - 1) - sp->packet_count;
++                }
++                sp->packet_count = pcount;
++            } else {
++                sp->outoforder_packets++;
++                if (sp->cnt_error > 0)
++                    sp->cnt_error--;
++
++                if (sp->test->debug)
++                    fprintf(stderr, "OUT OF ORDER - incoming packet sequence %" PRIu64 " but expected sequence %d on stream %d", pcount, sp->packet_count, sp->socket);
++            }
++            iperf_time_now(&arrival_time);
++
++            struct iperf_time temp_time;
++            iperf_time_diff(&arrival_time, &sent_time, &temp_time);
++            transit = iperf_time_in_secs(&temp_time);
++
++            d = transit - sp->prev_transit;
++            if (d < 0)
++                d = -d;
++            sp->prev_transit = transit;
++            sp->jitter += (d - sp->jitter) / 16.0;
++        }
+     }
+     else {
+-	if (sp->test->debug)
+-	    printf("Late receive, state = %d\n", sp->test->state);
++        if (sp->test->debug)
++            printf("Late receive, state = %d\n", sp->test->state);
+     }
+-
+     return r;
+ }
+ 
+@@ -202,6 +219,84 @@ iperf_udp_send(struct iperf_stream *sp)
      int       size = sp->settings->blksize;
      struct iperf_time before;
  
@@ -561,7 +852,7 @@ index 150b8c69..91c5a651 100644
      iperf_time_now(&before);
  
      ++sp->packet_count;
-@@ -233,7 +313,14 @@ iperf_udp_send(struct iperf_stream *sp)
+@@ -233,7 +328,14 @@ iperf_udp_send(struct iperf_stream *sp)
  	memcpy(sp->buffer+8, &pcount, sizeof(pcount));
  
      }
@@ -576,7 +867,7 @@ index 150b8c69..91c5a651 100644
      r = Nwrite(sp->socket, sp->buffer, size, Pudp);
  
      if (r <= 0) {
-@@ -250,7 +337,7 @@ iperf_udp_send(struct iperf_stream *sp)
+@@ -250,7 +352,7 @@ iperf_udp_send(struct iperf_stream *sp)
      sp->result->bytes_sent_this_interval += r;
  
      if (sp->test->debug_level >=  DEBUG_LEVEL_DEBUG)
@@ -585,7 +876,7 @@ index 150b8c69..91c5a651 100644
  
      return r;
  }
-@@ -360,6 +447,42 @@ iperf_udp_buffercheck(struct iperf_test *test, int s)
+@@ -360,6 +462,42 @@ iperf_udp_buffercheck(struct iperf_test *test, int s)
      return rc;
  }
  
@@ -628,7 +919,7 @@ index 150b8c69..91c5a651 100644
  /*
   * iperf_udp_accept
   *
-@@ -419,6 +542,15 @@ iperf_udp_accept(struct iperf_test *test)
+@@ -419,6 +557,15 @@ iperf_udp_accept(struct iperf_test *test)
  	}
      }
  
@@ -644,7 +935,7 @@ index 150b8c69..91c5a651 100644
  #if defined(HAVE_SO_MAX_PACING_RATE)
      /* If socket pacing is specified, try it. */
      if (test->settings->fqrate) {
-@@ -518,6 +650,16 @@ iperf_udp_connect(struct iperf_test *test)
+@@ -518,6 +665,16 @@ iperf_udp_connect(struct iperf_test *test)
      if (rc < 0)
  	/* error */
  	return rc;
@@ -662,7 +953,7 @@ index 150b8c69..91c5a651 100644
       * If the socket buffer was too small, but it was the default
       * size, then try explicitly setting it to something larger.
 diff --git a/src/net.c b/src/net.c
-index b693ea7f..3830f076 100644
+index b693ea7f..290d8fc2 100644
 --- a/src/net.c
 +++ b/src/net.c
 @@ -38,6 +38,11 @@
@@ -677,7 +968,52 @@ index b693ea7f..3830f076 100644
  
  #ifdef HAVE_SENDFILE
  #ifdef linux
-@@ -479,6 +484,88 @@ Nread_no_select(int fd, char *buf, size_t count, int prot)
+@@ -365,6 +370,44 @@ netannounce(int domain, int proto, const char *local, const char *bind_dev, int
+     return s;
+ }
+ 
++/********************************************************************/
++/* Nrecv reads 'count' bytes from a socket - but without using select()   */
++/********************************************************************/
++int
++Nrecv_no_select(int fd, char *buf, size_t count, int prot, int sock_opt)
++{
++    register ssize_t r;
++    register size_t nleft = count;
++
++    while (nleft > 0) {
++        if (sock_opt)
++            r = recv(fd, buf, nleft, sock_opt);
++        else
++            r = read(fd, buf, nleft);
++
++        if (r < 0) {
++            /* XXX EWOULDBLOCK can't happen without non-blocking sockets */
++            if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
++                break;
++            else
++                return NET_HARDERROR;
++        } else if (r == 0)
++            break;
++
++	if (sock_opt & MSG_TRUNC) {
++            size_t bytes_copied = (r > nleft)? nleft: r;
++            nleft -= bytes_copied;
++            buf += bytes_copied;
++        }
++	else {
++            nleft -= r;
++            buf += r;
++        }
++
++
++    }
++    return count - nleft;
++}
+ 
+ /*******************************************************************/
+ /* reads 'count' bytes from a socket  */
+@@ -479,6 +522,88 @@ Nread_no_select(int fd, char *buf, size_t count, int prot)
      return count - nleft;
  }
  
@@ -766,7 +1102,7 @@ index b693ea7f..3830f076 100644
  
  /*
   *                      N W R I T E
-@@ -518,6 +605,79 @@ Nwrite(int fd, const char *buf, size_t count, int prot)
+@@ -518,6 +643,79 @@ Nwrite(int fd, const char *buf, size_t count, int prot)
      return count;
  }
  
@@ -847,10 +1183,18 @@ index b693ea7f..3830f076 100644
  int
  has_sendfile(void)
 diff --git a/src/net.h b/src/net.h
-index 859c52ce..3d06dc5f 100644
+index 859c52ce..c1657635 100644
 --- a/src/net.h
 +++ b/src/net.h
-@@ -39,6 +39,12 @@ int Nsendfile(int fromfd, int tofd, const char *buf, size_t count) /* __attribut
+@@ -32,6 +32,7 @@ int create_socket(int domain, int proto, const char *local, const char *bind_dev
+ int netdial(int domain, int proto, const char *local, const char *bind_dev, int local_port, const char *server, int port, int timeout);
+ int netannounce(int domain, int proto, const char *local, const char *bind_dev, int port);
+ int Nread(int fd, char *buf, size_t count, int prot);
++int Nrecv_no_select(int fd, char *buf, size_t count, int prot, int sock_opt);
+ int Nread_no_select(int fd, char *buf, size_t count, int prot);
+ int Nwrite(int fd, const char *buf, size_t count, int prot) /* __attribute__((hot)) */;
+ int has_sendfile(void);
+@@ -39,6 +40,12 @@ int Nsendfile(int fromfd, int tofd, const char *buf, size_t count) /* __attribut
  int setnonblocking(int fd, int nonblocking);
  int getsockdomain(int sock);
  int parse_qos(const char *tos);

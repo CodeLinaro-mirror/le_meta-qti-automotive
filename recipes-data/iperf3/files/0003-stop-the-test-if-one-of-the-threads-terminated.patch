@@ -396,19 +396,5 @@ index 481c09d..6183aad 100644
      }
  
      return r;
-diff --git a/src/iperf_udp.c b/src/iperf_udp.c
-index 91c5a65..9ebf39d 100644
---- a/src/iperf_udp.c
-+++ b/src/iperf_udp.c
-@@ -185,7 +185,7 @@ iperf_udp_recv(struct iperf_stream *sp)
- 	sp->jitter += (d - sp->jitter) / 16.0;
-     }
-     else {
--	if (sp->test->debug)
-+	if (sp->test->debug_level >= DEBUG_LEVEL_DEBUG)
- 	    printf("Late receive, state = %d\n", sp->test->state);
-     }
- 
--- 
 2.34.1
 
