@@ -1,0 +1,16 @@
+Source: setup-network-host
+Section: net
+Priority: optional
+Maintainer: leiwang <leiwan@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+Rules-Requires-Root: no
+
+Package: setup-network-host
+Architecture: arm64
+Depends: ${misc:Depends}
+Description: LV host network setup scripts (Gunyah VMM)
+ Scripts to automatically setup LV host network in a Gunyah VMM setup.
+ Installs /usr/bin/setup-network-host.sh, /usr/bin/gvm_net_run.sh,
+ and the systemd unit setup-network-host.service.

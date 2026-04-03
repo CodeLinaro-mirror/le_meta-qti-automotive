@@ -1,0 +1,5 @@
+setup-network-host (1.0.1) unstable; urgency=medium
+
+  * Converted from RPM spec file.
+
+ -- leiwang <leiwan@qti.qualcomm.com>  Sat, 21 Mar 2026 12:01:16 +0000

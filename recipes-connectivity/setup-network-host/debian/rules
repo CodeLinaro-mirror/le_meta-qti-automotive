@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d debian/tmp/usr/bin
+	install -d debian/tmp/usr/lib/systemd/system
+
+	install -m 0755 $(CURDIR)/files/setup-network-host-gunyah-vmm.sh  debian/tmp/usr/bin/setup-network-host.sh
+
+	install -m 0755 $(CURDIR)/files/gvm_net_run.sh   debian/tmp/usr/bin/gvm_net_run.sh
+
+	install -m 0644 $(CURDIR)/files/setup-network-host-gunyah-vmm.service   debian/tmp/usr/lib/systemd/system/setup-network-host.service
