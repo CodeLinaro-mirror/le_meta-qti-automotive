@@ -1,0 +1,5 @@
+bt-module-load (1.0.0) noble; urgency=medium
+
+  * Initial Debian packaging for Bluetooth module load script.
+
+ -- Xiaoning Ma <mxiaonin@qti.qualcomm.com>  Sun, 30 Mar 2026 09:00:00 +0000

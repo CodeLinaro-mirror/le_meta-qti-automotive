@@ -1,0 +1,16 @@
+Source: bt-module-load
+Section: misc
+Priority: optional
+Maintainer: Xiaoning Ma <mxiaonin@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+Rules-Requires-Root: no
+
+Package: bt-module-load
+Architecture: all
+Depends: ${misc:Depends}, rfkill
+Description: Bluetooth Kernel Module Load Script
+ Load Bluetooth HCI Kernel Modules.
+ Provides a systemd service and shell script to load/unload
+ the hci_uart kernel module for Qualcomm Bluetooth chips.

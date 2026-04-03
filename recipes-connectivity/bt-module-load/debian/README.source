@@ -1,0 +1,12 @@
+bt-module-load
+==============
+
+This package provides the Bluetooth HCI kernel module load script and
+associated systemd service for Qualcomm platforms.
+
+Files installed:
+  - /usr/bin/load_bt_modules.sh   : Script to load/unload hci_uart kernel module
+  - /lib/systemd/system/bt_module_load.service : Systemd service unit
+  - /lib/firmware/qca             : Symlink to /bluetooth/image
+
+The service uses rfkill to reset Bluetooth before loading the hci_uart module.
