@@ -1,0 +1,57 @@
+From 7ef4f2cf09a97e6e3b08444debce2e3d23c41d8e Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+Date: Fri, 3 Apr 2026 16:05:05 +0800
+Subject: [PATCH] ivi-controller: Use weston_view_add_transform()
+
+Stop manipulating the view->geometry.transformation_list directly, use
+weston_view_add_transform() instead to be aligned with weston-13.
+
+This change refers to commit 2df127c1 from weston community.
+
+Upstream-Status: Pending
+
+Signed-off-by: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+---
+ weston-ivi-shell/src/ivi-controller.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/weston-ivi-shell/src/ivi-controller.c b/weston-ivi-shell/src/ivi-controller.c
+index 4c3f246..2b51c7c 100644
+--- a/weston-ivi-shell/src/ivi-controller.c
++++ b/weston-ivi-shell/src/ivi-controller.c
+@@ -25,6 +25,11 @@
+  * ivi-extension APIs, which uses ivi_controller_interface pvoided by
+  * ivi-layout.c in weston.
+  */
++/*
++ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ */
+ 
+ #include "config.h"
+ 
+@@ -868,7 +873,6 @@ set_bkgnd_surface_prop(struct ivishell *shell)
+     view = shell->bkgnd_view;
+     compositor = shell->compositor;
+ 
+-    wl_list_remove(&shell->bkgnd_transform.link);
+     weston_matrix_init(&shell->bkgnd_transform.matrix);
+ 
+     /*find the available screen's resolution*/
+@@ -902,9 +906,9 @@ set_bkgnd_surface_prop(struct ivishell *shell)
+     weston_log("set_bkgnd_surface_prop: x:%d y:%d s_width:%d s_height:%d d_width:%d d_height:%d\n",
+                x, y, src_width, src_height, dest_width, dest_height);
+ 
+-    wl_list_insert(&view->geometry.transformation_list,
+-                   &shell->bkgnd_transform.link);
+-    weston_view_update_transform(view);
++    weston_view_add_transform(view,
++                &view->geometry.transformation_list,
++                &shell->bkgnd_transform);
+     ivi_weston_surface_schedule_repaint(w_surface);
+ }
+ 
+-- 
+2.34.1
+
