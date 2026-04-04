@@ -3,6 +3,8 @@ FILESEXTRAPATHS:prepend := "${PATH_TO_REPO}/vendor/qcom/opensource/safelinux-sys
 SRC_URI += "file://irqbalanced.conf \
             file://set_irq_bal_level.sh"
 
+SYSTEMD_AUTO_ENABLE:irqbalance = "enable"
+
 do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/irqbalanced.service.d
     install -m 0644 ${WORKDIR}/irqbalanced.conf -D ${D}${sysconfdir}/systemd/system/irqbalanced.service.d/99irqbalanced.conf

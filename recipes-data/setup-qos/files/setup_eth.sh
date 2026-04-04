@@ -26,8 +26,8 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
-# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Changes from Qualcomm Technologies, Inc. are provided under the following license:
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 DUMP_TO_KMSG=/dev/kmsg
@@ -77,12 +77,21 @@ Usage:
 
         /etc/initscripts/setup_eth.sh /etc/initscripts/config.ini default_qos/perf_qos <dev>
 
+Note:
+	During the 'del' operation, the VLAN interface (e.g., eth0.2) will be DELETED.
+	It will be recreated automatically when you install 'perf_qos' or 'default_qos' back.
     "
 }
 
 del_tc_eth0() {
 	local interface="$1"
 
+	if [ "$eavb_vlan_id0" -ne 0 ]; then
+		# Bring the VLAN interface down
+		ifconfig $interface.$eavb_vlan_id0 down
+		# Remove the VLAN configuration
+		vconfig rem $interface.$eavb_vlan_id0
+	fi
 	tc qdisc delete dev $interface handle $mqprio_handle0: parent root mqprio
 	exit_status=$?
 	if [ $exit_status -ne 0 ]
@@ -111,6 +120,13 @@ del_tc_eth0() {
 del_tc_eth1() {
 	local interface="$1"
 
+	if [ "$eavb_vlan_id1" -ne 0 ];
+	then
+		# Bring the interface down first
+		ifconfig $interface.$eavb_vlan_id1 down
+		# Remove the VLAN interface
+		vconfig rem $interface.$eavb_vlan_id1
+	fi
 	tc qdisc delete dev $interface handle $mqprio_handle1: parent root mqprio
 	exit_status=$?
 	if [ $exit_status -ne 0 ]
@@ -275,8 +291,11 @@ add_perf_tc_eth0() {
 		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
 		exit 0
 	fi
-	#Pin eth0’s IRQ to CPU0: find eth0’s IRQ from /proc/interrupts and set its smp_affinity mask to 0x1
-	echo 1 > /proc/irq/$(awk '/eth0/{split($1,a,":");print a[1]; exit}' /proc/interrupts)/smp_affinity
+	# Configure TX interrupt coalescing on eth0 to generate an interrupt
+	# after up to 128 packets are transmitted, reducing interrupt rate/CPU load
+	ethtool -C $interface tx-frames 128 > /dev/null 2>&1
+	# Enable Receive Packet Steering on eth0 RX queue 0 and map it to CPUs 0–5
+	echo 3f000 > /sys/class/net/$interface/queues/rx-0/rps_cpus
 	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4
@@ -297,6 +316,11 @@ add_perf_tc_eth0() {
 	then
 		tc qdisc replace dev $interface handle $q5_etf_handle0 parent $q5_q6_cbs_handle0:6 etf clockid CLOCK_TAI delta $q5_delta0 offload skip_sock_check deadline_mode
 		tc qdisc replace dev $interface handle $q6_etf_handle0 parent $mqprio_handle0:7 etf clockid CLOCK_TAI delta $q6_delta0 offload skip_sock_check deadline_mode
+	fi
+	if [ "$eavb_vlan_id0" -ne 0 ];
+	then
+		vconfig add $interface $eavb_vlan_id0
+		ifconfig $interface.$eavb_vlan_id0 up
 	fi
 	if [ $l4_port0 -ne 0 ] && [ -n "$protocol0" ];
 	then
@@ -345,6 +369,11 @@ add_perf_tc_eth1() {
 	then
 		tc qdisc replace dev $interface handle $q5_etf_handle1 parent $q5_q6_cbs_handle1:6 etf clockid CLOCK_TAI delta $q5_delta1 offload skip_sock_check deadline_mode
 		tc qdisc replace dev $interface handle $q6_etf_handle1 parent $mqprio_handle1:7 etf clockid CLOCK_TAI delta $q6_delta1 offload skip_sock_check deadline_mode
+	fi
+	if [ "$eavb_vlan_id1" -ne 0 ];
+	then
+		vconfig add $interface $eavb_vlan_id1
+		ifconfig $interface.$eavb_vlan_id1 up
 	fi
 	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
 	then

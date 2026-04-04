@@ -22,6 +22,7 @@ RDEPENDS:${PN} = "\
     gvm-net-config \
     vhost-device-i2c \
     vhost-device-ssr \
+    vhost-device-gpio \
     hyp-udmabuf \
     hyp-udmabuf-test \
     vmm-boot-lcm \
