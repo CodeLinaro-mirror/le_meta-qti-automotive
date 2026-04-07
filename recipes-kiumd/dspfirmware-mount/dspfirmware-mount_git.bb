@@ -14,8 +14,11 @@ S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
 SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
-SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', ' bluetooth-mount.service', '', d)}"
-SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm-mount.service', '', d)}"
+SYSTEMD_SERVICE:${PN}-bt = "bluetooth-mount.service"
+SYSTEMD_SERVICE:${PN}-vmm:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm-mount.service', '', d)}"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa7255 = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8775 = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
+SYSTEMD_PACKAGES = "${PN} ${PN}-bt ${PN}-vmm ${PN}-lvgvm"
 
 do_compile[noexec] = "1"
 
@@ -46,9 +49,7 @@ do_install:append() {
         fi
     fi
 
-    if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
-        install -m 0755 ${S}/bluetooth-mount.service -D ${D}${systemd_unitdir}/system/bluetooth-mount.service
-    fi
+    install -m 0755 ${S}/bluetooth-mount.service -D ${D}${systemd_unitdir}/system/bluetooth-mount.service
 
     if [ -f ${S}/99-persist-storage-ab.rules ]; then
         install -m 0644 ${S}/99-persist-storage-ab.rules -D ${D}${sysconfdir}/udev/rules.d/99-persist-storage-ab.rules
@@ -75,9 +76,6 @@ do_install:append() {
             if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
                 sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
             fi
-
-            ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service \
-                ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv-mount.service
         fi
     fi
 }
@@ -100,6 +98,23 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
     install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm-mount.service ${D}${systemd_unitdir}/system/sa8797_firmware-vm-boot-autoghgvm-mount.service
 }
+
+PACKAGES =+ "${PN}-bt ${PN}-lvgvm ${PN}-vmm"
+
+FILES:${PN}-bt += "\
+    ${systemd_system_unitdir}/bluetooth-mount.service \
+"
+
+FILES:${PN}-lvgvm += "\
+    ${systemd_system_unitdir}/firmware-vm-boot-autoghgvmlv-mount.service \
+    /firmware/vm/boot/autoghgvmlv \
+"
+
+FILES:${PN}-vmm += "\
+    ${systemd_unitdir}/system/firmware-vm-boot-autoghgvm-mount.service \
+    /firmware/vm/boot/autoghgvm \
+"
+
 FILES:${PN} += "${systemd_unitdir}/*"
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${libdir}/modules-load.d/*"
