@@ -10,9 +10,13 @@ DEPENDS += "libcutils libhardware-headers liblog libutils virtual/kernel-headers
 
 PR = "r3"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/commonsys-intf/display/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/commonsys-intf/display;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display;usehead=1"
+
 SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display"
+
+
+S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display"
+
 
 inherit autotools pkgconfig
 
@@ -24,9 +28,9 @@ LDFLAGS += "-llog -lutils -lcutils"
 CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
-CPPFLAGS += "-I${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/gralloc"
-CPPFLAGS += "-I${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/libqdmetadata"
-CPPFLAGS += "-I${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/include"
+CPPFLAGS += "-I${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display/gralloc"
+CPPFLAGS += "-I${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display/libqdmetadata"
+CPPFLAGS += "-I${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display/include"
 
 do_install:append() {
     install -d ${D}${includedir}
