@@ -9,7 +9,7 @@ ${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 
 GUNYAH_VMM_SCRIPT ?= "setup-network-host-gunyah-vmm.sh"
 GUNYAH_VMM_SCRIPT:sa8775 = "setup-network-host-gunyah-vmm_sa8775.sh"
-GUNYAH_VMM_SCRIPT:sa7255 = "setup-network-host-gunyah-vmm_sa8775.sh"
+GUNYAH_VMM_SCRIPT:sa7255 = "setup-network-host-gunyah-vmm_sa7255.sh"
 
 SRC_URI = "\
     file://setup-network-host.sh \
