@@ -142,7 +142,7 @@ merge_ddr_dtbos_single () {
             input_dtb=$(basename "$dtb_file")
             prefix1=$(echo "$input_dtb" | sed -e 's/-.*//')
 
-            if [ "$prefix1" = "sa8397p" ]; then
+            if [ "$prefix1" = "sa8397p" ] || [ "$prefix1" = "seca" ]; then
                 cp $dtb_file $out_dir
                 continue
             fi
