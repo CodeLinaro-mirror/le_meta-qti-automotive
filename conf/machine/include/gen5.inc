@@ -83,6 +83,9 @@ MACHINE_FEATURES += "\
     qti-wlan-hsp \
     qti-wlan-hmt \
     qti-compute-platform \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
 
 MACHINE_FEATURES:remove = "${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)}"

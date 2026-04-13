@@ -10,13 +10,10 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=f3b90e78ea0cffb20bf5cca7947a896d"
 
-SRC_URI = "${PATH_TO_REPO}/sources/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=sources/wlan/qcacld-3.0;usehead=1 \
-           ${PATH_TO_REPO}/sources/wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=sources/wlan/qca-wifi-host-cmn;usehead=1 \
-           ${PATH_TO_REPO}/sources/wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=sources/wlan/fw-api/;usehead=1 \
+SRC_URI = "${PATH_TO_REPO}/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=wlan/qcacld-3.0;usehead=1 \
+           ${PATH_TO_REPO}/wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=wlan/qca-wifi-host-cmn;usehead=1 \
+           ${PATH_TO_REPO}/wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=wlan/fw-api/;usehead=1 \
            ${PATH_TO_REPO}/device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=device/qcom/wlan;usehead=1 \
-           file://0001-qcacld-3.0-Properly-declare-wlan_is_tdls_session_pre.patch \
-           file://0002-qcacld-3.0-Fix-compilation-error.patch \
-           file://0001-qcacmn-Remove-unnecessary-debug-code.patch;patchdir=../qca-wifi-host-cmn \
            "
 SRCREV_qcacld = "${AUTOREV}"
 SRCREV_qca-wifi-host-cmn = "${AUTOREV}"
@@ -26,10 +23,11 @@ SRCREV_FORMAT = "qcacld_cmn_fw_msm"
 
 _MODNAME = "qca6797"
 _WLAN_CTRL_NAME = "wlan"
+FW_PATH_NAME = "kiwi"
 FIRMWARE_PATH = "${D}${nonarch_base_libdir}/firmware/wlan/qca_cld/${_MODNAME}"
 
-S1 = "${WORKDIR}/sources/wlan/qca-wifi-host-cmn"
-S = "${WORKDIR}/sources/wlan/qcacld-3.0"
+S1 = "${WORKDIR}/wlan/qca-wifi-host-cmn"
+S = "${WORKDIR}/wlan/qcacld-3.0"
 
 # Explicitly disable HL to enable LL as current WLAN driver is not having
 # simultaneous support of HL and LL.
@@ -68,5 +66,7 @@ do_install() {
 
     install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6797.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
     install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/wlan_mac.bin ${FIRMWARE_PATH}/wlan_mac.bin
+
+    ln -sf /firmware/image/${FW_PATH_NAME} ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}
 
 }

@@ -17,7 +17,7 @@ WLAN_PLATFORM_CFG = "\
                    "
 EXTRA_OEMAKE:append = " ${WLAN_PLATFORM_CFG} "
 
-_LINUX_BUILD_TOP = "${WORKDIR}/sources/wlan"
+_LINUX_BUILD_TOP = "${WORKDIR}/wlan"
 
 do_unpack[deptask] = "do_populate_sysroot"
 do_compile:prepend() {
@@ -46,6 +46,7 @@ RPROVIDES:${PN} += "${PROVIDES_NAME}-${KERNEL_VERSION}"
 FILES:${PN} += "${nonarch_base_libdir}/firmware/wlan/*"
 FILES:${PN} += "${nonarch_base_libdir}/firmware/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/*"
+FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/updates/*"
 
 LDFLAGS:aarch64 = "-O1 --hash-style=gnu --as-needed"
 

@@ -66,13 +66,10 @@ MISSING_RECIPE_SRCLIST += "\
 MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-connectivity/synergy-opensource/csrspp-tty_git.bb \
     meta-qti-automotive/recipes-connectivity/synergy-opensource/synergy-opensource_git.bb \
-    meta-qti-automotive/recipes-wlan/wlan-platform-dlkm/wlan-platform-dlkm_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-genoa_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hasting-cnss0_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hasting-cnss2_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hasting_git.bb \
-    meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hmt_git.bb \
-    meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hsp_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-rome_git.bb \
 "
 
