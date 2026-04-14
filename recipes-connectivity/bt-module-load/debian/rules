@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	@echo "Nothing to configure"
+
+override_dh_auto_build:
+	@echo "Nothing to build"
+
+override_dh_auto_install:
+	install -d $(CURDIR)/debian/bt-module-load/usr/bin/
+	install -m 0755 $(CURDIR)/files/load_bt_modules.sh $(CURDIR)/debian/bt-module-load/usr/bin/
+	install -d $(CURDIR)/debian/bt-module-load/lib/systemd/system/
+	install -m 0644 $(CURDIR)/files/bt_module_load.service $(CURDIR)/debian/bt-module-load/lib/systemd/system/
+	install -d $(CURDIR)/debian/bt-module-load/lib/firmware/
+	ln -sf /bluetooth/image $(CURDIR)/debian/bt-module-load/lib/firmware/qca
