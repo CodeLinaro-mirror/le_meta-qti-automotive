@@ -16,3 +16,5 @@ override_dh_auto_install:
 	install -m 0644 $(CURDIR)/files/bt_module_load.service $(CURDIR)/debian/bt-module-load/lib/systemd/system/
 	install -d $(CURDIR)/debian/bt-module-load/lib/firmware/
 	ln -sf /bluetooth/image $(CURDIR)/debian/bt-module-load/lib/firmware/qca
+	install -d $(CURDIR)/debian/bt-module-load/etc/modprobe.d/
+	install -m 0644 $(CURDIR)/files/blacklist-hci_uart.conf $(CURDIR)/debian/bt-module-load/etc/modprobe.d/
