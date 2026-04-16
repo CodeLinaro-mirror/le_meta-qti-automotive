@@ -36,7 +36,6 @@ DEPENDS:remove:quin-gvm-monaco-dpk = "binder codec2-service"
 EXTRA_OEMESON:remove:quin-gvm-monaco-dpk = "-Dagl-c2service=true"
 
 DEPENDS:append:quin-gvm-lemans = " displaydlkm"
-DEPENDS:append:monaco = " displaydlkm"
 DEPENDS:append:quin-gvm-monaco = " displaydlkm"
 
 SRC_URI = "${PATH_TO_REPO}/gstreamer/gst-plugins-qti-oss/.git;protocol=${PROTO};destsuffix=gstreamer/gst-plugins-qti-oss;usehead=1"
@@ -61,14 +60,6 @@ CFLAGS:append:quin-gvm-lemans = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtu
 CXXFLAGS:append:quin-gvm-lemans = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
 EXTRA_OEMESON:append:quin-gvm-lemans = " \
     -Dav1-dec=enabled \
-    -Dmmmcolorfmt=true \
-    -Dqprange_option=op1 \
-    -Dreport_frame_qp_option=op1 \
-"
-
-CFLAGS:append:monaco = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
-CXXFLAGS:append:monaco = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
-EXTRA_OEMESON:append:monaco = " \
     -Dmmmcolorfmt=true \
     -Dqprange_option=op1 \
     -Dreport_frame_qp_option=op1 \
