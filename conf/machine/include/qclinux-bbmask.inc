@@ -74,6 +74,8 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hmt_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hsp_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-rome_git.bb \
+    meta-qti-automotive/recipes-qcvirtio/virglrenderer/virglrenderer_1.1.0.bb \
+    meta-qti-automotive-prop/recipes-qcvirtio/qcvirtio-devices/qcvirtio-devices_git.bb \
 "
 
 # Missing recipes in baseline LY.AU.0.2.0 (used by sa8775/sa7255)
