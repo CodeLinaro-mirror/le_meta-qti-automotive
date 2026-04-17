@@ -32,6 +32,16 @@ do_install:append:gen5() {
     install -d ${D}${systemd_system_unitdir}/
     install -m 0644 ${S}/plat-config-generator/offline-target-cpus.service -D ${D}${systemd_system_unitdir}/offline-target-cpus.service
     install -m 0644 ${S}/plat-config-generator/reconfig-cgrp-slices.service -D ${D}${systemd_system_unitdir}/reconfig-cgrp-slices.service
+
+    install -m 0444 ${S}/plat-config-generator/nord/safe_ivi.ini -D ${D}/etc/nord/safe_ivi.ini
+    install -m 0444 ${S}/plat-config-generator/nord/nonsafe_ivi.ini -D ${D}/etc/nord/nonsafe_ivi.ini
+    install -m 0444 ${S}/plat-config-generator/nord/flex.ini -D ${D}/etc/nord/flex.ini
+    install -m 0444 ${S}/plat-config-generator/nord/adas.ini -D ${D}/etc/nord/adas.ini
+
+    install -m 0444 ${S}/plat-config-generator/seca/safe_ivi.ini -D ${D}/etc/seca/safe_ivi.ini
+    install -m 0444 ${S}/plat-config-generator/seca/nonsafe_ivi.ini -D ${D}/etc/seca/nonsafe_ivi.ini
+    install -m 0444 ${S}/plat-config-generator/seca/flex.ini -D ${D}/etc/seca/flex.ini
+    install -m 0444 ${S}/plat-config-generator/seca/adas.ini -D ${D}/etc/seca/adas.ini
 }
 
 RDEPENDS:${PN} += "minini"
