@@ -30,10 +30,6 @@ SYSTEMD_SERVICE:${PN}:append:gen5 = " offline-target-cpus.service reconfig-cgrp-
 
 do_install:append:gen5() {
     install -d ${D}${systemd_system_unitdir}/
-    install -m 0444 ${S}/plat-config-generator/target_conf_safe_ivi.ini -D ${D}/etc/target_conf_safe_ivi.ini
-    install -m 0444 ${S}/plat-config-generator/target_conf_nonsafe_ivi.ini -D ${D}/etc/target_conf_nonsafe_ivi.ini
-    install -m 0444 ${S}/plat-config-generator/target_conf_flex.ini -D ${D}/etc/target_conf_flex.ini
-    install -m 0444 ${S}/plat-config-generator/target_conf_adas.ini -D ${D}/etc/target_conf_adas.ini
     install -m 0644 ${S}/plat-config-generator/offline-target-cpus.service -D ${D}${systemd_system_unitdir}/offline-target-cpus.service
     install -m 0644 ${S}/plat-config-generator/reconfig-cgrp-slices.service -D ${D}${systemd_system_unitdir}/reconfig-cgrp-slices.service
 }
