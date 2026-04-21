@@ -1,0 +1,180 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 3e31be189d51870f7eb938061e7c45ba557db28b Mon Sep 17 00:00:00 2001
+From: Saheli Saha <sahesaha@qti.qualcomm.com>
+Date: Fri, 22 May 2026 14:45:09 +0530
+Subject: [PATCH] securemsm: This code adds PKCS11 client support for SP800_108
+ kdf_counter_mode for FR116211.
+
+Change-Id: I4b3ddf0e061e07abe277970ba58e5ff7289cb721
+Signed-off-by: Saheli Saha <sahesaha@qti.qualcomm.com>
+---
+ libckteec/include/pkcs11.h   | 48 +++++++++++++++++++++++
+ libckteec/src/serialize_ck.c | 76 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 124 insertions(+)
+
+diff --git a/libckteec/include/pkcs11.h b/libckteec/include/pkcs11.h
+index ac34347b0..110378ec5 100644
+--- a/libckteec/include/pkcs11.h
++++ b/libckteec/include/pkcs11.h
+@@ -277,6 +277,52 @@ typedef CK_ULONG CK_CERTIFICATE_CATEGORY;
+ typedef CK_ULONG CK_MECHANISM_TYPE;
+ typedef CK_MECHANISM_TYPE *CK_MECHANISM_TYPE_PTR;
+ 
++/*
++ * NIST SP 800-108 Counter Mode KDF parameter structures (PKCS#11 v3.0)
++ *
++ * NOTE: This repo currently targets Cryptoki v2.40 headers; these definitions
++ * are added to support CKM_SP800_108_COUNTER_KDF.
++ */
++
++/* PRF selection for SP800-108: only CKP_* mechanisms (e.g., CKP_PKCS5_PBKD2_HMAC_SHA256) in spec,
++ * but in practice we will accept HMAC mechanisms as well (CKM_SHA256_HMAC etc) if desired by TA.
++ * Keep it as CK_MECHANISM_TYPE to match the spec intent.
++ */
++typedef CK_MECHANISM_TYPE CK_SP800_108_PRF_TYPE;
++typedef CK_SP800_108_PRF_TYPE *CK_SP800_108_PRF_TYPE_PTR;
++
++/* Data parameter type for SP800-108 - only BYTE_ARRAY is used */
++#define CK_SP800_108_BYTE_ARRAY		0x00000005UL
++
++/* PRF data parameter */
++typedef struct CK_PRF_DATA_PARAM {
++	CK_ULONG type;
++	CK_VOID_PTR pValue;
++	CK_ULONG ulValueLen;
++} CK_PRF_DATA_PARAM;
++
++typedef CK_PRF_DATA_PARAM *CK_PRF_DATA_PARAM_PTR;
++
++/* Derived key structure */
++typedef struct CK_DERIVED_KEY {
++	CK_ATTRIBUTE_PTR pTemplate;
++	CK_ULONG ulAttributeCount;
++	CK_OBJECT_HANDLE_PTR phKey;
++} CK_DERIVED_KEY;
++
++typedef CK_DERIVED_KEY *CK_DERIVED_KEY_PTR;
++
++/* Full SP800-108 KDF parameters */
++typedef struct CK_SP800_108_KDF_PARAMS {
++	CK_SP800_108_PRF_TYPE prfType;
++	CK_ULONG ulNumberOfDataParams;
++	CK_PRF_DATA_PARAM_PTR pDataParams;
++	CK_ULONG ulAdditionalDerivedKeys;
++	CK_DERIVED_KEY_PTR pAdditionalDerivedKeys;
++} CK_SP800_108_KDF_PARAMS;
++
++typedef CK_SP800_108_KDF_PARAMS *CK_SP800_108_KDF_PARAMS_PTR;
++
+ /*
+  * Values for type CK_MECHANISM_TYPE
+  *
+@@ -379,6 +425,8 @@ typedef CK_MECHANISM_TYPE *CK_MECHANISM_TYPE_PTR;
+ #define CKM_AES_KEY_WRAP		0x02109
+ #define CKM_AES_KEY_WRAP_PAD		0x0210a
+ #define CKM_HKDF_DERIVE			0x0402a
++/* PKCS#11 v3.0: NIST SP 800-108 Counter Mode KDF */
++#define CKM_SP800_108_COUNTER_KDF	0x003AC
+ 
+ typedef struct CK_MECHANISM_INFO CK_MECHANISM_INFO;
+ typedef struct CK_MECHANISM_INFO *CK_MECHANISM_INFO_PTR;
+diff --git a/libckteec/src/serialize_ck.c b/libckteec/src/serialize_ck.c
+index 8ad7609eb..7f65ec2c6 100644
+--- a/libckteec/src/serialize_ck.c
++++ b/libckteec/src/serialize_ck.c
+@@ -725,6 +725,80 @@ static CK_RV serialize_mecha_mac_general_param(struct serializer *obj,
+ 	return serialize_ck_ulong(obj, ck_data);
+ }
+ 
++static CK_RV serialize_mecha_sp800_108_counter_kdf(struct serializer *obj,
++						   CK_MECHANISM_PTR mecha)
++{
++	CK_SP800_108_KDF_PARAMS_PTR p = mecha->pParameter;
++	CK_RV rv = CKR_GENERAL_ERROR;
++        size_t params_size = 0;  /* use size_t to avoid overflow */
++	uint32_t params_size32 = 0;
++	uint32_t i = 0;
++
++	if (mecha->ulParameterLen != sizeof(*p))
++		return CKR_ARGUMENTS_BAD;
++
++	/* Additional derived keys not supported */
++	if (p->ulAdditionalDerivedKeys != 0)
++		return CKR_MECHANISM_PARAM_INVALID;
++
++        /* Validate pDataParams pointer if count > 0 */
++        if (p->ulNumberOfDataParams > 0 && !p->pDataParams)
++                return CKR_MECHANISM_PARAM_INVALID;
++
++	/* Calculate total size: prfType + numParams + each param (type + len + data) */
++	params_size = 2 * sizeof(uint32_t); /* prfType + ulNumberOfDataParams */
++
++	for (i = 0; i < p->ulNumberOfDataParams; i++) {
++		params_size += 2 * sizeof(uint32_t); /* type + ulValueLen */
++		params_size += p->pDataParams[i].ulValueLen;
++	}
++
++        /* Check for overflow before casting to uint32_t */
++        if (params_size > UINT32_MAX)
++                return CKR_MECHANISM_PARAM_INVALID;
++        params_size32 = (uint32_t)params_size;
++
++	rv = serialize_32b(obj, obj->type);
++	if (rv)
++		return rv;
++
++	rv = serialize_32b(obj, params_size32);
++	if (rv)
++		return rv;
++
++	/* Serialize PRF type */
++	rv = serialize_ck_ulong(obj, p->prfType);
++	if (rv)
++		return rv;
++
++	/* Serialize number of data parameters */
++	rv = serialize_ck_ulong(obj, p->ulNumberOfDataParams);
++	if (rv)
++		return rv;
++
++	/* Serialize each data parameter: type, length, and data */
++	for (i = 0; i < p->ulNumberOfDataParams; i++) {
++		CK_PRF_DATA_PARAM_PTR param = &p->pDataParams[i];
++
++		rv = serialize_ck_ulong(obj, param->type);
++		if (rv)
++			return rv;
++
++		rv = serialize_ck_ulong(obj, param->ulValueLen);
++		if (rv)
++			return rv;
++
++                if (param->ulValueLen > 0 && !param->pValue)
++                        return CKR_MECHANISM_PARAM_INVALID;
++
++		rv = serialize_buffer(obj, param->pValue, param->ulValueLen);
++		if (rv)
++			return rv;
++	}
++
++	return CKR_OK;
++}
++
+ /**
+  * serialize_ck_mecha_params - serialize a mechanism type & params
+  *
+@@ -840,6 +914,8 @@ CK_RV serialize_ck_mecha_params(struct serializer *obj,
+ 		return serialize_mecha_mac_general_param(obj, &mecha);
+ 	case CKM_RSA_AES_KEY_WRAP:
+ 		return serialize_mecha_rsa_aes_key_wrap(obj, &mecha);
++	case CKM_SP800_108_COUNTER_KDF:
++		return serialize_mecha_sp800_108_counter_kdf(obj, &mecha);
+ 
+ 	default:
+ 		return CKR_MECHANISM_INVALID;
+-- 
+2.34.1
+
