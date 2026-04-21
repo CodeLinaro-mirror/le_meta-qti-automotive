@@ -15,7 +15,7 @@ SRCREV = "${AUTOREV}"
 SRC_DIR = "${SRC_DIR_ROOT}/vendor/qcom/opensource/args/ar_osal"
 S = "${WORKDIR}/vendor/qcom/opensource/args/ar_osal"
 
-inherit pkgconfig cmake
+inherit pkgconfig cmake qprebuilt
 
 EXTRA_OECONF += "\
     --with-glib \

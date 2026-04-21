@@ -10,8 +10,9 @@ SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/args/.git;protocol=${PROTO};de
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/args/gpr"
+SRC_DIR = "${WORKDIR}/vendor/qcom/opensource/args/gpr"
 
-inherit pkgconfig cmake
+inherit pkgconfig cmake qprebuilt
 
 EXTRA_OECONF += "--with-glib"
 

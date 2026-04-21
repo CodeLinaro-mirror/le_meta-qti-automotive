@@ -12,7 +12,7 @@ SRCREV = "${AUTOREV}"
 SRC_DIR = "${SRC_DIR_ROOT}/vendor/qcom/opensource/args/ar_util"
 S = "${WORKDIR}/vendor/qcom/opensource/args/ar_util"
 
-inherit pkgconfig cmake
+inherit pkgconfig cmake qprebuilt
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
