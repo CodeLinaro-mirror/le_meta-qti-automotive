@@ -5,22 +5,15 @@
 QPERFDEPLOYDIR = "${WORKDIR}/deploy-qperf-${PN}"
 
 python __anonymous() {
-    # Append PRODUCT, VARIANT info to PR
+    # Append PRODUCT, VARIANT info to PV
     prd = d.getVar('PRODUCT', True)
     var = d.getVar('VARIANT', True)
-    revision = d.getVar('PR', True)
+    version = d.getVar('PV', True)
     if prd != "base":
-        revision += "_"+prd
+        version += "_"+prd
     if var != "debug":
-        revision += "_"+var
-
-    # Update PR value to ensure recipe rebuilds.
-    if (d.getVar('PERF_BUILD', True) == '1'):
-        if (d.getVar('USER_BUILD', True) == '1'):
-            revision += "_user"
-        else:
-            revision += "_perf"
-    d.setVar('PR', revision.replace("-","_"))
+        version += "_"+var
+    d.setVar('PV', version.replace("-","_"))
 
     # While building kernel module recipes add a task to
     # copy build artifacts into DEPLOY_DIR for ease of access
