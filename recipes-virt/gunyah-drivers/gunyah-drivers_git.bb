@@ -18,6 +18,9 @@ TECHPACK_MODULES = "\
     drivers/virt/gunyah/gh_msgq.ko \
     drivers/virt/gunyah/gh_rm_drv.ko \
     drivers/virt/gunyah/gunyah.ko \
+    drivers/virt/gunyah/gunyah_info.ko \
+    drivers/virt/gunyah/gh_ctrl.ko \
+    drivers/virt/gunyah/gunyah_trace.ko \
     drivers/tty/hvc/hvc_gunyah.ko \
 "
 inherit qti-techpack
@@ -40,3 +43,6 @@ RPROVIDES:${PN} += "${@'kernel-module-hvc-gunyah-${KERNEL_VERSION}'.replace('_',
 RPROVIDES:${PN} += "${@'kernel-module-gh-rm-drv-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-gh-dbl-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-gunyah-${KERNEL_VERSION}'.replace('_', '-')}"
+RPROVIDES:${PN} += "${@'kernel-module-gunyah-info-${KERNEL_VERSION}'.replace('_', '-')}"
+RPROVIDES:${PN} += "${@'kernel-module-gh-ctrl-${KERNEL_VERSION}'.replace('_', '-')}"
+RPROVIDES:${PN} += "${@'kernel-module-gunyah-trace-${KERNEL_VERSION}'.replace('_', '-')}"
