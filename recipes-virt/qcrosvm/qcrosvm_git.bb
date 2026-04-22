@@ -26,6 +26,8 @@ inherit cargo systemd cargo-update-recipe-crates
 
 require ${BPN}-crates.inc
 
+CARGO_BUILD_FLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', '--features=vhost-user-generic', '', d)}"
+
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
@@ -69,7 +71,11 @@ do_install:append:sa7255-ivi() {
 
 do_install:append:sa8255-ivi() {
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
+        install -m 0644 ${S}/qcrosvm_lv_qcvirtio.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    else
+        install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    fi
 }
 
 do_install:append:sa8775-flex() {
