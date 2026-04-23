@@ -23,6 +23,8 @@ RDEPENDS:${PN} += "\
     system-core-usb \
     system-prop \
     memory-hotplug \
+    ${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "system-core-mount-ab", "", d)} \
+    ${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "binder", "", d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "qti-gunyah", "modules-load-late", "" ,d)} \
     ${@bb.utils.contains("MACHINE_FEATURES", "qti-umd", "platform-config", "", d)} \
     ${@bb.utils.contains("DISTRO_FEATURES", "early_init", "early-init", "" ,d)} \
