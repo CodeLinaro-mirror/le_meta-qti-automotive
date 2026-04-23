@@ -1,7 +1,7 @@
 
 [Unit]
 Description=MODPROBE_WLAN_MODULE
-After=firmware-links.service firmware.mount sysinit.target systemd-modules-load.service
+After=firmware-links.service firmware.mount usr-lib-firmware-qcom.mount sysinit.target systemd-modules-load.service
 Conflicts=shutdown.target
 
 [Service]

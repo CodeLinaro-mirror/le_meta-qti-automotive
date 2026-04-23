@@ -1,0 +1,6 @@
+cnss-wlan-load (1.0.0) unstable; urgency=medium
+
+  * Installs init_qti_wlan_auto.service and WLAN on/off scripts.
+  * Creates cnss-wlan user and group for service isolation.
+
+ -- Ben Wang <benw@qti.qualcomm.com>  Wed, 23 Apr 2026 00:00:00 +0800

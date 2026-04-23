@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+# Debian rules for cnss-wlan-load
+# Installs WLAN module load service and scripts.
+#
+# Source layout (relative to recipes-wlan/cnss-wlan-load/, which is $(CURDIR)):
+#   files/init_qti_wlan_auto.service  → /lib/systemd/system/init_qti_wlan_auto.service
+#   files/init.qti.wlan_on.sh         → /usr/bin/init.qti.wlan_on.sh  (ExecStart)
+#   files/init.qti.wlan_off.sh        → /usr/bin/init.qti.wlan_off.sh (ExecStop)
+
+export DH_VERBOSE = 1
+
+FILES_DIR := $(CURDIR)/files
+PKG_DIR   := $(CURDIR)/debian/cnss-wlan-load
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to compile – pure data package.
+
+override_dh_auto_install:
+	# Install WLAN scripts → /usr/bin/
+	install -d $(PKG_DIR)/usr/bin
+	install -m 0755 $(FILES_DIR)/init.qti.wlan_on.sh  $(PKG_DIR)/usr/bin/init.qti.wlan_on.sh
+	install -m 0755 $(FILES_DIR)/init.qti.wlan_off.sh $(PKG_DIR)/usr/bin/init.qti.wlan_off.sh
+	# Install systemd service → /lib/systemd/system/
+	install -d $(PKG_DIR)/lib/systemd/system
+	install -m 0644 $(FILES_DIR)/init_qti_wlan_auto.service \
+		$(PKG_DIR)/lib/systemd/system/init_qti_wlan_auto.service
+
+override_dh_installsystemd:
+	# Enable init_qti_wlan_auto.service on install
+	dh_installsystemd --name=init_qti_wlan_auto --no-start
+
+override_dh_auto_clean:
+	# Nothing to clean.

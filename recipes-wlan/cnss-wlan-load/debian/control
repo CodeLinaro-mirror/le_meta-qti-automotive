@@ -1,0 +1,19 @@
+Source: cnss-wlan-load
+Section: misc
+Priority: optional
+Maintainer: Ben Wang <benw@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+
+Package: cnss-wlan-load
+Architecture: all
+Depends: ${misc:Depends}
+Description: CNSS2 & WLAN Driver Module Load Service
+ Installs the init_qti_wlan_auto.service systemd service which loads
+ the cnss2 module and WLAN host driver module on boot.
+ .
+ Includes:
+  - init_qti_wlan_auto.service: systemd service for WLAN module load
+  - init.qti.wlan_on.sh: script to load WLAN driver
+  - init.qti.wlan_off.sh: script to unload WLAN driver
