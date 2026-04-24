@@ -10,11 +10,11 @@ SRC_URI:append = " \
     file://0001-systemd-config-linger-for-root-user.patch \
 "
 
+SRC_URI:append:gvm-gen5 = " file://60-vblk.rules"
+SRC_URI:append:gvm-gen4-5 = " file://60-vblk.rules"
 SRC_URI:append:sa81x5 = " file://0001-systemd-add-slotselect-support-in-fstab.patch"
 
-SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "5.15", "file://platform_load.conf", "", d)}"
-
-SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0033-systemd-Make-root-s-home-directory-configurable-2.patch', '', d)} "
+SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.12", "file://linux-msm-6.12_modules_load.conf", "", d)}"
 
 SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0035-systemd-Make-systemd-init-run-in-high-priority.patch', '', d)} "
 
@@ -114,8 +114,8 @@ do_install:append () {
     rm ${D}${nonarch_base_libdir}/udev/rules.d/60-persistent-v4l.rules
 
     # Add platform_load.conf to /etc/modules-load.d/, systemd will load modules in this file.
-    if ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "5.15", "true", "false", d)}; then
-        install -m 0664 ${WORKDIR}/platform_load.conf ${D}${sysconfdir}/modules-load.d/
+    if ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.12", "true", "false", d)}; then
+        install -m 0664 ${WORKDIR}/linux-msm-6.12_modules_load.conf ${D}${sysconfdir}/modules-load.d/
     fi
 
     # Create by-partlabel symlink for la/lv/bluetooth/modem/dsp devices in disksymlink-service service, remove these operations from plain udev rules
@@ -123,4 +123,12 @@ do_install:append () {
 
     # Mask serial-getty on hvc0 to prevent auto getty on hypervisor console
     ln -sf /dev/null ${D}${sysconfdir}/systemd/system/serial-getty@hvc0.service
+}
+
+do_install:append:gvm-gen5() {
+    install -m 0644 ${WORKDIR}/60-vblk.rules ${D}${sysconfdir}/udev/rules.d/
+}
+
+do_install:append:gvm-gen4-5() {
+    install -m 0644 ${WORKDIR}/60-vblk.rules ${D}${sysconfdir}/udev/rules.d/
 }
