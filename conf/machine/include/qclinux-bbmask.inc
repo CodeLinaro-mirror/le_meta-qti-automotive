@@ -254,6 +254,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-virt/vhost-user-q/vhost-user-q_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
+    meta-qti-automotive/recipes-virt/vm-gvminfo/vm-gvminfo_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
@@ -326,6 +327,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-virt/vhost-user-q/vhost-user-q_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
+    meta-qti-automotive/recipes-virt/vm-gvminfo/vm-gvminfo_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \

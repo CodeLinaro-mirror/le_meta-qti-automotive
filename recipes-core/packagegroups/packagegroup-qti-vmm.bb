@@ -26,6 +26,7 @@ RDEPENDS:${PN} = "\
     hyp-udmabuf-test \
     vmm-boot-lcm \
     dspfirmware-mount-vmm \
+    vm-gvminfo \
 "
 
 RDEPENDS:${PN}:append:gen5 = " \
