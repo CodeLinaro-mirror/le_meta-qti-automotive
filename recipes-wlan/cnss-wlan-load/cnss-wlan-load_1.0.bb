@@ -10,8 +10,10 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause;m
 
 SRC_URI = "\
            file://init_qti_wlan_auto.service \
+           file://init_qti_wlan_auto_legacy.service \
            file://init.qti.wlan_on.sh \
            file://init.qti.wlan_off.sh \
+           file://blacklist-pcie-qcom-ecam.conf \
            "
 
 inherit systemd useradd
@@ -27,18 +29,35 @@ do_compile[noexec] = "1"
 
 do_install() {
     install -d ${D}${bindir}
+    install -d ${D}${sysconfdir}/modprobe.d
+    install -m 0644 ${WORKDIR}/blacklist-pcie-qcom-ecam.conf -D ${D}${sysconfdir}/modprobe.d/
     install -D -m 0755 ${WORKDIR}/init.qti.wlan_on.sh ${D}${bindir}/init.qti.wlan_on.sh
     install -D -m 0755 ${WORKDIR}/init.qti.wlan_off.sh ${D}${bindir}/init.qti.wlan_off.sh
     install -d ${D}${systemd_unitdir}/system/
+}
+
+do_install:append:gen5() {
     install -m 0644 ${WORKDIR}/init_qti_wlan_auto.service -D ${D}${systemd_unitdir}/system/init_qti_wlan_auto.service
+}
+
+do_install:append:sa8255-ivi() {
+    install -m 0644 ${WORKDIR}/init_qti_wlan_auto_legacy.service -D ${D}${systemd_unitdir}/system/init_qti_wlan_auto.service
+}
+
+do_install:append:sa7255-ivi() {
+    install -m 0644 ${WORKDIR}/init_qti_wlan_auto_legacy.service -D ${D}${systemd_unitdir}/system/init_qti_wlan_auto.service
+}
+
+do_install:append() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'smack', 'true', 'false', d)}; then
         #Add CAP_MAC_OVERRIDE capability for init_qti_wlan_auto.service to ignore Smack checks
-         sed -i "/^AmbientCapabilities/s/$/ CAP_MAC_OVERRIDE/" ${D}${systemd_unitdir}/system/init_qti_wlan_auto.service
+        sed -i "/^AmbientCapabilities/s/$/ CAP_MAC_OVERRIDE/" ${D}${systemd_unitdir}/system/init_qti_wlan_auto.service
     fi
 }
 
 FILES:${PN} += "\
                 ${systemd_unitdir}/system/* \
+                ${sysconfdir}/modprobe.d/* \
                 ${bindir}/init.qti.wlan_on.sh \
                 ${bindir}/init.qti.wlan_off.sh \
 "
