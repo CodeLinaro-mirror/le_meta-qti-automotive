@@ -91,6 +91,12 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
     meta-qti-automotive/recipes-audio/gsl/gsl_git.bb \
     meta-qti-automotive/recipes-audio/spf/spf_git.bb \
+    meta-qti-automotive/recipes-audio/ar-audio-init-service/ar-audio-init-service_git.bb \
+    meta-qti-automotive/recipes-audio/ar-audio-service-utils/ar-audio-service-utils_git.bb \
+    meta-qti-automotive/recipes-audio/ar-dev-plugin/ar-dev-plugin_git.bb \
+    meta-qti-automotive/recipes-audio/ar-scmi/ar-scmi_git.bb \
+    meta-qti-automotive/recipes-audio/ar2-audio-service/ar2-audio-service_git.bb \
+    meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-multimedia/codec2/codec2-app_git.bb \
