@@ -1,0 +1,65 @@
+#!/usr/bin/make -f
+# Debian rules for hostap-daemon
+#
+# Source layout (relative to this package directory):
+#   src/          → symlink to external/wpa_supplicant_8 (whole repo)
+#   src/hostapd/  → actual build dir (external/wpa_supplicant_8/hostapd)
+#   files/        → config files (defconfig-qcacld)
+#   debian/       → this file
+#
+# CURDIR == layers/meta-qti-automotive/recipes-wlan/hostap-daemon/
+# HOSTAPD_SRC == CURDIR/src/hostapd
+
+export DH_VERBOSE = 1
+
+FILES_DIR    := $(CURDIR)/files
+PKG_DIR      := $(CURDIR)/debian/hostapd
+
+# Source: src/ → ../../../../external/wpa_supplicant_8 (whole repo)
+# HOSTAPD_SRC = src/hostapd matches external/wpa_supplicant_8/hostapd
+HOSTAPD_SRC  := $(CURDIR)/src/hostapd
+
+# Install prefix (equivalent to BINDIR = ${sbindir} in bb)
+BINDIR       := /usr/sbin
+
+# Parallel jobs: honour DEB_BUILD_OPTIONS=parallel=N, default to nproc
+NJOBS        := $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+ifeq ($(NJOBS),)
+NJOBS        := $(shell nproc)
+endif
+
+%:
+	dh $@
+
+# ---------------------------------------------------------------------------
+# do_configure:
+# ---------------------------------------------------------------------------
+override_dh_auto_configure:
+	install -m 0644 $(FILES_DIR)/defconfig-qcacld $(HOSTAPD_SRC)/.config
+	echo 'CFLAGS +="-I/usr/include/libnl3"' >> $(HOSTAPD_SRC)/.config
+
+# ---------------------------------------------------------------------------
+# do_compile equivalent (autotools-brokensep: build in source dir)
+# Multi-threaded: -j$(NJOBS) passed explicitly
+# ---------------------------------------------------------------------------
+override_dh_auto_build:
+	$(MAKE) -C $(HOSTAPD_SRC) -j$(NJOBS) \
+		BINDIR=$(BINDIR)
+
+# ---------------------------------------------------------------------------
+# do_install:
+# ---------------------------------------------------------------------------
+override_dh_auto_install:
+	# Install hostapd binary via make install
+	$(MAKE) -C $(HOSTAPD_SRC) install \
+		DESTDIR=$(PKG_DIR) \
+		BINDIR=$(BINDIR)
+
+	# Install default config → /etc/hostapd.conf
+	install -d $(PKG_DIR)/etc
+	install -m 0644 $(HOSTAPD_SRC)/hostapd.conf \
+		$(PKG_DIR)/etc/hostapd.conf
+
+override_dh_auto_clean:
+	$(MAKE) -C $(HOSTAPD_SRC) clean || true
+	rm -f $(HOSTAPD_SRC)/.config

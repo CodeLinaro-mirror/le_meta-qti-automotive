@@ -1,0 +1,38 @@
+Source: wpa-supplicant
+Section: net
+Priority: optional
+Maintainer: Ben Wang <benw@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13),
+               libnl-3-dev,
+               libnl-genl-3-dev,
+               libdbus-1-dev,
+               libssl-dev,
+               pkg-config,
+               libreadline-dev
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+
+Package: wpasupplicant
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         libnl-3-200,
+         libnl-genl-3-200,
+         libssl3,
+         dbus
+Conflicts: wpasupplicant
+Replaces: wpasupplicant
+Provides: wpasupplicant
+Description: Client for Wi-Fi Protected Access (WPA) - Qualcomm build
+ WPA supplicant client built from Qualcomm source (external/wpa_supplicant_8,
+ v2.12-devel) with QCA-specific features enabled via defconfig-qcacld.
+ .
+ Enabled QCA features (vs Ubuntu wpasupplicant 2.10):
+  - CONFIG_DRIVER_NL80211_QCA: QCA vendor nl80211 extensions
+  - CONFIG_WAPI / CONFIG_WAPI_AP: WAPI authentication support
+  - CONFIG_IEEE80211BE: Wi-Fi 7 (EHT/802.11be) preliminary support
+  - CONFIG_SAE_PK / CONFIG_OCV: WPA3 R3 features
+  - CONFIG_MARKER: Boot KPI marker support
+  - CONFIG_NO_ROAMING: Disable roaming (automotive use case)
+  - CONFIG_MBO / CONFIG_WNM / CONFIG_ACS: Additional AP features
+ .
+ Replaces the Ubuntu wpasupplicant package.
