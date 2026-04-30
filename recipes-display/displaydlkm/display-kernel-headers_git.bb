@@ -4,9 +4,11 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "GPLv2.0-with-linux-syscall-note"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/display-drivers;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/display-drivers;usehead=1"
 SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/vendor/qcom/opensource/display-drivers/include/uapi"
+
+S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/include/uapi"
+
 
 DRM_UAPI_HEADERS = "\
     drm/msm_drm_pp.h \
