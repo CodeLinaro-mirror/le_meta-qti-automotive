@@ -1,0 +1,29 @@
+Source: hostap-daemon
+Section: net
+Priority: optional
+Maintainer: Ben Wang <benw@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13),
+               libnl-3-dev,
+               libnl-genl-3-dev,
+               libssl-dev,
+               pkg-config
+Standards-Version: 4.6.0
+Homepage: https://git.codelinaro.org/
+
+Package: hostapd
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: hostapd for SoftAP - Qualcomm build
+ Hostapd (host access point daemon) built from Qualcomm source
+ (external/wpa_supplicant_8/hostapd, v2.12-devel) with QCA-specific
+ features enabled via defconfig-qcacld.
+ .
+ Enables a network interface card to act as an access point and
+ authentication server. Supports open mode and security modes
+ (WPA2/WPA3).
+ .
+ Enabled QCA features:
+  - CONFIG_DRIVER_NL80211_QCA: QCA vendor nl80211 extensions
+  - CONFIG_IEEE80211AC / CONFIG_IEEE80211AX: Wi-Fi 5/6 support
+  - CONFIG_SAE: WPA3-Personal
+  - CONFIG_OWE: Opportunistic Wireless Encryption

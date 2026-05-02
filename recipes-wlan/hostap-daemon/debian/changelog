@@ -1,0 +1,9 @@
+hostap-daemon (2.12) unstable; urgency=medium
+
+  * Source: external/wpa_supplicant_8/hostapd (v2.12-devel, AUTOREV).
+  * Build config: defconfig-qcacld with QCA-specific features:
+    - CONFIG_DRIVER_NL80211_QCA, CONFIG_IEEE80211AC, CONFIG_IEEE80211AX,
+      CONFIG_SAE, CONFIG_OWE, CONFIG_FILS, CONFIG_SUITEB192.
+  * Installs: hostapd binary, hostapd_cli, hostapd.conf.
+
+ -- Ben Wang <benw@qti.qualcomm.com>  Mon, 28 Apr 2026 00:00:00 +0800

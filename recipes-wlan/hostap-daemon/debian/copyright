@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: hostap-daemon
+Upstream-Contact: Qualcomm Technologies, Inc.
+Source: https://git.codelinaro.org/
+
+Files: *
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-2-Clause

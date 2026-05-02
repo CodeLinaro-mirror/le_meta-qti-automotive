@@ -1,0 +1,13 @@
+wpa-supplicant (2.12) unstable; urgency=medium
+
+  * Source: external/wpa_supplicant_8 (v2.12-devel, AUTOREV).
+  * Build config: defconfig-qcacld with QCA-specific features:
+    - CONFIG_DRIVER_NL80211_QCA, CONFIG_WAPI, CONFIG_IEEE80211BE,
+      CONFIG_SAE_PK, CONFIG_OCV, CONFIG_MARKER, CONFIG_NO_ROAMING,
+      CONFIG_MBO, CONFIG_WNM, CONFIG_ACS, CONFIG_FILS, CONFIG_SUITEB192.
+  * Replaces Ubuntu wpasupplicant 2:2.10-21ubuntu0.3.
+  * Installs: wpa_supplicant binary, wpa_supplicant.conf, ifupdown hooks,
+    DBus config, systemd service (disabled by default), AppArmor profile,
+    volatile directory config.
+
+ -- Ben Wang <benw@qti.qualcomm.com>  Mon, 28 Apr 2026 00:00:00 +0800
