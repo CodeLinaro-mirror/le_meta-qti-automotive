@@ -34,6 +34,8 @@ MISSING_RECIPE_SRCLIST:append:sa7255 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY020
 
 # Missing recipes globally
 MISSING_RECIPE_SRCLIST += "\
+    meta-qti-automotive/recipes-bsp/abctl/abctl_1.0.bb \
+    meta-qti-automotive/recipes-bsp/libgpt/libgpt_1.0.bb \
     meta-qti-automotive/recipes-audio/agm/agm_git.bb \
     meta-qti-automotive/recipes-audio/agm-alsa-plugin/agm-alsa-plugin_git.bb \
     meta-qti-automotive/recipes-audio/agm_client/agm-client_git.bb \
@@ -65,8 +67,6 @@ MISSING_RECIPE_SRCLIST += "\
 
 # Missing recipes in baseline LY.AU.0.1.1 (used by gen5)
 MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
-    meta-qti-automotive/recipes-connectivity/synergy-opensource/csrspp-tty_git.bb \
-    meta-qti-automotive/recipes-connectivity/synergy-opensource/synergy-opensource_git.bb \
     meta-qti-automotive/recipes-wlan/wlan-platform-dlkm/wlan-platform-dlkm_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-genoa_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hasting-cnss0_git.bb \

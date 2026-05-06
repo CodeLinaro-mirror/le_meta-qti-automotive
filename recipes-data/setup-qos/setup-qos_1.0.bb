@@ -12,6 +12,7 @@ SRC_URI:gen5 = "\
     file://setup_eth1.service \
     file://config.ini \
     file://setup_eth.sh \
+    file://net.conf \
 "
 
 SRC_URI = "\
@@ -36,6 +37,8 @@ do_install:gen5() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/setup_eth0.service ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/setup_eth1.service ${D}${systemd_unitdir}/system/
+
+    install -D -m 644 ${WORKDIR}/net.conf ${D}${sysconfdir}/tmpfiles.d/net.conf
   fi
 }
 

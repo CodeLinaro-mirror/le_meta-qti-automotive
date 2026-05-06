@@ -166,10 +166,12 @@ merge_ddr_dtbos_single () {
             for i in $ddr_sizes; do
                ddr_size=$(echo $i | sed 's,:.*,,g')
                ddr_type=$(echo $i | sed 's,.*:,,g')
-               if [[ "$dtbo_file" == *"$ddr_size"* ]]; then
-                  subtype="$ddr_type"
-                  break
-               fi
+               case "$dtbo_file" in
+                  *"$ddr_size"*)
+                      subtype="$ddr_type"
+                      break
+                      ;;
+               esac
             done
 
             fdtoverlay -i $dtb_file -o ${out_dir}/${out_dtb} -v $dtbo_file

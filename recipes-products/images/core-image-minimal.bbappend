@@ -1,4 +1,7 @@
-IMAGE_INSTALL += "kernel-modules"
+IMAGE_INSTALL += "\
+    kernel-modules \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'ab-boot-support', 'abctl ab-status-updater', '', d)} \
+"
 
 EXTRA_IMAGECMD:ext4 = "-i 4096 -b 4096"
 

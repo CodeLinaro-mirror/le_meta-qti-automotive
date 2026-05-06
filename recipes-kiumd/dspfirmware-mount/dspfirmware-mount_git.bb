@@ -14,6 +14,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
 SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
+SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', ' bluetooth.automount bluetooth.mount', '', d)}"
 
 SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm.automount firmware-vm-boot-autoghgvm.mount', '', d)}"
 
@@ -53,11 +54,6 @@ do_install:append() {
 
         install -m 0755 ${S}/bluetooth.mount -D ${D}${systemd_unitdir}/system/bluetooth.mount
         install -m 0755 ${S}/bluetooth.automount -D ${D}${systemd_unitdir}/system/bluetooth.automount
-
-        ln -sf ${systemd_unitdir}/system/bluetooth.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.mount
-        ln -sf ${systemd_unitdir}/system/bluetooth.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.automount
     fi
 
     if [ -f ${S}/99-persist-storage-ab.rules ]; then
