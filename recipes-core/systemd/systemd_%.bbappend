@@ -101,8 +101,8 @@ do_install:append () {
     # Create a symlink to the touchscreen input device via USB1
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
         echo '# Create a symlink to the touchscreen input device or the mouse input device via USB1' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
-        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}!="1", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
-        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{ID_INPUT_MOUSE}!="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}!="1", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN", TAG+="touchscreen"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
+        echo 'SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{ID_INPUT_MOUSE}!="1", ENV{ID_BUS}=="usb", DEVPATH=="*usb1*", SYMLINK+="input/usb1_touchscreen0", TAG+="systemd", ATTRS{name}!="* UNKNOWN", TAG+="touchscreen"' >> ${D}${sysconfdir}/udev/rules.d/touchscreen.rules
     fi
 
     #Remove privatetmp=true from hostname service
