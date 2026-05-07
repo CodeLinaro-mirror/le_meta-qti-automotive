@@ -1,7 +1,8 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI:append = " file://blacklist.conf"
+BLACKLIST_FILE = "${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "blacklist_gvm.conf", "blacklist.conf", d)}"
+SRC_URI:append = " file://${BLACKLIST_FILE}"
 
 do_install:append () {
-    install -Dm644 "${WORKDIR}/blacklist.conf" "${D}${sysconfdir}/modprobe.d/blacklist.conf"
+    install -Dm644 "${WORKDIR}/${BLACKLIST_FILE}" "${D}${sysconfdir}/modprobe.d/blacklist.conf"
 }
