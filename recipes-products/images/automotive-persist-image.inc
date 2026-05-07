@@ -52,6 +52,8 @@ populate_persist_usr() {
     PERSIST_IMAGE_ROOTFS="${TMPDIR}/rootfs/${PERSIST_IMAGE_BASENAME}"
     mv ${IMAGE_ROOTFS}/var/* ${PERSIST_IMAGE_ROOTFS}
     USR_IMAGE_ROOTFS="${TMPDIR}/rootfs/${USR_IMAGE_BASENAME}"
-    [ -e ${IMAGE_ROOTFS}/home/ ] && cp -rpP ${IMAGE_ROOTFS}/home/* ${USR_IMAGE_ROOTFS}
-    /bin/sync
+    if [ -d ${IMAGE_ROOTFS}/home ] && ["$(ls -A ${IMAGE_ROOTFS}/home) 2>/dev/null"]; then
+        cp -rpP ${IMAGE_ROOTFS}/home/* ${USR_IMAGE_ROOTFS}
+        /bin/sync
+    fi
 }
