@@ -1,8 +1,8 @@
 SUMMARY = "Graphics drivers"
 DESCRIPTION = "Build graphics drivers to kernel module"
 HOMEPAGE = "https://git.codelinaro.org/"
-LICENSE = "GPL-2.0 WITH Linux-syscall-note"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
+LICENSE = "GPLv2.0-with-linux-syscall-note"
+LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=8afb6abdac9a14cb18a0d6c9c151e9b4"
 
 DEPENDS += "graphics-devicetree"
 
