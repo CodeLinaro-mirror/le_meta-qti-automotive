@@ -12,10 +12,10 @@ LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=f3b90e78ea0cffb20bf5cca7947a896d"
 
 PR = "r8"
-SRC_URI = "${PATH_TO_REPO}/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=wlan/qcacld-3.0;usehead=1 \
-           ${PATH_TO_REPO}/wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=wlan/qca-wifi-host-cmn;usehead=1 \
-           ${PATH_TO_REPO}/wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=wlan/fw-api/;usehead=1 \
-           ${PATH_TO_REPO}/device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=device/qcom/wlan;usehead=1 \
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=${TARGET_DIR}wlan/qcacld-3.0;usehead=1 \
+           ${PATH_TO_REPO}/${TARGET_DIR}wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=${TARGET_DIR}wlan/qca-wifi-host-cmn;usehead=1 \
+           ${PATH_TO_REPO}/${TARGET_DIR}wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=${TARGET_DIR}wlan/fw-api/;usehead=1 \
+           ${PATH_TO_REPO}/${TARGET_DIR}device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=${TARGET_DIR}device/qcom/wlan;usehead=1 \
            file://qca6390-module-load.service \
            file://qca6390_load.sh \
            file://qca6390_unload.sh \
@@ -30,8 +30,8 @@ _MODNAME = "qca6390"
 FW_PATH_NAME = "qca6390"
 FIRMWARE_PATH = "${D}${nonarch_base_libdir}/firmware/wlan/qca_cld/${_MODNAME}"
 
-S1 = "${WORKDIR}/wlan/qca-wifi-host-cmn"
-S = "${WORKDIR}/wlan/qcacld-3.0"
+S1 = "${WORKDIR}/${TARGET_DIR}wlan/qca-wifi-host-cmn"
+S = "${WORKDIR}/${TARGET_DIR}wlan/qcacld-3.0"
 
 inherit systemd
 
@@ -112,8 +112,8 @@ EXTRA_OEMAKE:append:quin-gvm-lemans = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE_G
 EXTRA_OEMAKE:append:quin-gvm-monaco = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE_GVM}"
 
 do_configure:append() {
-    sed -i -e 's/^gEnableConcurrentSTA=wlan1/gEnableConcurrentSTA=wlan3/g' ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini
-    sed -i '1 i\host_log_custom_nl_proto=1' ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini
+    sed -i -e 's/^gEnableConcurrentSTA=wlan1/gEnableConcurrentSTA=wlan3/g' ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini
+    sed -i '1 i\host_log_custom_nl_proto=1' ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini
 }
 
 SYSTEMD_SERVICE:${PN} = "qca6390-module-load.service"
@@ -131,8 +131,8 @@ do_install() {
     install -d ${WLAN_KO}/wlan
     install -m 0644 ${S}/${_MODNAME}.ko ${WLAN_KO}/wlan/
 
-    install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
-    install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/wlan_mac_hst_2.bin ${FIRMWARE_PATH}/wlan_mac.bin
+    install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6390.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
+    install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/wlan_mac_hst_2.bin ${FIRMWARE_PATH}/wlan_mac.bin
     install -d ${D}${bindir}
     install -D -m 0755 ${WORKDIR}/qca6390_load.sh ${D}${bindir}/qca6390_load.sh
     install -D -m 0755 ${WORKDIR}/qca6390_load.sh ${D}${bindir}/qca6390_unload.sh
