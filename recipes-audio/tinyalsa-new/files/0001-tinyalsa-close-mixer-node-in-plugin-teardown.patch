@@ -1,0 +1,35 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From ad726b08def666a205f60727d55ef5919359ed02 Mon Sep 17 00:00:00 2001
+From: Hugh Guan <hhguan@qti.qualcomm.com>
+Date: Fri, 8 May 2026 14:08:59 -0700
+Subject: [PATCH] tinyalsa: close mixer node in plugin teardown
+
+Keeps open/close symmetry in mixer plugin lifecycle and fix
+plugin mixer close path to release the node opened by.
+
+Change-Id: I531936faade7c260ddcb4303bf23d4378c5b8274
+Signed-off-by: Hugh Guan <hhguan@qti.qualcomm.com>
+---
+ src/mixer_plugin.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/mixer_plugin.c b/src/mixer_plugin.c
+index a07b8f6..342cf89 100644
+--- a/src/mixer_plugin.c
++++ b/src/mixer_plugin.c
+@@ -347,6 +347,8 @@ static void mixer_plug_close(void *data)
+ 
+     plug_data->ops->close(&plugin);
+     dlclose(plug_data->dl_hdl);
++    snd_utils_close_dev_node(plug_data->mixer_node);
++    plug_data->mixer_node = NULL;
+ 
+     free(plug_data);
+     plug_data = NULL;
+-- 
+2.34.1
+
