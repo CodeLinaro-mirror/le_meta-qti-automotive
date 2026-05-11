@@ -55,19 +55,6 @@ check_interface_status() {
 
 print_usage() {
     echo "
-Modes supported: setup_eth.sh has two pre-defined modes which can be enabled using below commands
-	1) default_qos Mode (Default mode at boot up)
-	2) perf_qos Mode (Needs to be enabled when running performance use cases)
-
-Switching from one mode to another:
-	eth0 interface:
-		1) "/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini del eth0" <- To delete the exisiting rules
-		2) "/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini default_qos/perf_qos eth0"  <- To install new rules
-
-	eth1 interface:
-		1) "/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini del eth1" <- To delete the exisiting rules
-		2) "/etc/initscripts/setup_eth.sh /etc/initscripts/config.ini default_qos/perf_qos eth1"  <- To install new rules
-
 Usage:
 	/etc/initscripts/setup_eth.sh (--help / help / h)
 
@@ -75,12 +62,33 @@ Usage:
 
         /etc/initscripts/setup_eth.sh /etc/initscripts/config.ini del <dev>
 
-        /etc/initscripts/setup_eth.sh /etc/initscripts/config.ini default_qos/perf_qos <dev>
+        /etc/initscripts/setup_eth.sh /etc/initscripts/config.ini add <dev>
+
+          EMAC VDMA/PDMA to Traffic Class (TC) Mapping Configuration:
+          Transmit:
+          - VDMA0,1,2,3 <-> TC0 <-> PDMA0 (Best Effort)
+          - VDMA4 <-> TC1 <-> PDMA1 (PTP)
+          - VDMA5 <-> TC2 <-> PDMA2 (Class B)
+          - VDMA6 <-> TC3 <-> PDMA3 (Class A)
+          - VDMA7 <-> TC4 <-> PDMA4 (VLAN PCP)
+          - VDMA8 <-> TC5 <-> PDMA5 (VLAN PCP)
+          - VDMA9 <-> TC6 <-> PDMA6,7,8,9 (VLAN PCP)
+          - VDMA10 <-> TC7 <-> PDMA10 (ADSP)
+          - VDMA11 <-> TC7 <-> PDMA11 (ADSP)
+          Receive:
+          - PDMA0 <-> TC0 <-> VDMA0 (Best Effort)
+          - PDMA1 <-> TC1 <-> VDMA1 (PTP)
+          - PDMA2 <-> TC2 <-> VDMA2 (AVCPQ)
+          - PDMA3 <-> TC3 <-> VDMA3 (Class A/B)
+          - PDMA4 <-> TC4 <-> VDMA4
+          - PDMA5 <-> TC5 <-> VDMA5
+          - PDMA6,7,8,9 <-> TC6 <-> VDMA6,7,8,9
+          - PDMA10 <-> TC7 <-> VDMA10 (ADSP)
+          - PDMA11 <-> TC7 <-> VDMA11 (ADSP)
 
 Note:
 	During the 'del' operation, the VLAN interface (e.g., eth0.2) will be DELETED.
-	It will be recreated automatically when you install 'perf_qos' or 'default_qos' back.
-    "
+	"
 }
 
 del_tc_eth0() {
@@ -152,139 +160,7 @@ del_tc_eth1() {
 	fi
 }
 
-add_default_tc_eth0() {
-	local interface="$1"
-
-	if ! check_interface_status $interface; then
-		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
-		exit 0
-	fi
-	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues $queue_map0 hw 0
-	tc qdisc add dev $interface clsact
-	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
-	tc filter add dev $interface egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
-	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id0 vlan_prio $pcp0_value0 action skbedit priority $skb0_priority0
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id0 vlan_prio $pcp1_value0 action skbedit priority $skb1_priority0
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id0 vlan_prio $pcp2_value0 action skbedit priority $skb2_priority0
-	if [ $q2_idle_slope0 -ne 0 ] && [ $q2_send_slope0 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q2_cbs_handle0 parent $mqprio_handle0:3 cbs idleslope $q2_idle_slope0 sendslope $q2_send_slope0 hicredit $q2_hicredit0 locredit $q2_locredit0 offload 1
-	fi
-	if [ $q3_idle_slope0 -ne 0 ] && [ $q3_send_slope0 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q3_cbs_handle0 parent $mqprio_handle0:4 cbs idleslope $q3_idle_slope0 sendslope $q3_send_slope0 hicredit $q3_hicredit0 locredit $q3_locredit0 offload 1
-	fi
-	if [ $q4_idle_slope0 -ne 0 ] && [ $q4_send_slope0 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q4_cbs_handle0 parent $mqprio_handle0:5 cbs idleslope $q4_idle_slope0 sendslope $q4_send_slope0 hicredit $q4_hicredit0 locredit $q4_locredit0 offload 1
-	fi
-	if [ $q5_q6_idle_slope0 -ne 0 ] && [ $q5_q6_send_slope0 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q5_q6_cbs_handle0 parent $mqprio_handle0:6 cbs idleslope $q5_q6_idle_slope0 sendslope $q5_q6_send_slope0 hicredit $q5_q6_hicredit0 locredit $q5_q6_locredit0 offload 1
-	fi
-	if [ $q7_q8_q9_idle_slope0 -ne 0 ] && [ $q7_q8_q9_send_slope0 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q7_q8_q9_cbs_handle0 parent $mqprio_handle0:7 cbs idleslope $q7_q8_q9_idle_slope0 sendslope $q7_q8_q9_send_slope0 hicredit $q7_q8_q9_hicredit0 locredit $q7_q8_q9_locredit0 offload 1
-	fi
-	if [ "$tbs_enabled0" -eq 1 ];
-	then
-		tc qdisc replace dev $interface handle $q2_etf_handle0 parent $q2_cbs_handle0:3 etf clockid CLOCK_TAI delta $q2_delta0 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q3_etf_handle0 parent $q3_cbs_handle0:4 etf clockid CLOCK_TAI delta $q3_delta0 offload skip_sock_check deadline_mode
-	fi
-	if [ "$eavb_vlan_id0" -ne 0 ];
-	then
-		vconfig add $interface $eavb_vlan_id0
-		ifconfig $interface.$eavb_vlan_id0 up
-	fi
-	if [ $l4_port0 -ne 0 ] && [ -n "$protocol0" ];
-	then
-		if [ $is_src0 -eq 1 ];
-		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 src_port $l4_port0 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 dst_port $l4_port0 action drop
-		fi
-	fi
-	if [ -n "$l3_ip_address0" ];
-	then
-		if [ $is_src0 -eq 1 ];
-		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address0 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address0 action drop
-		fi
-	fi
-}
-
-add_default_tc_eth1() {
-	local interface="$1"
-
-	if ! check_interface_status $interface; then
-		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
-		exit 0
-	fi
-	tc qdisc add dev $interface handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues $queue_map1 hw 0
-	tc qdisc add dev $interface clsact
-	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 1
-	tc filter add dev $interface egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 2
-	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 3
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id1 vlan_prio $pcp0_value1 action skbedit priority $skb0_priority1
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id1 vlan_prio $pcp1_value1 action skbedit priority $skb1_priority1
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id1 vlan_prio $pcp2_value1 action skbedit priority $skb2_priority1
-	if [ $q2_idle_slope1 -ne 0 ] && [ $q2_send_slope1 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q2_cbs_handle1 parent $mqprio_handle1:3 cbs idleslope $q2_idle_slope1 sendslope $q2_send_slope1 hicredit $q2_hicredit1 locredit $q2_locredit1 offload 1
-	fi
-	if [ $q3_idle_slope1 -ne 0 ] && [ $q3_send_slope1 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q3_cbs_handle1 parent $mqprio_handle1:4 cbs idleslope $q3_idle_slope1 sendslope $q3_send_slope1 hicredit $q3_hicredit1 locredit $q3_locredit1 offload 1
-	fi
-	if [ $q4_idle_slope1 -ne 0 ] && [ $q4_send_slope1 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q4_cbs_handle1 parent $mqprio_handle1:5 cbs idleslope $q4_idle_slope1 sendslope $q4_send_slope1 hicredit $q4_hicredit1 locredit $q4_locredit1 offload 1
-	fi
-	if [ $q5_q6_idle_slope1 -ne 0 ] && [ $q5_q6_send_slope1 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q5_q6_cbs_handle1 parent $mqprio_handle1:6 cbs idleslope $q5_q6_idle_slope1 sendslope $q5_q6_send_slope1 hicredit $q5_q6_hicredit1 locredit $q5_q6_locredit1 offload 1
-	fi
-	if [ $q7_q8_q9_idle_slope1 -ne 0 ] && [ $q7_q8_q9_send_slope1 -ne 0 ];
-	then
-		tc qdisc replace dev $interface handle $q7_q8_q9_cbs_handle1 parent $mqprio_handle1:7 cbs idleslope $q7_q8_q9_idle_slope1 sendslope $q7_q8_q9_send_slope1 hicredit $q7_q8_q9_hicredit1 locredit $q7_q8_q9_locredit1 offload 1
-	fi
-	if [ "$tbs_enabled1" -eq 1 ];
-	then
-		tc qdisc replace dev $interface handle $q2_etf_handle1 parent $q2_cbs_handle1:3 etf clockid CLOCK_TAI delta $q2_delta1 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q3_etf_handle1 parent $q3_cbs_handle1:4 etf clockid CLOCK_TAI delta $q3_delta1 offload skip_sock_check deadline_mode
-	fi
-	if [ "$eavb_vlan_id1" -ne 0 ];
-	then
-		vconfig add $interface $eavb_vlan_id1
-		ifconfig $interface.$eavb_vlan_id1 up
-	fi
-	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
-	then
-		if [ $is_src1 -eq 1 ];
-		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 src_port $l4_port1 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 dst_port $l4_port1 action drop
-		fi
-
-	fi
-	if [ -n "$l3_ip_address1" ];
-	then
-		if [ $is_src1 -eq 1 ];
-		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address1 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address1 action drop
-		fi
-
-	fi
-}
-
-add_perf_tc_eth0() {
+add_tc_eth0() {
 	local interface="$1"
 
 	if ! check_interface_status $interface; then
@@ -296,26 +172,38 @@ add_perf_tc_eth0() {
 	ethtool -C $interface tx-frames 128 > /dev/null 2>&1
 	# Enable Receive Packet Steering on eth0 RX queue 0 and map it to CPUs 0–5
 	echo 3f000 > /sys/class/net/$interface/queues/rx-0/rps_cpus
-	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
+	tc qdisc add dev $interface handle $mqprio_handle0: parent root mqprio num_tc $num_tc0 map $mqprio_map0 queues $queue_map0 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4
 	tc filter add dev $interface egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 5
 	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 6
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id0 vlan_prio $pcp0_value0 action skbedit priority 5
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id0 vlan_prio $pcp1_value0 action skbedit priority 6
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id0 vlan_prio $pcp2_value0 action skbedit priority 7
-	if [ $q5_q6_idle_slope0_perf -ne 0 ] && [ $q5_q6_send_slope0_perf -ne 0 ];
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id0 vlan_prio $pcp0_value0 action skbedit priority $skb0_priority0
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id0 vlan_prio $pcp1_value0 action skbedit priority $skb1_priority0
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id0 vlan_prio $pcp2_value0 action skbedit priority $skb2_priority0
+	if [ $vdma5_q2_idle_slope0 -ne 0 ] && [ $vdma5_q2_send_slope0 -ne 0 ];
 	then
-		tc qdisc replace dev $interface handle $q5_q6_cbs_handle0 parent $mqprio_handle0:6 cbs idleslope $q5_q6_idle_slope0_perf sendslope $q5_q6_send_slope0_perf hicredit $q5_q6_hicredit0_perf locredit $q5_q6_locredit0_perf offload 1
+		tc qdisc replace dev $interface handle $vdma5_q2_cbs_handle0 parent $mqprio_handle0:6 cbs idleslope $vdma5_q2_idle_slope0 sendslope $vdma5_q2_send_slope0 hicredit $vdma5_q2_hicredit0 locredit $vdma5_q2_locredit0 offload 1
 	fi
-	if [ $q7_q8_q9_idle_slope0 -ne 0 ] && [ $q7_q8_q9_send_slope0 -ne 0 ];
+	if [ $vdma6_q3_idle_slope0 -ne 0 ] && [ $vdma6_q3_send_slope0 -ne 0 ];
 	then
-		tc qdisc replace dev $interface handle $q7_q8_q9_cbs_handle0 parent $mqprio_handle0:7 cbs idleslope $q7_q8_q9_idle_slope0 sendslope $q7_q8_q9_send_slope0 hicredit $q7_q8_q9_hicredit0 locredit $q7_q8_q9_locredit0 offload 1
+		tc qdisc replace dev $interface handle $vdma6_q3_cbs_handle0 parent $mqprio_handle0:7 cbs idleslope $vdma6_q3_idle_slope0 sendslope $vdma6_q3_send_slope0 hicredit $vdma6_q3_hicredit0 locredit $vdma6_q3_locredit0 offload 1
+	fi
+	if [ $vdma7_q4_idle_slope0 -ne 0 ] && [ $vdma7_q4_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma7_q4_cbs_handle0 parent $mqprio_handle0:8 cbs idleslope $vdma7_q4_idle_slope0 sendslope $vdma7_q4_send_slope0 hicredit $vdma7_q4_hicredit0 locredit $vdma7_q4_locredit0 offload 1
+	fi
+	if [ $vdma8_q5_idle_slope0 -ne 0 ] && [ $vdma8_q5_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma8_q5_cbs_handle0 parent $mqprio_handle0:9 cbs idleslope $vdma8_q5_idle_slope0 sendslope $vdma8_q5_send_slope0 hicredit $vdma8_q5_hicredit0 locredit $vdma8_q5_locredit0 offload 1
+	fi
+	if [ $vdma9_q6_q7_q8_q9_idle_slope0 -ne 0 ] && [ $vdma9_q6_q7_q8_q9_send_slope0 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma9_q6_q7_q8_q9_cbs_handle0 parent $mqprio_handle0:a cbs idleslope $vdma9_q6_q7_q8_q9_idle_slope0 sendslope $vdma9_q6_q7_q8_q9_send_slope0 hicredit $vdma9_q6_q7_q8_q9_hicredit0 locredit $vdma9_q6_q7_q8_q9_locredit0 offload 1
 	fi
 	if [ "$tbs_enabled0" -eq 1 ];
 	then
-		tc qdisc replace dev $interface handle $q5_etf_handle0 parent $q5_q6_cbs_handle0:6 etf clockid CLOCK_TAI delta $q5_delta0 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q6_etf_handle0 parent $mqprio_handle0:7 etf clockid CLOCK_TAI delta $q6_delta0 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $vdma5_q2_etf_handle0 parent $vdma5_q2_cbs_handle0:6 etf clockid CLOCK_TAI delta $vdma5_q2_delta0 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $vdma6_q3_etf_handle0 parent $vdma6_q3_cbs_handle0:7 etf clockid CLOCK_TAI delta $vdma6_q3_delta0 offload skip_sock_check deadline_mode
 	fi
 	if [ "$eavb_vlan_id0" -ne 0 ];
 	then
@@ -342,33 +230,45 @@ add_perf_tc_eth0() {
 	fi
 }
 
-add_perf_tc_eth1() {
+add_tc_eth1() {
 	local interface="$1"
 
 	if ! check_interface_status $interface; then
 		echo "Failed to bring up interface $interface, skipping configuration" > $DUMP_TO_KMSG
 		exit 0
 	fi
-	tc qdisc add dev $interface handle $mqprio_handle1: parent root mqprio num_tc 7 map 0 2 1 2 3 4 5 6 6 3 4 5 1 2 3 6 queues 4@0 1@4 1@5 1@6 1@7 1@8 1@9 hw 0
+	tc qdisc add dev $interface handle $mqprio_handle1: parent root mqprio num_tc $num_tc1 map $mqprio_map1 queues $queue_map1 hw 0
 	tc qdisc add dev $interface clsact
 	tc filter add dev $interface egress prio 0 u32 match u16 0x88f7 0xffff at -2 action skbedit queue_mapping 4
 	tc filter add dev $interface egress prio 0 u32 match u32 0x400222f0 0xffffffff at -4 action skbedit queue_mapping 5
 	tc filter add dev $interface egress prio 0 u32 match u32 0x600222f0 0xffffffff at -4 action skbedit queue_mapping 6
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id1 vlan_prio $pcp0_value1 action skbedit priority 5
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id1 vlan_prio $pcp1_value1 action skbedit priority 6
-	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id1 vlan_prio $pcp2_value1 action skbedit priority 7
-	if [ $q5_q6_idle_slope1_perf -ne 0 ] && [ $q5_q6_send_slope1_perf -ne 0 ];
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan0_id1 vlan_prio $pcp0_value1 action skbedit priority $skb0_priority1
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan1_id1 vlan_prio $pcp1_value1 action skbedit priority $skb1_priority1
+	tc filter add dev $interface egress protocol 802.1q flower vlan_id $vlan2_id1 vlan_prio $pcp2_value1 action skbedit priority $skb2_priority1
+	if [ $vdma5_q2_idle_slope1 -ne 0 ] && [ $vdma5_q2_send_slope1 -ne 0 ];
 	then
-		tc qdisc replace dev $interface handle $q5_q6_cbs_handle1 parent $mqprio_handle1:6 cbs idleslope $q5_q6_idle_slope1_perf sendslope $q5_q6_send_slope1_perf hicredit $q5_q6_hicredit1_perf locredit $q5_q6_locredit1_perf offload 1
+		tc qdisc replace dev $interface handle $vdma5_q2_cbs_handle1 parent $mqprio_handle1:6 cbs idleslope $vdma5_q2_idle_slope1 sendslope $vdma5_q2_send_slope1 hicredit $vdma5_q2_hicredit1 locredit $vdma5_q2_locredit1 offload 1
 	fi
-	if [ $q7_q8_q9_idle_slope1 -ne 0 ] && [ $q7_q8_q9_send_slope1 -ne 0 ];
+	if [ $vdma6_q3_idle_slope1 -ne 0 ] && [ $vdma6_q3_send_slope1 -ne 0 ];
 	then
-		tc qdisc replace dev $interface handle $q7_q8_q9_cbs_handle1 parent $mqprio_handle1:7 cbs idleslope $q7_q8_q9_idle_slope1 sendslope $q7_q8_q9_send_slope1 hicredit $q7_q8_q9_hicredit1 locredit $q7_q8_q9_locredit1 offload 1
+		tc qdisc replace dev $interface handle $vdma6_q3_cbs_handle1 parent $mqprio_handle1:7 cbs idleslope $vdma6_q3_idle_slope1 sendslope $vdma6_q3_send_slope1 hicredit $vdma6_q3_hicredit1 locredit $vdma6_q3_locredit1 offload 1
+	fi
+	if [ $vdma7_q4_idle_slope1 -ne 0 ] && [ $vdma7_q4_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma7_q4_cbs_handle1 parent $mqprio_handle1:8 cbs idleslope $vdma7_q4_idle_slope1 sendslope $vdma7_q4_send_slope1 hicredit $vdma7_q4_hicredit1 locredit $vdma7_q4_locredit1 offload 1
+	fi
+	if [ $vdma8_q5_idle_slope1 -ne 0 ] && [ $vdma8_q5_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma8_q5_cbs_handle1 parent $mqprio_handle1:9 cbs idleslope $vdma8_q5_idle_slope1 sendslope $vdma8_q5_send_slope1 hicredit $vdma8_q5_hicredit1 locredit $vdma8_q5_locredit1 offload 1
+	fi
+	if [ $vdma9_q6_q7_q8_q9_idle_slope1 -ne 0 ] && [ $vdma9_q6_q7_q8_q9_send_slope1 -ne 0 ];
+	then
+		tc qdisc replace dev $interface handle $vdma9_q6_q7_q8_q9_cbs_handle1 parent $mqprio_handle1:a cbs idleslope $vdma9_q6_q7_q8_q9_idle_slope1 sendslope $vdma9_q6_q7_q8_q9_send_slope1 hicredit $vdma9_q6_q7_q8_q9_hicredit1 locredit $vdma9_q6_q7_q8_q9_locredit1 offload 1
 	fi
 	if [ "$tbs_enabled1" -eq 1 ];
 	then
-		tc qdisc replace dev $interface handle $q5_etf_handle1 parent $q5_q6_cbs_handle1:6 etf clockid CLOCK_TAI delta $q5_delta1 offload skip_sock_check deadline_mode
-		tc qdisc replace dev $interface handle $q6_etf_handle1 parent $mqprio_handle1:7 etf clockid CLOCK_TAI delta $q6_delta1 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $vdma5_q2_etf_handle1 parent $vdma5_q2_cbs_handle1:6 etf clockid CLOCK_TAI delta $vdma5_q2_delta1 offload skip_sock_check deadline_mode
+		tc qdisc replace dev $interface handle $vdma6_q3_etf_handle1 parent $vdma6_q3_cbs_handle1:7 etf clockid CLOCK_TAI delta $vdma6_q3_delta1 offload skip_sock_check deadline_mode
 	fi
 	if [ "$eavb_vlan_id1" -ne 0 ];
 	then
@@ -433,28 +333,15 @@ main() {
             print_usage
             return 255
         fi
-    elif [ "$1" = "default_qos" ]
+    elif [ "$1" = "add" ]
     then
 	    shift
 		if [ "$1" = "eth0" ]
 		then
-            add_default_tc_eth0 "$1"
+            add_tc_eth0 "$1"
 	    elif [ "$1" = "eth1" ]
 		then
-            add_default_tc_eth1 "$1"
-        else
-            print_usage
-            return 255
-        fi
-	elif [ "$1" = "perf_qos" ]
-    then
-	    shift
-		if [ "$1" = "eth0" ]
-		then
-            add_perf_tc_eth0 "$1"
-	    elif [ "$1" = "eth1" ]
-		then
-            add_perf_tc_eth1 "$1"
+            add_tc_eth1 "$1"
         else
             print_usage
             return 255

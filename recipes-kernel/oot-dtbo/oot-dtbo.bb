@@ -18,9 +18,10 @@ EXTRA_OEMAKE += "KDIR=${STAGING_KERNEL_DIR}"
 CONFIG_ARCH ?= ""
 CONFIG_ARCH:sa7255 = "CONFIG_ARCH_SA7255=y"
 IS_QCLINUX_BUILD = "${@bb.utils.contains_any("PREFERRED_PROVIDER_virtual/kernel", "linux-qcom-custom linux-qcom-custom-rt", "QCLINUX_BUILD=true", "", d)}"
+IS_QCVIRTIO = "${@bb.utils.contains("DISTRO_FEATURES", "qti-qcvirtio", "QCVIRTIO=true", "", d)}"
 
 do_compile() {
-    make dtbos KDIR=${STAGING_KERNEL_DIR} O=${STAGING_KERNEL_BUILDDIR} ${CONFIG_ARCH} CC="${KERNEL_CC}" LD="${KERNEL_LD}" ${IS_QCLINUX_BUILD}
+    make dtbos KDIR=${STAGING_KERNEL_DIR} O=${STAGING_KERNEL_BUILDDIR} ${CONFIG_ARCH} CC="${KERNEL_CC}" LD="${KERNEL_LD}" ${IS_QCLINUX_BUILD} ${IS_QCVIRTIO}
 }
 
 do_merge_dtb() {
