@@ -76,8 +76,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-rome_git.bb \
     meta-qti-automotive/recipes-qcvirtio/ \
     meta-qti-automotive-prop/recipes-qcvirtio/ \
-    meta-qti-automotive/recipes-kernel/qcvirtio-uclk-driver-linux/qcvirtio-uclk-driver-linux_git.bb \
-    meta-qti-automotive/recipes-kernel/qcvirtio-uclk-driver-linux/qcvirtio-uclk-driver-linux-headers_git.bb \
 "
 
 # Missing recipes in baseline LY.AU.0.2.0 (used by sa8775/sa7255)
