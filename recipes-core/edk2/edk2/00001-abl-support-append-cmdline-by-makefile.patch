@@ -1,0 +1,101 @@
+From 62fe1dea007719d186d0db84ab41b47dacf6fafa Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Thu, 14 May 2026 18:07:01 +0800
+Subject: [PATCH] abl: support append cmdline by makefile variable
+
+To enable single-lv-gvm without softsku support, add mechanism to append 
+cmdline via makefile.
+
+Upstream-Status: Inappropriate [Workaround for missing softsku conf]
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Change-Id: If02833764d6d7498516a8ddbde7f825716f530a3
+---
+ QcomModulePkg/Include/Library/UpdateCmdLine.h |  3 +++
+ QcomModulePkg/Library/BootLib/UpdateCmdLine.c | 15 +++++++++++++++
+ QcomModulePkg/QcomModulePkg.dsc               |  3 +++
+ makefile                                      |  1 +
+ 4 files changed, 22 insertions(+)
+
+diff --git a/QcomModulePkg/Include/Library/UpdateCmdLine.h b/QcomModulePkg/Include/Library/UpdateCmdLine.h
+index c9edeb293c..5d88c12f02 100644
+--- a/QcomModulePkg/Include/Library/UpdateCmdLine.h
++++ b/QcomModulePkg/Include/Library/UpdateCmdLine.h
+@@ -122,6 +122,9 @@ typedef struct UpdateCmdLineParamList {
+ #ifdef SOC_OP_MODE_IN_CMDLINE
+   CHAR8 *SocOpModeCmdLine;
+ #endif
++#ifdef EXTRA_STATIC_CMDLINE
++  CHAR8 *ExtraStaticCmdLine;
++#endif
+ } UpdateCmdLineParamList;
+ 
+ 
+diff --git a/QcomModulePkg/Library/BootLib/UpdateCmdLine.c b/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
+index 55ed7bc325..dfd92d3a02 100644
+--- a/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
++++ b/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
+@@ -128,6 +128,9 @@ STATIC CHAR8 SocOpModeCmdLine[SOC_OP_MODE_MAX_LEN];
+ STATIC CONST CHAR8 *SocOpModes[] = {
+    "default", "commercial-grade", };
+ #endif
++#ifdef EXTRA_STATIC_CMDLINE
++STATIC CONST CHAR8 *ExtraStaticCmdLine = " " EXTRA_STATIC_CMDLINE;
++#endif
+ /* Display command line related structures */
+ #define MAX_DISPLAY_CMD_LINE 256
+ STATIC CHAR8 DisplayCmdLine[MAX_DISPLAY_CMD_LINE];
+@@ -909,6 +912,14 @@ UpdateCmdLineParams (UpdateCmdLineParamList *Param, CHAR8 **FinalCmdLine,
+     if (Src) {
+       AsciiStrCatS (Dst, MaxCmdLineLen, Src);
+     }
++#endif
++#ifdef EXTRA_STATIC_CMDLINE
++    {
++      Src = Param->ExtraStaticCmdLine;
++      if (Src) {
++        AsciiStrCatS (Dst, MaxCmdLineLen, Src);
++      }
++    }
+ #endif
+   }
+ 
+@@ -1690,6 +1701,10 @@ UpdateCmdLine (BootParamlist *BootParamlistPtr,
+     } else {
+       DEBUG ((EFI_D_VERBOSE, "Failed to get SOC Operation Mode info\n"));
+     }
++#endif
++#ifdef EXTRA_STATIC_CMDLINE
++  CmdLineLen += AsciiStrLen (ExtraStaticCmdLine);
++  Param.ExtraStaticCmdLine = (CHAR8 *)ExtraStaticCmdLine;
+ #endif
+   }
+ 
+diff --git a/QcomModulePkg/QcomModulePkg.dsc b/QcomModulePkg/QcomModulePkg.dsc
+index cbbc141578..f28a30a7c4 100644
+--- a/QcomModulePkg/QcomModulePkg.dsc
++++ b/QcomModulePkg/QcomModulePkg.dsc
+@@ -223,6 +223,9 @@
+   !if $(FLASHING_LOCK_WITHOUT_MISC_PART) == 1
+       GCC:*_*_*_CC_FLAGS = -DFLASHING_LOCK_WITHOUT_MISC_PART
+   !endif
++  !ifdef $(EXTRA_STATIC_CMDLINE)
++      GCC:*_*_*_CC_FLAGS = -DEXTRA_STATIC_CMDLINE='"$(EXTRA_STATIC_CMDLINE)"'
++  !endif
+ 
+ [PcdsFixedAtBuild.common]
+ 
+diff --git a/makefile b/makefile
+index a8f9053189..15a399e617 100644
+--- a/makefile
++++ b/makefile
+@@ -390,6 +390,7 @@ ABL_FV_IMG: $(EDK_TOOLS_PATH_MARK_FILE)
+ 	-D QSPA_BOOTCONFIG_ENABLE=$(QSPA_BOOTCONFIG_ENABLE) \
+ 	-D SOC_OP_MODE_IN_CMDLINE=$(SOC_OP_MODE_IN_CMDLINE) \
+ 	-D FLASHING_LOCK_WITHOUT_MISC_PART=$(FLASHING_LOCK_WITHOUT_MISC_PART) \
++	$(if $(EXTRA_STATIC_CMDLINE),-D EXTRA_STATIC_CMDLINE=$(EXTRA_STATIC_CMDLINE)) \
+ 	-j build_modulepkg.log $*
+ 
+ 	cp $(BUILD_ROOT)/FV/FVMAIN_COMPACT.Fv $(ABL_FV_IMG)
+-- 
+2.34.1
+
