@@ -33,6 +33,11 @@ S = "${WORKDIR}/vendor/qcom/opensource/qcnode"
 
 inherit cmake
 
+# Force a clean build directory before every configure step.
+# This ensures CMake always performs a full recompilation from scratch,
+# preventing incremental build artifacts from hiding errors during gate compilation.
+do_configure[cleandirs] = "${B}"
+
 CFLAGS += "\
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} \
 "
@@ -99,4 +104,3 @@ FILES:${PN}-dev += "\
     ${includedir}/* \
     ${libdir}/cmake \
 "
-
