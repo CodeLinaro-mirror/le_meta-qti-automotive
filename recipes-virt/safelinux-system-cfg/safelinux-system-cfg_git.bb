@@ -28,6 +28,7 @@ do_compile[noexec] = "1"
 do_install:append() {
     install -m 0755 ${S}/modules-autoload-config/i2cdev.conf -D ${D}${libdir}/modules-load.d/i2cdev.conf
     install -m 0755 ${S}/modules-autoload-config/spidev.conf -D ${D}${libdir}/modules-load.d/spidev.conf
+    install -m 0755 ${S}/modules-autoload-config/pinctrl_scmi.conf -D ${D}${libdir}/modules-load.d/pinctrl_scmi.conf
     install -m 0755 ${WORKDIR}/vfio.conf -D ${D}${libdir}/modules-load.d/vfio.conf
     install -m 0755 ${WORKDIR}/vfio_param.conf -D ${D}${sysconfdir}/modprobe.d/vfio.conf
 

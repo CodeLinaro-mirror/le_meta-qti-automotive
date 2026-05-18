@@ -142,7 +142,7 @@ merge_ddr_dtbos_single () {
             input_dtb=$(basename "$dtb_file")
             prefix1=$(echo "$input_dtb" | sed -e 's/-.*//')
 
-            if [ "$prefix1" = "sa8397p" ]; then
+            if [ "$prefix1" = "sa8397p" ] || [ "$prefix1" = "seca" ]; then
                 cp $dtb_file $out_dir
                 continue
             fi
@@ -166,10 +166,12 @@ merge_ddr_dtbos_single () {
             for i in $ddr_sizes; do
                ddr_size=$(echo $i | sed 's,:.*,,g')
                ddr_type=$(echo $i | sed 's,.*:,,g')
-               if [[ "$dtbo_file" == *"$ddr_size"* ]]; then
-                  subtype="$ddr_type"
-                  break
-               fi
+               case "$dtbo_file" in
+                  *"$ddr_size"*)
+                      subtype="$ddr_type"
+                      break
+                      ;;
+               esac
             done
 
             fdtoverlay -i $dtb_file -o ${out_dir}/${out_dtb} -v $dtbo_file

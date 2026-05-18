@@ -49,6 +49,7 @@ SYSTEMD_SERVICE:${PN} = "\
 
 SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = "\
     ${LV_SERVICES_LIST} \
+    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
 "
 
 SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = "\
@@ -105,6 +106,10 @@ do_install:append() {
 
 do_install:append:sa7255-ivi() {
     for service in ${LV_SERVICES_LIST}; do
+        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
+    done
+
+    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 }

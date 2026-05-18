@@ -1,0 +1,69 @@
+From 02250bae4aedde6107c225649d9c83cebdb4c4bd Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+Date: Thu, 31 Jul 2025 18:44:50 +0800
+Subject: [PATCH] gl-renderer: disable partial update
+
+Since partial update can't support semi-transparent/transparent
+background situation (especially under ivi-shell), disable this function
+and glclear framebuffer for every frame to avoid unexpected garbage.
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: Ib27535825e2bbe944bc05ea7a4f83cacaf5ac30d
+Signed-off-by: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+---
+ libweston/renderer-gl/egl-glue.c    | 13 +++++++++----
+ libweston/renderer-gl/gl-renderer.c |  6 ++++++
+ 2 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/libweston/renderer-gl/egl-glue.c b/libweston/renderer-gl/egl-glue.c
+index f6d7c487..57894c29 100644
+--- a/libweston/renderer-gl/egl-glue.c
++++ b/libweston/renderer-gl/egl-glue.c
+@@ -23,6 +23,10 @@
+  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  * SOFTWARE.
++ *
++ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+ #include "config.h"
+@@ -668,10 +672,11 @@ gl_renderer_setup_egl_extensions(struct weston_compositor *ec)
+ 	if (weston_check_egl_extension(extensions, "EGL_EXT_buffer_age"))
+ 		gr->has_egl_buffer_age = true;
+ 
+-	if (weston_check_egl_extension(extensions, "EGL_KHR_partial_update")) {
+-		assert(gr->set_damage_region);
+-		gr->has_egl_partial_update = true;
+-	}
++	/* Commented out this logic, since partial update can't work properly for transparent background */
++	// if (weston_check_egl_extension(extensions, "EGL_KHR_partial_update")) {
++	// 	assert(gr->set_damage_region);
++	// 	gr->has_egl_partial_update = true;
++	// }
+ 
+ 	for (i = 0; i < ARRAY_LENGTH(swap_damage_ext_to_entrypoint); i++) {
+ 		if (weston_check_egl_extension(extensions,
+diff --git a/libweston/renderer-gl/gl-renderer.c b/libweston/renderer-gl/gl-renderer.c
+index d9f42051..c5ca46c4 100644
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -2095,6 +2095,12 @@ gl_renderer_repaint_output(struct weston_output *output,
+ 			   go->area.width, go->area.height);
+ 	}
+ 
++	/* If partial update is disabled, clear all unknown regions */
++	if (!gr->has_egl_partial_update) {
++		glClearColor(0,0,0,0);
++		glClear(GL_COLOR_BUFFER_BIT);
++	}
++
+ 	/* In fan debug mode, redraw everything to make sure that we clear any
+ 	 * fans left over from previous draws on this buffer.
+ 	 * This precludes the use of EGL_EXT_swap_buffers_with_damage and
+-- 
+2.34.1
+

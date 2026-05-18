@@ -35,6 +35,7 @@ do_install:append() {
     install -d ${D}/${includedir}/dice
     install -d ${D}/${includedir}/dice/ops
     install -m 0644 ${S}/include/dice/dice.h ${D}${includedir}/dice/
+    install -m 0644 ${S}/include/dice/cbor_writer.h ${D}${includedir}/dice/
     install -m 0644 ${S}/include/dice/ops.h ${D}${includedir}/dice/
     install -m 0644 ${S}/include/dice/ops/clear_memory.h ${D}${includedir}/dice/ops
     install -m 0644 ${S}/include/dice/android.h ${D}${includedir}/dice/

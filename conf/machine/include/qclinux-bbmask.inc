@@ -34,7 +34,8 @@ MISSING_RECIPE_SRCLIST:append:sa7255 = " ${MISSING_RECIPE_SRCLIST_BASELINE_LY020
 
 # Missing recipes globally
 MISSING_RECIPE_SRCLIST += "\
-    meta-qti-automotive/recipes-audio/agm/agm_git.bb \
+    meta-qti-automotive/recipes-bsp/abctl/abctl_1.0.bb \
+    meta-qti-automotive/recipes-bsp/libgpt/libgpt_1.0.bb \
     meta-qti-automotive/recipes-audio/agm-alsa-plugin/agm-alsa-plugin_git.bb \
     meta-qti-automotive/recipes-audio/agm_client/agm-client_git.bb \
     meta-qti-automotive/recipes-audio/agm_server/agm-server_git.bb \
@@ -65,8 +66,6 @@ MISSING_RECIPE_SRCLIST += "\
 
 # Missing recipes in baseline LY.AU.0.1.1 (used by gen5)
 MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
-    meta-qti-automotive/recipes-connectivity/synergy-opensource/csrspp-tty_git.bb \
-    meta-qti-automotive/recipes-connectivity/synergy-opensource/synergy-opensource_git.bb \
     meta-qti-automotive/recipes-wlan/wlan-platform-dlkm/wlan-platform-dlkm_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-genoa_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hasting-cnss0_git.bb \
@@ -75,10 +74,21 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hmt_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hsp_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-rome_git.bb \
+    meta-qti-automotive/recipes-qcvirtio/virglrenderer/virglrenderer_1.1.0.bb \
+    meta-qti-automotive-prop/recipes-qcvirtio/qcvirtio-devices/qcvirtio-devices_git.bb \
 "
 
 # Missing recipes in baseline LY.AU.0.2.0 (used by sa8775/sa7255)
 MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
+    meta-qti-automotive/recipes-audio/agm/agm_git.bb \
+    meta-qti-automotive/recipes-audio/acdb/acdb_git.bb \
+    meta-qti-automotive/recipes-audio/ar-osal/ar-osal_git.bb \
+    meta-qti-automotive/recipes-audio/ar-util/ar-util_git.bb \
+    meta-qti-automotive/recipes-audio/ats/ats_git.bb \
+    meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
+    meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
+    meta-qti-automotive/recipes-audio/gsl/gsl_git.bb \
+    meta-qti-automotive/recipes-audio/spf/spf_git.bb \
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-multimedia/codec2/codec2-app_git.bb \

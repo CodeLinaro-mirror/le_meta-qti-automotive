@@ -14,6 +14,9 @@ S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
 SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
+SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', ' bluetooth.automount bluetooth.mount', '', d)}"
+
+SYSTEMD_SERVICE:${PN}:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm.automount firmware-vm-boot-autoghgvm.mount', '', d)}"
 
 do_compile[noexec] = "1"
 
@@ -45,21 +48,12 @@ do_install:append() {
             sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount
         fi
 
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvm.automount
-        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvm.mount
     fi
 
     if ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'true', 'false', d)}; then
 
         install -m 0755 ${S}/bluetooth.mount -D ${D}${systemd_unitdir}/system/bluetooth.mount
         install -m 0755 ${S}/bluetooth.automount -D ${D}${systemd_unitdir}/system/bluetooth.automount
-
-        ln -sf ${systemd_unitdir}/system/bluetooth.mount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.mount
-        ln -sf ${systemd_unitdir}/system/bluetooth.automount \
-            ${D}${systemd_unitdir}/system/multi-user.target.wants/bluetooth.automount
     fi
 
     if [ -f ${S}/99-persist-storage-ab.rules ]; then
@@ -112,8 +106,9 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass0_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass0_compute_cfg
     install -m 0755 ${S}/sa8797_hpass1_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass1_compute_cfg
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
+    install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.automount
+    install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.mount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount
 }
-
 FILES:${PN} += "${systemd_unitdir}/*"
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${libdir}/modules-load.d/*"
