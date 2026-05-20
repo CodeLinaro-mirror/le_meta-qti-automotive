@@ -9,6 +9,8 @@ ${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 SRC_URI = "\
     file://early_eth0.service \
     file://early_eth1.service \
+    file://early_eth0_sa7255.sh \
+    file://early_eth0_sa7255.service \
 "
 
 inherit systemd useradd
@@ -27,9 +29,19 @@ do_install:append:sa8775() {
     sed -i 's/^WantedBy=.*$/WantedBy=sysinit.target/' ${D}${systemd_unitdir}/system/early_eth1.service
 }
 
+do_install:append:sa7255() {
+    install -d ${D}${bindir}
+    install -m 0755 ${WORKDIR}/early_eth0_sa7255.sh ${D}${bindir}/early_eth0_sa7255.sh
+    install -m 0644 ${WORKDIR}/early_eth0_sa7255.service ${D}${systemd_unitdir}/system/early_eth0_sa7255.service
+}
+
 SYSTEMD_SERVICE:${PN} = "\
        early_eth0.service \
        early_eth1.service \
+"
+
+SYSTEMD_SERVICE:${PN}:sa7255 = "\
+       early_eth0_sa7255.service \
 "
 
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -37,4 +49,6 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 FILES:${PN} += "\
      ${systemd_unitdir}/system/early_eth0.service \
      ${systemd_unitdir}/system/early_eth1.service \
+     ${systemd_unitdir}/system/early_eth0_sa7255.service \
+     ${bindir}/early_eth0_sa7255.sh \
 "

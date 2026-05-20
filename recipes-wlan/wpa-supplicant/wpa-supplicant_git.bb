@@ -5,7 +5,7 @@ LICENSE = "BSD-2-Clause"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/external/wpa_supplicant_8/COPYING;md5=5ebcb90236d1ad640558c3d3cd3035df"
 
 DEPENDS += "dbus libnl openssl"
-SRC_URI = "${PATH_TO_REPO}/external/wpa_supplicant_8/.git;protocol=${PROTO};destsuffix=external/wpa_supplicant_8;usehead=1 \
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}external/wpa_supplicant_8/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}external/wpa_supplicant_8;usehead=1 \
            file://wpa_supplicant.conf-sane \
            file://defconfig-qcacld \
            file://wpa-supplicant.sh \
@@ -17,7 +17,7 @@ PR = "r5.2"
 SOLIBS = "*.so"
 FILES_SOLIBSDEV = ""
 
-S = "${WORKDIR}/external/wpa_supplicant_8/wpa_supplicant"
+S = "${WORKDIR}/${TARGET_DIR}external/wpa_supplicant_8/wpa_supplicant"
 
 inherit autotools-brokensep linux-kernel-base pkgconfig systemd
 
