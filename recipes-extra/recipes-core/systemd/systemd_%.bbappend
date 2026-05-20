@@ -19,6 +19,10 @@ SRC_URI:append = " \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0001-systemd-Remove-systemd-watchdog-ping-condition.patch', '', d)} \
 "
 
+SRC_URI:append:sa7255 = " \
+             file://0001-systemd-assign-prime-core-to-manager_dispatch_load_q.patch \
+"
+
 SRC_URI:append:gen5 = " \
              file://0001-systemd-add-mm-vfio-script-wait-in-systemd-init-proc.patch \
 "
