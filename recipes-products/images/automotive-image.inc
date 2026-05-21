@@ -39,4 +39,7 @@ TOOLCHAIN_TARGET_TASK:append = " kernel-devsrc ${PREFERRED_PROVIDER_virtual/kern
 # Add libgomp header
 TOOLCHAIN_TARGET_TASK:append = " libgomp-dev libgomp-staticdev"
 
+# This packages only provide header files that have not been RDPENDS into the final image, displayed as added to the SDK here
+TOOLCHAIN_TARGET_TASK:append = " ${@bb.utils.contains('COMBINED_FEATURES', 'qti-display', 'display-commonsys-intf-linux-dev', '', d)}"
+
 BAD_RECOMMENDATIONS += "rng-tools"
