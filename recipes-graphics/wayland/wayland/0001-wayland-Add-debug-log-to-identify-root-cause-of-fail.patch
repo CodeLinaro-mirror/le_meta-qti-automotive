@@ -1,0 +1,163 @@
+From d9620cccdc3c0bcafcaae5111dcb076cffeb5f8b Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+Date: Tue, 28 Apr 2026 19:34:19 +0800
+Subject: [PATCH] wayland: Add debug log to identify root cause of failed
+ connection
+
+When wl_display_connect() fails, we need debug log to be printed in
+journalctl for us to further debug, especially for stress test case
+(which we could almost only rely on journalctl log).
+
+Upstream-Status: Inappropriate [qti specific]
+
+Signed-off-by: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+---
+ src/wayland-client.c | 58 ++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 53 insertions(+), 5 deletions(-)
+
+diff --git a/src/wayland-client.c b/src/wayland-client.c
+index 105f9be..735d3c4 100644
+--- a/src/wayland-client.c
++++ b/src/wayland-client.c
+@@ -22,6 +22,11 @@
+  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  * SOFTWARE.
++ *
++ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
++
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
+  */
+ 
+ #define _GNU_SOURCE
+@@ -41,6 +46,7 @@
+ #include <fcntl.h>
+ #include <poll.h>
+ #include <pthread.h>
++#include <syslog.h>
+ 
+ #include "wayland-util.h"
+ #include "wayland-os.h"
+@@ -1091,6 +1097,20 @@ static const struct wl_display_listener display_listener = {
+ 	display_handle_delete_id
+ };
+ 
++/* Log to syslog so messages reach journald during stress tests where
++ * stderr is not captured.  openlog/closelog per call to pick up the
++ * calling process name from program_invocation_short_name. */
++static void __attribute__((format(printf, 1, 2)))
++wl_client_syslog(const char *fmt, ...)
++{
++	va_list argp;
++	va_start(argp, fmt);
++	openlog(program_invocation_short_name, LOG_PID | LOG_NDELAY, LOG_USER);
++	vsyslog(LOG_USER | LOG_ERR, fmt, argp);
++	closelog();
++	va_end(argp);
++}
++
+ static int
+ connect_to_socket(const char *name)
+ {
+@@ -1110,6 +1130,11 @@ connect_to_socket(const char *name)
+ 	runtime_dir = getenv("XDG_RUNTIME_DIR");
+ 	if (((!runtime_dir || runtime_dir[0] != '/') && !path_is_absolute)) {
+ 		wl_log("error: XDG_RUNTIME_DIR is invalid or not set in the environment.\n");
++		wl_client_syslog("error: XDG_RUNTIME_DIR is invalid or not set "
++		                 "(value=\"%s\", wayland_display=\"%s\", name=\"%s\")",
++		                 runtime_dir ? runtime_dir : "(null)",
++		                 getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(null)",
++		                 name);
+ 		/* to prevent programs reporting
+ 		 * "failed to create display: Success" */
+ 		errno = ENOENT;
+@@ -1117,8 +1142,10 @@ connect_to_socket(const char *name)
+ 	}
+ 
+ 	fd = wl_os_socket_cloexec(PF_LOCAL, SOCK_STREAM, 0);
+-	if (fd < 0)
++	if (fd < 0) {
++		wl_client_syslog("error: failed to create local socket: %s", strerror(errno));
+ 		return -1;
++	}
+ 
+ 	memset(&addr, 0, sizeof addr);
+ 	addr.sun_family = AF_LOCAL;
+@@ -1138,9 +1165,15 @@ connect_to_socket(const char *name)
+ 		if (!path_is_absolute) {
+ 			wl_log("error: socket path \"%s/%s\" plus null terminator"
+ 			       " exceeds %i bytes\n", runtime_dir, name, (int) sizeof(addr.sun_path));
++			wl_client_syslog("error: socket path \"%s/%s\" plus null terminator"
++			                 " exceeds %i bytes",
++			                 runtime_dir, name, (int) sizeof(addr.sun_path));
+ 		} else {
+ 			wl_log("error: socket path \"%s\" plus null terminator"
+ 			       " exceeds %i bytes\n", name, (int) sizeof(addr.sun_path));
++			wl_client_syslog("error: socket path \"%s\" plus null terminator"
++			                 " exceeds %i bytes",
++			                 name, (int) sizeof(addr.sun_path));
+ 		}
+ 		close(fd);
+ 		/* to prevent programs reporting
+@@ -1152,7 +1185,13 @@ connect_to_socket(const char *name)
+ 	size = offsetof (struct sockaddr_un, sun_path) + name_size;
+ 
+ 	if (connect(fd, (struct sockaddr *) &addr, size) < 0) {
++		int saved_errno = errno;
++		wl_log("error: connect to wayland socket \"%s\" failed: %s\n",
++		       addr.sun_path, strerror(saved_errno));
++		wl_client_syslog("error: connect to wayland socket \"%s\" failed: %s",
++		                 addr.sun_path, strerror(saved_errno));
+ 		close(fd);
++		errno = saved_errno;
+ 		return -1;
+ 	}
+ 
+@@ -1182,6 +1221,7 @@ wl_display_connect_to_fd(int fd)
+ 
+ 	display = zalloc(sizeof *display);
+ 	if (display == NULL) {
++		wl_client_syslog("error: out of memory allocating wl_display (fd=%d)", fd);
+ 		close(fd);
+ 		return NULL;
+ 	}
+@@ -1231,8 +1271,11 @@ wl_display_connect_to_fd(int fd)
+ 	display->proxy.version = 0;
+ 
+ 	display->connection = wl_connection_create(display->fd);
+-	if (display->connection == NULL)
++	if (display->connection == NULL) {
++		wl_client_syslog("error: wl_connection_create failed for fd %d: %s",
++		                 display->fd, strerror(errno));
+ 		goto err_connection;
++	}
+ 
+ 	return display;
+ 
+@@ -1285,14 +1328,19 @@ wl_display_connect(const char *name)
+ 		int prev_errno = errno;
+ 		errno = 0;
+ 		fd = strtol(connection, &end, 10);
+-		if (errno != 0 || connection == end || *end != '\0')
++		if (errno != 0 || connection == end || *end != '\0') {
++			wl_client_syslog("error: WAYLAND_SOCKET=\"%s\" is not a valid fd number",
++			                 connection);
+ 			return NULL;
++		}
+ 		errno = prev_errno;
+ 
+ 		flags = fcntl(fd, F_GETFD);
+-		if (flags == -1 && errno == EBADF)
++		if (flags == -1 && errno == EBADF) {
++			wl_client_syslog("error: WAYLAND_SOCKET fd %d is not open (EBADF)",
++			                 fd);
+ 			return NULL;
+-		else if (flags != -1)
++		} else if (flags != -1)
+ 			fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+ 		unsetenv("WAYLAND_SOCKET");
+ 	} else {
+-- 
+2.34.1
+
