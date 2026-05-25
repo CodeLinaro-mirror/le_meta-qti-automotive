@@ -125,4 +125,10 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-gh-rm-drv-${KERNEL_VERSION} \
     kernel-module-gunyah-${KERNEL_VERSION} \
     kernel-module-hvc-gunyah-${KERNEL_VERSION} \
+    kernel-module-phylink-${KERNEL_VERSION} \
+    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
+    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
+    kernel-module-stmmac-${KERNEL_VERSION} \
+    kernel-module-stmmac-platform-${KERNEL_VERSION} \
+    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
 "
