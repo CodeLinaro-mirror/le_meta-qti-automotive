@@ -1,7 +1,7 @@
 #Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 
-DEPENDS += "dtc-native virtual/kernel"
+DEPENDS += "dtc-native virtual/kernel rsync-native"
 
 TECHPACK_MODULE_OUT ?= ""
 TECHPACK_HEADERS ?= ""
@@ -22,9 +22,28 @@ MAKE_TARGETS = "\
     ${@oe.utils.ifelse(d.getVar('TECHPACK_DTBOS') != '', 'dtbs', '')} \
     "
 
-do_compile() {
-    if [ -n "${TECHPACK_DTBS}" ] || [ -n "${TECHPACK_DTBOS}" ] || [ -n "${TECHPACK_MODULES}" ]; then
+DDK_BUILD = "${@oe.utils.ifelse(d.getVar('TECHPACK_MODULES') != '', 'true', '')}"
+DTB_BUILD = "${@oe.utils.ifelse(d.getVar('TECHPACK_DTBS') != '', 'dtbs', '')}"
+
+do_compile(){
+    if ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'true', 'false', d)}; then
+        cd ${BSPDIR}/kernel/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform &&
+
+        BUILD_CONFIG=${KERNEL_BUILD_CONFIG} \
+        KBUILD_OPTIONS="ARCH=arm64" \
+        EXT_MODULES=../../../${EXT_MODULE} \
+        ENABLE_DDK_BUILD=${DDK_BUILD} \
+        SUBTARGET_REGEX=${MODNAME_MODULE} \
+        TARGET_BOARD_PLATFORM=${KERNEL_ARCH} \
+        VARIANT=${KERNEL_DEFCONFIG_VARIANT} \
+        MODULE_OUT=${S} \
+        KERNEL_KIT=${BSPDIR}/kernel/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig \
+        OUT_DIR=${BSPDIR}/kernel/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig \
+        ./build/build_module.sh ${DTB_BUILD}
+    else
+        if [ -n "${TECHPACK_DTBS}" ] || [ -n "${TECHPACK_DTBOS}" ] || [ -n "${TECHPACK_MODULES}" ]; then
         module_do_compile
+        fi
     fi
 }
 
