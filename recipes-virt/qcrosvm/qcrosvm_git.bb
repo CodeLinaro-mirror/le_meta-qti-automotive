@@ -34,6 +34,7 @@ SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
 SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = " qcrosvm_lv.service"
 SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " qcrosvm_lv.service"
 SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}:append:gen5 = " qcrosvm_qclinux_lv.service"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
@@ -52,6 +53,7 @@ do_install:append() {
 do_install:append:gen5() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
+    install -m 0644 ${S}/qcrosvm_qclinux_lv_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm_qclinux_lv.service
 }
 
 do_install:append:sa8775() {
