@@ -42,6 +42,20 @@ do_make_dtb() {
     ddrdtbosflex_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
     flex_directory=${DEPLOY_DIR_IMAGE}/flexdtb
 
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        if [ -d "${DEPLOY_DIR_IMAGE}/dtbs" ]; then
+            rm -r ${DEPLOY_DIR_IMAGE}/dtbs
+        fi
+
+        install -d ${DEPLOY_DIR_IMAGE}/dtbs/1gvm
+        install -d ${DEPLOY_DIR_IMAGE}/dtbs/0gvm
+        install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos0gvm
+        install -d ${DEPLOY_DIR_IMAGE}/0gvmdtb
+
+        ddrdtbos0gvm_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos0gvm
+        pvm_only_directory=${DEPLOY_DIR_IMAGE}/0gvmdtb
+    fi
+
     merge_dtbos $dtb_dir $dtbo_dir $inter_out_dir
 
     #Copy flex dtb from interout to separate directory
@@ -52,6 +66,16 @@ do_make_dtb() {
          fi
     done
 
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        #Copy pvm only dtb from interout to separate directory
+
+        for file in "$inter_out_dir"/*; do
+            if [[ "$file" != *vm* ]]; then
+                mv "$file" "$pvm_only_directory"
+            fi
+        done
+    fi
+
     merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
 
     # Apply overlay for flex dtb
@@ -59,6 +83,26 @@ do_make_dtb() {
         merge_ddr_dtbos_single $flex_directory $ddrdtbosflex_dir $out_directory
     elif ! [ -z "$(ls -A "$flex_directory")" ]; then
         cp -r "$flex_directory"/* "$out_directory"/
+    fi
+
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        # Apply overlay for PVM only dtb
+        if ! [ -z "$(ls -A "$pvm_only_directory")" ] && ! [ -z "$(ls -A "$ddrdtbos0gvm_dir")" ]; then
+            merge_ddr_dtbos_single $pvm_only_directory $ddrdtbos0gvm_dir $out_directory
+        elif ! [ -z "$(ls -A "$pvm_only_directory")" ]; then
+            cp -r "$pvm_only_directory"/* "$out_directory"/
+        fi
+
+        dtb_1gvm_files=$(find $out_directory -name "*1gvm*.dtb")
+        if [ -n "$dtb_1gvm_files" ]; then
+            mv $out_directory/*1gvm*.dtb ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/
+            cat ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/dtb.img
+        fi
+        dtb_0gvm_files=$(find $out_directory -name "*0gvm*.dtb")
+        if [ -n "$dtb_0gvm_files" ]; then
+            mv $out_directory/*0gvm*.dtb ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/
+            cat ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/dtb.img
+        fi
     fi
 
     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
