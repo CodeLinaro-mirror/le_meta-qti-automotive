@@ -74,8 +74,8 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hmt_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-hsp_git.bb \
     meta-qti-automotive/recipes-wlan/wlan/qcacld32-ll-rome_git.bb \
-    meta-qti-automotive/recipes-qcvirtio/virglrenderer/virglrenderer_1.1.0.bb \
-    meta-qti-automotive-prop/recipes-qcvirtio/qcvirtio-devices/qcvirtio-devices_git.bb \
+    meta-qti-automotive/recipes-qcvirtio/ \
+    meta-qti-automotive-prop/recipes-qcvirtio/ \
 "
 
 # Missing recipes in baseline LY.AU.0.2.0 (used by sa8775/sa7255)
@@ -89,6 +89,12 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
     meta-qti-automotive/recipes-audio/gsl/gsl_git.bb \
     meta-qti-automotive/recipes-audio/spf/spf_git.bb \
+    meta-qti-automotive/recipes-audio/ar-audio-init-service/ar-audio-init-service_git.bb \
+    meta-qti-automotive/recipes-audio/ar-audio-service-utils/ar-audio-service-utils_git.bb \
+    meta-qti-automotive/recipes-audio/ar-dev-plugin/ar-dev-plugin_git.bb \
+    meta-qti-automotive/recipes-audio/ar-scmi/ar-scmi_git.bb \
+    meta-qti-automotive/recipes-audio/ar2-audio-service/ar2-audio-service_git.bb \
+    meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-multimedia/codec2/codec2-app_git.bb \
@@ -104,7 +110,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace_1.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvrate_git.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver_1.0.0.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vidc.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-vdec-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-venc-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/secure-video-app_1.0.0.bb \

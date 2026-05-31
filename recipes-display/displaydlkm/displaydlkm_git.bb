@@ -7,11 +7,11 @@ ${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
 DEPENDS += "display-devicetree securemsmdlkm"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/display-drivers;;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/display-drivers;;usehead=1"
 
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display-drivers"
+S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/display-drivers"
 
 TECHPACK_MODULE_OUT = "${WORKDIR}/display-drivers"
 TECHPACK_MODULES = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', \

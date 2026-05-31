@@ -12,18 +12,17 @@ SRC_URI = "\
 "
 
 SRC_URI:append = " \
-    file://gles2_kpi.service  \
+    file://gles2_kpi.service \
+    file://gles2_kpi.conf \
 "
 
 SRCREV = "${AUTOREV}"
 
-inherit cmake systemd
+inherit cmake systemd sleep-notify-service
 
 SYSTEMD_SERVICE:${PN} = "gles2_kpi.service"
 
 S = "${WORKDIR}/vendor/qcom/opensource/auto-gfx-app"
-
-# SYSTEMD_SERVICE:${PN} = "gles2_kpi.service"
 
 do_install() {
     install -d ${D}${libdir} \
@@ -43,10 +42,12 @@ do_install() {
                         ${D}${systemd_system_unitdir}/gles2_kpi.service
 
         ln -sf ${systemd_system_unitdir}/gles2_kpi.service ${D}/${sysconfdir}/systemd/system/multi-user.target.wants/gles2_kpi.service
+        install -m 0644 ${WORKDIR}/gles2_kpi.conf -D ${D}${systemd_system_unitdir}/sleep-notify@gles2_kpi.service.d/gles2_kpi.conf
     fi
 }
 
 FILES:${PN} += "\
     ${systemd_system_unitdir}/*.service \
+    ${systemd_system_unitdir}/sleep-notify@gles2_kpi.service.d/ \
 "
 

@@ -7,11 +7,11 @@ ${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
 DEPENDS += "umd-power-devicetree"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/display-drivers;;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/display-drivers;;usehead=1"
 
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display-drivers/umd-mm"
+S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/umd-mm"
 
 TECHPACK_MODULE_OUT = "${WORKDIR}/display-drivers"
 TECHPACK_MODULES = "umd_power.ko"

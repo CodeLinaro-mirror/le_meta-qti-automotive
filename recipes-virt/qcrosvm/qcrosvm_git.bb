@@ -31,9 +31,10 @@ CARGO_BUILD_FLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', '-
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
-SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = " qcrosvm_lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " qcrosvm_lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa7255-ivi = " qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8255-ivi = " qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8775-flex = " qcrosvm_lv.service"
+SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
@@ -73,6 +74,8 @@ do_install:append:sa8255-ivi() {
     install -d ${D}${systemd_unitdir}/system/
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
         install -m 0644 ${S}/qcrosvm_lv_qcvirtio.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+        install -d ${D}${bindir}
+        install -m 0755 ${S}/qcrosvm_lv_qcvirtio.sh ${D}/${bindir}
     else
         install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
     fi
@@ -85,3 +88,9 @@ do_install:append:sa8775-flex() {
     install -m 0644 ${S}/vm_config_xml/vm_config_lalv.xml ${D}${sysconfdir}/vm_config_lalv.xml
 }
 
+PACKAGES =+ "${PN}-lvgvm"
+
+FILES:${PN}-lvgvm += "\
+    ${systemd_system_unitdir}/qcrosvm_lv.service \
+    ${sysconfdir}/vm_config_lalv.xml \
+"

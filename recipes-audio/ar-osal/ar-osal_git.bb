@@ -12,10 +12,9 @@ DEPENDS += "glib-2.0 libcutils audio-headers-export audio-utils ar-util libkiumd
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/args/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/args/ar_osal;subpath=ar_osal;usehead=1"
 SRCREV = "${AUTOREV}"
 
-SRC_DIR = "${SRC_DIR_ROOT}/vendor/qcom/opensource/args/ar_osal"
 S = "${WORKDIR}/vendor/qcom/opensource/args/ar_osal"
 
-inherit pkgconfig cmake qprebuilt
+inherit pkgconfig cmake
 
 EXTRA_OECONF += "\
     --with-glib \

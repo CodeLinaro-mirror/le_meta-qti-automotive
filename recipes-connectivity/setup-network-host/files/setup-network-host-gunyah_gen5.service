@@ -14,5 +14,4 @@ NoNewPrivileges=true
 ExecStart=/usr/bin/setup-network-host.sh
 
 [Install]
-WantedBy=multi-user.target
-
+WantedBy=adas.target

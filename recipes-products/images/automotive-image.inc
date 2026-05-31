@@ -15,12 +15,15 @@ IMAGE_INSTALL += "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-camera', bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'packagegroup-qti-camera', d), '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-graphics', 'packagegroup-qti-graphics', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'packagegroup-qti-umd', '', d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'packagegroup-qti-vmm', '', d)} \
     ${@bb.utils.contains('VARIANT', 'debug', 'packagegroup-qti-debug', '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-qcnode', 'packagegroup-qti-qcnode', '', d)} \
     "
 
 IMAGE_INSTALL:append:gen5 = " packagegroup-qti-multimedia"
+
+IMAGE_INSTALL += "\
+    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'packagegroup-qti-multimedia', '', d)} \
+"
 
 IMAGE_LINGUAS = ""
 
@@ -38,5 +41,8 @@ TOOLCHAIN_TARGET_TASK:append = " kernel-devsrc ${PREFERRED_PROVIDER_virtual/kern
 
 # Add libgomp header
 TOOLCHAIN_TARGET_TASK:append = " libgomp-dev libgomp-staticdev"
+
+# This packages only provide header files that have not been RDPENDS into the final image, displayed as added to the SDK here
+TOOLCHAIN_TARGET_TASK:append = " ${@bb.utils.contains('COMBINED_FEATURES', 'qti-display', 'display-commonsys-intf-linux-dev', '', d)}"
 
 BAD_RECOMMENDATIONS += "rng-tools"
