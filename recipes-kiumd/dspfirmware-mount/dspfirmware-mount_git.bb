@@ -108,6 +108,18 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
     install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.automount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.automount
     install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm.mount ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm.mount
+
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
+        install -d -p ${D}/firmware/vm/boot/autoghgvmlv
+        install -m 0644 ${S}/firmware-vm-boot-autoghgvmlv-mount.service ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
+
+        if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+            sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
+        fi
+
+        ln -sf ${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service \
+            ${D}${systemd_unitdir}/system/multi-user.target.wants/firmware-vm-boot-autoghgvmlv-mount.service
+     fi
 }
 FILES:${PN} += "${systemd_unitdir}/*"
 FILES:${PN} += "${sysconfdir}/*"
