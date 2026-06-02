@@ -28,7 +28,7 @@ PACKAGECONFIG[qti-vndbinder] = "--enable-vendor-binder,--disable-vendor-binder"
 
 SYSTEMD_SERVICE:${PN} = "servicemanager.service create-binder.service"
 SYSTEMD_SERVICE:${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'qti-vndbinder', 'vndservicemanager.service', '', d)}"
-SYSTEMD_AUTO_ENABLE:${PN} = "disable"
+SYSTEMD_AUTO_ENABLE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'enable', 'disable', d)}"
 
 # servicemanager.service and create-binder.service run as binder user
 USERADD_PACKAGES = "${PN}"
