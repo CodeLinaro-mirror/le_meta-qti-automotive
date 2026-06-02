@@ -7,9 +7,11 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
+MEMORY_SERVICE = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'memory-hotplug_gvm.service', 'memory-hotplug.service', d)}"
+
 SRC_URI = "\
     file://memory-hotplug.sh \
-    file://memory-hotplug.service \
+    file://${MEMORY_SERVICE} \
 "
 
 inherit systemd
@@ -21,5 +23,5 @@ do_compile[noexec] = "1"
 
 do_install() {
     install -D -m 0755 ${WORKDIR}/memory-hotplug.sh ${D}${bindir}/memory-hotplug.sh
-    install -D -m 0644 ${WORKDIR}/memory-hotplug.service ${D}${systemd_unitdir}/system/memory-hotplug.service
+    install -D -m 0644 ${WORKDIR}/${MEMORY_SERVICE} ${D}${systemd_unitdir}/system/memory-hotplug.service
 }
