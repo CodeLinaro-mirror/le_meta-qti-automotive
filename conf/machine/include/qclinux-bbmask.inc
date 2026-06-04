@@ -135,10 +135,27 @@ MISSING_RECIPE_SRCLIST += "\
     meta-qti-automotive/recipes-products/images/qti-image-boot.bb \
 "
 
-# Missing recipes in baseline LV.AU.0.5.3 (used by gvm-gen5)
+# Missing recipes in baseline LV.AU.0.5.3 (used by qclinux-gvm-gen5)
 # Temporary writing, once all GVM projects are integrated into qclinux, will uniformly refined
+BBMASK:remove:qclinux-gvm-gen5 = "${MISSING_RECIPE_SRCLIST}"
 BBMASK:remove:gvm-gen5 = "${MISSING_RECIPE_SRCLIST}"
-BBMASK:append:gvm-gen5 = " \
+BBMASK:append:qclinux-gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
+BBMASK:append:gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
+BBMASK:append:qclinux-gvm-gen5 = " \
+    recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
+    recipes-kernel/edk2/edk2_5.0.bb \
+    recipes/kernel-tests/kernel-tests.bb \
+    recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
+    meta-qti-automotive/recipes-qcvirtio \
+    meta-qti-automotive/recipes-audio \
+    meta-qti-automotive-prop/recipes-audio \
+    meta-qti-automotive/recipes-graphics \
+    meta-qti-automotive-prop/recipes-mmframeworks/mm-frameworks-core/mm-frameworks-core_git.bb \
+    recipes-products/images/qti-image-boot.bb \
+"
+
+
+GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-q/vhost-user-q_git.bb \
