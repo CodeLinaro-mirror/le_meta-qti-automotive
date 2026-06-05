@@ -66,6 +66,21 @@ install_module() {
 	echo 1 > /sys/kernel/cnss_0/fs_ready
 }
 
+# Function to trigger PCIe initialization via sysfs
+qcom_pcie_init_trigger() {
+	echo 1 > /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger
+}
+
+# Load pcie_qcom_ecam module if not already loaded
+if [ -z "$(lsmod | grep pcie_qcom_ecam)" ]; then
+	modprobe pcie_qcom_ecam
+fi
+
+# Call the function if the PCIe init trigger sysfs node exists
+if [ -f /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger ]; then
+	qcom_pcie_init_trigger
+fi
+
 echo "##########Trying to load wlanhost driver ##########"
 n=0
 while [ $n -le 5 ]

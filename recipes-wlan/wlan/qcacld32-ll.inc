@@ -1,7 +1,7 @@
 PROVIDES_NAME = "kernel-module-${_MODNAME}"
 
-DEPENDS += "wlan-platform-dlkm"
-inherit autotools-brokensep module qperf module-sign qti-kernel-arch-clang
+DEPENDS += "wlan-platform-dlkm virtual/kernel"
+inherit autotools-brokensep module qperf module-sign ${@oe.utils.ifelse(d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-msm',"qti-kernel-arch-clang", "")}
 
 WLAN_PLATFORM_PATH = "${STAGING_INCDIR}/wlan-platform"
 WLAN_KBUILD_EXTRA = "KBUILD_EXTRA_SYMBOLS=${WLAN_PLATFORM_PATH}/Module.symvers"
@@ -46,6 +46,7 @@ RPROVIDES:${PN} += "${PROVIDES_NAME}-${KERNEL_VERSION}"
 FILES:${PN} += "${nonarch_base_libdir}/firmware/wlan/*"
 FILES:${PN} += "${nonarch_base_libdir}/firmware/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/*"
+FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/updates/*"
 
 LDFLAGS:aarch64 = "-O1 --hash-style=gnu --as-needed"
 
