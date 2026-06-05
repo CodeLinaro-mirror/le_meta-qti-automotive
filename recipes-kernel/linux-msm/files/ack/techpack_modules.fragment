@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# techpack_modules.fragment
+#
+# CONFIG entries for platform-kernel and securemsm-kernel OOT modules.
+# These CONFIGs must be present in auto.conf so soc-repo Kbuild
+# obj-$(CONFIG_xxx) rules select the correct source files.
+#
+# platform-kernel modules (platform_modules.bzl):
+#   obj-$(CONFIG_QCOM_SOCINFO_DT)              += socinfo_dt.o
+#   obj-$(CONFIG_VIRTIO_SSR)                   += virtio_ssr.o
+#   obj-$(CONFIG_MSM_QUIN_SUBSYSTEM_NOTIF_VIRT)+= subsystem_notif_virt.o
+#   obj-$(CONFIG_VIRTIO_FASTRPC)               += virtual_fastrpc/
+#   obj-$(CONFIG_HYBRID_FASTRPC)               += virtual_fastrpc/
+#   obj-$(CONFIG_MSM_BOOT_MARKER)              += boot_marker.o
+#
+# securemsm-kernel modules:
+#   obj-$(CONFIG_QSEECOM)              += qseecom_dlkm.o
+#   obj-$(CONFIG_HW_RANDOM_MSM_LEGACY) += qrng_dlkm.o
+#   obj-$(CONFIG_QCEDEV_FE)            += qcedev_fe_dlkm.o
+
+CONFIG_QCOM_SOCINFO_DT=m
+CONFIG_VIRTIO_SSR=m
+CONFIG_MSM_QUIN_SUBSYSTEM_NOTIF_VIRT=m
+CONFIG_VIRTIO_FASTRPC=m
+CONFIG_HYBRID_FASTRPC=m
+CONFIG_MSM_BOOT_MARKER=m
+CONFIG_QSEECOM=m
+CONFIG_HW_RANDOM_MSM_LEGACY=m
+CONFIG_QCEDEV_FE=m
