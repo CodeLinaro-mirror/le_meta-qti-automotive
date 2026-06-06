@@ -124,6 +124,7 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-vfio-iommu-qcom-${KERNEL_VERSION} \
     kernel-module-ipcc-shmem-test-module-${KERNEL_VERSION} \
     kernel-module-i2c-qcom-geni-${KERNEL_VERSION} \
+    kernel-module-spi-geni-qcom-${KERNEL_VERSION} \
     kernel-module-qcom-scm-oot-${KERNEL_VERSION} \
     kernel-module-qtee-shmbridge-${KERNEL_VERSION} \
     kernel-module-qcom-smcinvoke-${KERNEL_VERSION} \
