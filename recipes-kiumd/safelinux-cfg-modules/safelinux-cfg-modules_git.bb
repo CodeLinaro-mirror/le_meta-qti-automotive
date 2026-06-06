@@ -26,7 +26,7 @@ TECHPACK_MODULES = "apps_pinctrl.ko scm_user_intf.ko qcom_dload_mode.ko vfio_iom
 
 inherit qti-techpack
 
-TECHPACK_MODULES:append:gen5 = " vendor_uscmi.ko"
+TECHPACK_MODULES:append:gen5 = " vendor_uscmi.ko  qcom_vm_cpufreq.ko"
 TECHPACK_MODULES:append:sa8775 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
 TECHPACK_MODULES:append:sa7255 = " qcom_ethqos_filter.ko qcom_l3_cache_config.ko iommu_faults.ko"
 
@@ -53,6 +53,7 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_uscmi.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/vendor_uscmi.h ${D}${includedir}/uapi/misc
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_l3_cache_config.h ${D}${includedir}/uapi/misc
+    install -m 0644 ${WORKDIR}/vendor/qcom/opensource/safelinux-cfg-modules/safelinux-modules/include/uapi/misc/qcom_vm_cpufreq.h ${D}${includedir}/uapi/misc
     install -m 0755 ${WORKDIR}/${UMD_LOAD_CONF} -D ${D}${sysconfdir}/modules-load.d/umd_load.conf
 }
 
@@ -79,6 +80,7 @@ RPROVIDES:${PN} += "kernel-module-iommu-faults-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-ethqos-filter-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-l3-cache-config-${KERNEL_VERSION}"
 RPROVIDES:${PN} += "kernel-module-qcom-remote-virq-${KERNEL_VERSION}"
+RPROVIDES:${PN} += "kernel-module-qcom-vm-cpufreq-${KERNEL_VERSION}"
 
 FILES:${PN} += "${sysconfdir}/modules-load.d/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/*"
