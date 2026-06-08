@@ -22,3 +22,5 @@ EXTRA_OECONF += "\
     --with-system-core-includes=${WORKDIR}/system/core/include \
     --with-liblog-includes=${WORKDIR}/system/core/liblog \
 "
+
+BBCLASSEXTEND = "native"

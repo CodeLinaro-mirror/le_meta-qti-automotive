@@ -42,6 +42,8 @@ EXTRA_OECONF += "\
     LE_PROPERTIES_ENABLED=true \
 "
 
+EXTRA_OECONF:append:class-native = " --with-glib"
+
 do_install:append() {
     ln -sf ../private/android_filesystem_capability.h ${D}${includedir}/cutils/android_filesystem_capability.h
     ln -sf ../private/android_filesystem_config.h ${D}${includedir}/cutils/android_filesystem_config.h

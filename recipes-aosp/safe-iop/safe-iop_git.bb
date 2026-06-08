@@ -10,3 +10,5 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/external/safe-iop"
 
 inherit autotools-brokensep
+
+BBCLASSEXTEND = "native"

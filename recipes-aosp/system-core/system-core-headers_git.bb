@@ -29,3 +29,5 @@ do_install () {
     install -m 0644 ${S}/include/netutils/dhcp.h  ${D}${includedir}/netutils/
     install -m 0644 ${S}/include/netutils/ifc.h  ${D}${includedir}/netutils/
 }
+
+BBCLASSEXTEND = "native"
