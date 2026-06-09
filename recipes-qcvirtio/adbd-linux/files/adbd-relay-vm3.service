@@ -8,7 +8,7 @@ Before=adbd.service
 
 [Service]
 Type=simple
-Restart=on-failure
+Restart=always
 User=root
 Environment="ADB_USB_FFS_PATH=/dev/usb-ffs/adb-relay-vm3"
 Environment="ADB_USB_FFS_NAME=adb-relay-vm3"
