@@ -13,14 +13,15 @@ DEPENDS += "openssl libcap glib-2.0 systemd"
 
 REPO_NAME = "coqos-adbd"
 SRC_URI = "${PATH_TO_REPO}/${REPO_NAME}/.git;protocol=${PROTO};destsuffix=${REPO_NAME};usehead=1"
-SRC_URI:append = " file://adbd-relay.service"
+SRC_URI:append = " file://adbd-relay-vm2.service"
+SRC_URI:append = " file://adbd-relay-vm3.service"
 
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/${REPO_NAME}"
 
 SYSTEMD_PACKAGES = "adbd-relay"
-SYSTEMD_SERVICE:adbd-relay = "adbd-relay.service"
+SYSTEMD_SERVICE:adbd-relay = "adbd-relay-vm2.service adbd-relay-vm3.service"
 
 # Source files are not included in the packages
 PACKAGE_DEBUG_SPLIT_STYLE = "debug-without-src"
@@ -32,7 +33,8 @@ PACKAGES = "\
 
 FILES:adbd-relay += "\
     ${sbindir}/adbd-relay \
-    ${systemd_system_unitdir}/adbd-relay.service \
+    ${systemd_system_unitdir}/adbd-relay-vm2.service \
+    ${systemd_system_unitdir}/adbd-relay-vm3.service \
 "
 
 FILES:adbd-relay-dbg += "\
@@ -66,5 +68,6 @@ do_install() {
 
     # install locally provided systemd unit file
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/adbd-relay.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/adbd-relay-vm2.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/adbd-relay-vm3.service ${D}${systemd_system_unitdir}
 }
