@@ -20,6 +20,7 @@ VIRT_MODULES_BUILD = "${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12'
 
 VIRT_MODULES_BUILD:append:gvm-gen4-5 = "${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', ' hfastrpc.ko', ' drivers/virtual_fastrpc/hfastrpc.ko', d)}"
 VIRT_MODULES_BUILD:append:gvm-gen5 = " hfastrpc.ko"
+VIRT_MODULES_BUILD:append:qclinux-gvm-gen5 = " drivers/virtual_fastrpc/hfastrpc.ko"
 
 TECHPACK_MODULES = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '${VIRT_MODULES_BUILD}', '${METAL_MODULES_BUILD}', d)}"
 

@@ -16,7 +16,11 @@ B = "${WORKDIR}/build"
 inherit linux-kernel-base kernel-arch
 
 # We need the kernel to be unpacked and patched before we can grab the headers.
+# For qclinux-gvm-gen5: soc-repo headers must also be overlaid onto the kernel
+# source tree before extracting, so that soc-repo's include/ and
+# arch/arm64/include/ overrides are visible to headers_install.
 do_install[depends] += "virtual/kernel:do_patch"
+do_install[depends] += "${@'soc-repo:do_configure' if d.getVar('MACHINE') == 'qclinux-gvm-gen5' else ''}"
 
 # There's nothing to do here, except install the headers where we can package them
 do_fetch[noexec] = "1"

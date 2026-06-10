@@ -16,3 +16,4 @@ do_image[noexec] = "1"
 do_image_complete[noexec] = "1"
 
 do_merge_dtbs[depends] += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'bt-devicetree:do_deploy ', '', d)}"
+do_merge_dtbs[depends] += "${@bb.utils.contains('MACHINE', 'qclinux-gvm-gen5', 'devicetree-qcom-gvm:do_deploy', '', d)}"
