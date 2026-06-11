@@ -12,7 +12,6 @@ KBRANCH ?= ""
 KCONFIG_MODE = "--alldefconfig"
 KBUILD_DEFCONFIG ?= "${KERNEL_CONFIG}"
 LINUX_VERSION_EXTENSION = "${@['-perf', ''][d.getVar('VARIANT', True) == ('' or 'debug')]}"
-EXTRA_OEMAKE += "INSTALL_MOD_STRIP=1"
 
 do_generate_base_defconfig() {
     export KCONFIG_CONFIG="${S}/arch/arm64/configs/${KBUILD_DEFCONFIG}"
@@ -95,7 +94,6 @@ do_deploy:append() {
     fi
 }
 
-INHIBIT_PACKAGE_STRIP = "1"
 KERNEL_VERSION_SANITY_SKIP = "1"
 KERNEL_IMAGETYPE_FOR_MAKE += "dtbs"
 KERNEL_IMAGETYPE_FOR_MAKE += "${KERNEL_IMAGETYPE}"
