@@ -34,7 +34,7 @@ SSTATE_MANFILEPREFIX = "${@bb.utils.contains('PERF_BUILD', '1', '${SSTATE_MANIFE
 SDK_DEPLOY = "${DEPLOY_DIR}/sdk-${PRODUCT}"
 
 # Add kernel header to SDK.
-TOOLCHAIN_TARGET_TASK:append = " kernel-devsrc ${PREFERRED_PROVIDER_virtual/kernel-headers}-dev"
+TOOLCHAIN_TARGET_TASK:append = " kernel-devsrc ${PREFERRED_PROVIDER_virtual/kernel-headers}-dev kernel-dbg"
 
 # Add libgomp header
 TOOLCHAIN_TARGET_TASK:append = " libgomp-dev libgomp-staticdev"
