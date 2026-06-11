@@ -1,0 +1,21 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+# Create a symlink to virtio block device
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_system_a*",SYMLINK+="block/platform/system_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_system_b*",SYMLINK+="block/platform/system_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_userdata*",SYMLINK+="block/platform/userdata"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_persist*",SYMLINK+="block/platform/persist"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_boot_a*",SYMLINK+="block/platform/boot_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_boot_b*",SYMLINK+="block/platform/boot_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_dtbo_a*",SYMLINK+="block/platform/dtbo_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_dtbo_b*",SYMLINK+="block/platform/dtbo_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_vbmeta_a*",SYMLINK+="block/platform/vbmeta_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_vbmeta_b*",SYMLINK+="block/platform/vbmeta_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_modem_a*",SYMLINK+="block/platform/modem_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_modem_b*",SYMLINK+="block/platform/modem_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_dsp_a*",SYMLINK+="block/platform/dsp_a"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_dsp_b*",SYMLINK+="block/platform/dsp_b"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_devinfo*",SYMLINK+="block/platform/devinfo"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_misc*",SYMLINK+="block/platform/lv_misc"
+SUBSYSTEM=="block", DEVPATH=="*virtio_blk_lv_firmware*",SYMLINK+="block/platform/firmware"
