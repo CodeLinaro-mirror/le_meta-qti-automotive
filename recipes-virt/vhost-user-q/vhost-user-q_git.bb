@@ -46,34 +46,19 @@ LV_EXTRA_SERVICES_LIST_GEN5 = "\
 
 SYSTEMD_SERVICE:${PN} = "\
     ${LA_BASIC_SERVICES_LIST} \
-"
-
-SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = "\
-    ${LV_SERVICES_LIST} \
     ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
 "
 
-SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = "\
-    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
+SYSTEMD_SERVICE:${PN}-lvgvm:append = "\
     ${LV_SERVICES_LIST} \
 "
 
-SYSTEMD_SERVICE:${PN}:append:sa8775-flex = "\
-    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
-    ${LV_SERVICES_LIST} \
+SYSTEMD_SERVICE:${PN}-lvgvm:append:gen5 = "\
+    ${LV_EXTRA_SERVICES_LIST_GEN5} \
 "
 
 SYSTEMD_SERVICE:${PN}:append:gen5 = "\
-    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
     ${LA_EXTRA_SERVICES_LIST_GEN5} \
-"
-
-# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
-SYSTEMD_SERVICE:${PN}:append:gen5-multi = "\
-    ${LA_EXTRA_SERVICES_LIST_GEN4_5} \
-    ${LA_EXTRA_SERVICES_LIST_GEN5} \
-    ${LV_SERVICES_LIST} \
-    ${LV_EXTRA_SERVICES_LIST_GEN5} \
 "
 
 DEPENDS += "virtual/kernel-headers"
@@ -103,59 +88,18 @@ do_install:append() {
     for service in ${LA_BASIC_SERVICES_LIST}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
-}
 
-do_install:append:sa7255-ivi() {
     for service in ${LV_SERVICES_LIST}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 
     for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-}
-
-do_install:append:sa8255-ivi() {
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LV_SERVICES_LIST}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-}
-
-do_install:append:sa8775-flex() {
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LV_SERVICES_LIST}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 }
 
 do_install:append:gen5() {
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
     for service in ${LA_EXTRA_SERVICES_LIST_GEN5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-}
-
-# multi-gvm is not yet supported on SA8797P, 8797-multi is used as a placeholder to mask off *-vm3.service
-do_install:append:gen5-multi() {
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN4_5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LA_EXTRA_SERVICES_LIST_GEN5}; do
-        install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
-    done
-
-    for service in ${LV_SERVICES_LIST}; do
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 
@@ -163,3 +107,8 @@ do_install:append:gen5-multi() {
         install -m 0644 ${S}/${service} -D ${D}${systemd_unitdir}/system/
     done
 }
+
+PACKAGES =+ "${PN}-lvgvm"
+SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
+
+FILES:${PN}-lvgvm += "${systemd_system_unitdir}/vhost-user-*vm3.service"

@@ -2,7 +2,7 @@ SUMMARY = "Client for Wi-Fi Protected Access (WPA)"
 DESCRIPTION = "WPA supplicant client used for WLAN STA/AP/P2P/WPS such feature test"
 HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "BSD-2-Clause"
-LIC_FILES_CHKSUM = "file://${WORKDIR}/external/wpa_supplicant_8/COPYING;md5=5ebcb90236d1ad640558c3d3cd3035df"
+LIC_FILES_CHKSUM = "file://${WORKDIR}/${TARGET_DIR}external/wpa_supplicant_8/COPYING;md5=5ebcb90236d1ad640558c3d3cd3035df"
 
 DEPENDS += "dbus libnl openssl"
 SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}external/wpa_supplicant_8/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}external/wpa_supplicant_8;usehead=1 \

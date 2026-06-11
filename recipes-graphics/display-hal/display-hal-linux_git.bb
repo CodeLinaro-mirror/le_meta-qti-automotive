@@ -24,7 +24,7 @@ DEPENDS:append:gen5 = " display-kernel-headers display-intf-headers"
 
 PR = "r8"
 
-DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "display/display-hal", d)}"
+DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "${TARGET_DIR}display/display-hal", d)}"
 DISPLAY_DIR:sa8775 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:sa7255 = "${TARGET_DIR}display/display-hal"
 

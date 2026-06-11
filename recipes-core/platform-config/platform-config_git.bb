@@ -42,6 +42,10 @@ do_install:append:gen5() {
     install -m 0444 ${S}/plat-config-generator/seca/nonsafe_ivi.ini -D ${D}/etc/seca/nonsafe_ivi.ini
     install -m 0444 ${S}/plat-config-generator/seca/flex.ini -D ${D}/etc/seca/flex.ini
     install -m 0444 ${S}/plat-config-generator/seca/adas.ini -D ${D}/etc/seca/adas.ini
+
+    install -m 0444 ${S}/plat-config-generator/lemans/nonsafe_ivi.ini  -D ${D}/etc/lemans/nonsafe_ivi.ini
+    install -m 0444 ${S}/plat-config-generator/lemans/flex.ini         -D ${D}/etc/lemans/flex.ini
+    install -m 0444 ${S}/plat-config-generator/lemans/flex.ini         -D ${D}/etc/lemans/flex.ini
 }
 
 RDEPENDS:${PN} += "minini"

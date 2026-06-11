@@ -16,10 +16,10 @@ LIC_FILES_CHKSUM = "file://README;md5=edb3527809487b74b4d4a7e02b05acf0"
 
 DEPENDS += "libnl"
 
-SRC_URI = "${PATH_TO_REPO}/wlan/utils/sigma-dut/.git;protocol=${PROTO};destsuffix=wlan/utils/sigma-dut;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}wlan/utils/sigma-dut/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}wlan/utils/sigma-dut;usehead=1"
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/wlan/utils/sigma-dut"
+S = "${WORKDIR}/${TARGET_DIR}wlan/utils/sigma-dut"
 
 inherit autotools-brokensep pkgconfig
 

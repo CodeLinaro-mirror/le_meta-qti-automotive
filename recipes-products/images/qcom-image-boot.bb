@@ -12,6 +12,13 @@ DEPENDS:append:sod = " mm-vfio-devicetree"
 IMAGE_CLASSES:remove = "qimage"
 IMAGE_FEATURES:remove = "ssh-server-openssh"
 
+DEPLOY_NAME_BASE_LAGVM = "${PRODUCT}-lagvm-automotive"
+DEPLOY_NAME_LAGVM = "${DEPLOY_NAME_BASE_LAGVM}${@['-' + d.getVar('VARIANT', True), ''][d.getVar('VARIANT', True) == ('' or 'debug')]}"
+DEPLOY_DIR_IMAGE_LAGVM = "${DEPLOY_DIR}/images/${DEPLOY_NAME_LAGVM}"
+DEPLOY_NAME_BASE_PVM = "${PRODUCT}-pvm-automotive"
+DEPLOY_NAME_PVM = "${DEPLOY_NAME_BASE_PVM}${@['-' + d.getVar('VARIANT', True), ''][d.getVar('VARIANT', True) == ('' or 'debug')]}"
+DEPLOY_DIR_IMAGE_PVM = "${DEPLOY_DIR}/images/${DEPLOY_NAME_PVM}"
+
 inherit image qcom-dtb-merge
 
 EXTRA_IMAGE_FEATURES = ""
@@ -35,6 +42,20 @@ do_make_dtb() {
     ddrdtbosflex_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
     flex_directory=${DEPLOY_DIR_IMAGE}/flexdtb
 
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        if [ -d "${DEPLOY_DIR_IMAGE}/dtbs" ]; then
+            rm -r ${DEPLOY_DIR_IMAGE}/dtbs
+        fi
+
+        install -d ${DEPLOY_DIR_IMAGE}/dtbs/1gvm
+        install -d ${DEPLOY_DIR_IMAGE}/dtbs/0gvm
+        install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos0gvm
+        install -d ${DEPLOY_DIR_IMAGE}/0gvmdtb
+
+        ddrdtbos0gvm_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos0gvm
+        pvm_only_directory=${DEPLOY_DIR_IMAGE}/0gvmdtb
+    fi
+
     merge_dtbos $dtb_dir $dtbo_dir $inter_out_dir
 
     #Copy flex dtb from interout to separate directory
@@ -45,6 +66,16 @@ do_make_dtb() {
          fi
     done
 
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        #Copy pvm only dtb from interout to separate directory
+
+        for file in "$inter_out_dir"/*; do
+            if [[ "$file" != *vm* ]]; then
+                mv "$file" "$pvm_only_directory"
+            fi
+        done
+    fi
+
     merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
 
     # Apply overlay for flex dtb
@@ -52,6 +83,26 @@ do_make_dtb() {
         merge_ddr_dtbos_single $flex_directory $ddrdtbosflex_dir $out_directory
     elif ! [ -z "$(ls -A "$flex_directory")" ]; then
         cp -r "$flex_directory"/* "$out_directory"/
+    fi
+
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        # Apply overlay for PVM only dtb
+        if ! [ -z "$(ls -A "$pvm_only_directory")" ] && ! [ -z "$(ls -A "$ddrdtbos0gvm_dir")" ]; then
+            merge_ddr_dtbos_single $pvm_only_directory $ddrdtbos0gvm_dir $out_directory
+        elif ! [ -z "$(ls -A "$pvm_only_directory")" ]; then
+            cp -r "$pvm_only_directory"/* "$out_directory"/
+        fi
+
+        dtb_1gvm_files=$(find $out_directory -name "*1gvm*.dtb")
+        if [ -n "$dtb_1gvm_files" ]; then
+            mv $out_directory/*1gvm*.dtb ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/
+            cat ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/dtb.img
+        fi
+        dtb_0gvm_files=$(find $out_directory -name "*0gvm*.dtb")
+        if [ -n "$dtb_0gvm_files" ]; then
+            mv $out_directory/*0gvm*.dtb ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/
+            cat ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/dtb.img
+        fi
     fi
 
     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
@@ -78,6 +129,38 @@ do_makeboot () {
         --ramdisk_offset 0x0 \
         --cmdline "${KERNEL_CMD_PARAMS}" \
         --output  ${DEPLOY_DIR_IMAGE}/${PRODUCT}-boot-${KERNEL_VERSION}.img
+        # Make lagvm bootimage
+        if [ -f "${DEPLOY_DIR_IMAGE}/dtbs/1gvm/dtb.img" ]; then
+            if [ ! -d "${DEPLOY_DIR_IMAGE_LAGVM}" ]; then
+                install -d ${DEPLOY_DIR_IMAGE_LAGVM}
+            fi
+            ${STAGING_BINDIR_NATIVE}/scripts/mkbootimg.py --header_version ${KERNEL_IMAGE_HEADER_VERSION} \
+            --kernel  ${DEPLOY_DIR_IMAGE}/Image \
+            --dtb  ${DEPLOY_DIR_IMAGE}/dtbs/1gvm/dtb.img \
+            --ramdisk ${BOOT_RAMDISK_IMG} \
+            --pagesize ${PAGE_SIZE} \
+            --base ${KERNEL_BASE} \
+            --ramdisk_offset 0x0 \
+            --cmdline "${KERNEL_CMD_PARAMS}" \
+            --output  ${DEPLOY_DIR_IMAGE_LAGVM}/${PRODUCT}-lagvm-boot-${KERNEL_VERSION}.img
+            cp ${DEPLOY_DIR_IMAGE_LAGVM}/${PRODUCT}-lagvm-boot-${KERNEL_VERSION}.img ${DEPLOY_DIR_IMAGE_LAGVM}/${PRODUCT}-lagvm-boot.img
+        fi
+        # Make pvm bootimage
+        if [ -f "${DEPLOY_DIR_IMAGE}/dtbs/0gvm/dtb.img" ]; then
+            if [ ! -d "${DEPLOY_DIR_IMAGE_PVM}" ]; then
+                install -d ${DEPLOY_DIR_IMAGE_PVM}
+            fi
+            ${STAGING_BINDIR_NATIVE}/scripts/mkbootimg.py --header_version ${KERNEL_IMAGE_HEADER_VERSION} \
+            --kernel  ${DEPLOY_DIR_IMAGE}/Image \
+            --dtb  ${DEPLOY_DIR_IMAGE}/dtbs/0gvm/dtb.img \
+            --ramdisk ${BOOT_RAMDISK_IMG} \
+            --pagesize ${PAGE_SIZE} \
+            --base ${KERNEL_BASE} \
+            --ramdisk_offset 0x0 \
+            --cmdline "${KERNEL_CMD_PARAMS}" \
+            --output  ${DEPLOY_DIR_IMAGE_PVM}/${PRODUCT}-pvm-boot-${KERNEL_VERSION}.img
+            cp ${DEPLOY_DIR_IMAGE_PVM}/${PRODUCT}-pvm-boot-${KERNEL_VERSION}.img ${DEPLOY_DIR_IMAGE_PVM}/${PRODUCT}-pvm-boot.img
+        fi
     elif [ "${KERNEL_IMAGE_HEADER_VERSION}" = "1" ]; then
         # Make bootimage
         ${STAGING_BINDIR_NATIVE}/scripts/mkbootimg.py \
@@ -112,6 +195,14 @@ do_sign_boot_img () {
     imgname="${DEPLOY_DIR_IMAGE}/${BOOTIMAGE_TARGET}"
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'true', 'false', d)}; then
         avb_sign_boot_image ${imgname}
+        if [ -f "${DEPLOY_DIR_IMAGE_LAGVM}/${PRODUCT}-lagvm-boot.img" ]; then
+            imgname="${DEPLOY_DIR_IMAGE_LAGVM}/${PRODUCT}-lagvm-boot.img"
+            avb_sign_boot_image ${imgname}
+        fi
+        if [ -f "${DEPLOY_DIR_IMAGE_PVM}/${PRODUCT}-pvm-boot.img" ]; then
+            imgname="${DEPLOY_DIR_IMAGE_PVM}/${PRODUCT}-pvm-boot.img"
+            avb_sign_boot_image ${imgname}
+        fi
     fi
 }
 

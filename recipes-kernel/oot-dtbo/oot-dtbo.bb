@@ -32,16 +32,43 @@ do_merge_dtb() {
     install -d ${OVERLAYED_OOT_DTBS_OUT}
     install -d ${S}/dtbodir
 
-    if [ -z "${OOT_DTBOS}" ]; then
-        OOT_DTBOS=$(find ${S} -not -path "${S}/oot/*" -name "*.dtbo" -printf "%P\n")
-    fi
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        install -d ${S}/base_dtbodir
 
-    for oot_dtbo in ${OOT_DTBOS}; do
-        if [ -f ${S}/${oot_dtbo} ]; then
-            install -m 0644 ${S}/${oot_dtbo} ${S}/dtbodir/
+        if [ -z "${OOT_VM_DTBOS}" ]; then
+            OOT_VM_DTBOS=$(find ${S} -not -path "${S}/oot/*" -name "*.dtbo" -printf "%P\n")
         fi
-    done
 
+        for oot_dtbo in ${OOT_VM_DTBOS}; do
+            if [ -f ${S}/${oot_dtbo} ]; then
+                install -m 0644 ${S}/${oot_dtbo} ${S}/dtbodir/
+            fi
+        done
+
+        #Merge base OOT DTBs
+        if [ -z "${OOT_BASE_DTBOS}" ]; then
+            OOT_BASE_DTBOS=$(find ${S} -not -path "${S}/oot/*" -name "*.dtbo" -printf "%P\n")
+        fi
+
+        for oot_dtbo in ${OOT_BASE_DTBOS}; do
+            if [ -f ${S}/${oot_dtbo} ]; then
+                install -m 0644 ${S}/${oot_dtbo} ${S}/base_dtbodir/
+            fi
+        done
+        dtb_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/kernel-dtb
+        dtbo_dir=${S}/base_dtbodir
+        merge_dtbos_single $dtb_dir $dtbo_dir ${OVERLAYED_OOT_DTBS_OUT}
+    else
+        if [ -z "${OOT_DTBOS}" ]; then
+            OOT_DTBOS=$(find ${S} -not -path "${S}/oot/*" -name "*.dtbo" -printf "%P\n")
+        fi
+
+        for oot_dtbo in ${OOT_DTBOS}; do
+            if [ -f ${S}/${oot_dtbo} ]; then
+                install -m 0644 ${S}/${oot_dtbo} ${S}/dtbodir/
+            fi
+        done
+    fi
     dtb_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/kernel-dtb
     dtbo_dir=${S}/dtbodir
     merge_dtbos_single $dtb_dir $dtbo_dir ${OVERLAYED_OOT_DTBS_OUT}
@@ -73,9 +100,24 @@ do_deploy() {
     fi
     if [ -n "${OOT_DDR_DTBOS}" ]; then
         install -d ${DEPLOYDIR}/build-artifacts/ddrdtbos
+
         for dtb in ${OOT_DDR_DTBOS}; do
             if [ -f ${B}/$dtb ]; then
-                install -m 0644 ${B}/$dtb ${DEPLOYDIR}/build-artifacts/ddrdtbos
+                if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+                    install -d ${DEPLOYDIR}/build-artifacts/ddrdtbos0gvm
+
+                    # copy 0gvm dtbo in separate directory
+                    case "$dtb" in
+                        *0gvm*)
+                            install -m 0644 ${B}/$dtb ${DEPLOYDIR}/build-artifacts/ddrdtbos0gvm
+                            ;;
+                        *)
+                            install -m 0644 ${B}/$dtb ${DEPLOYDIR}/build-artifacts/ddrdtbos
+                            ;;
+                    esac
+                else
+                    install -m 0644 ${B}/$dtb ${DEPLOYDIR}/build-artifacts/ddrdtbos
+                fi
             fi
         done
     fi

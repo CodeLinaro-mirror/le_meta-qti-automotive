@@ -14,8 +14,6 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/vendor/qcom/opensource/agm"
 
-SRC_DIR = "${WORKDIR}/vendor/qcom/opensource/agm"
-
 do_install:append () {
     install -m 0644 ${S}/ipc/DBus/config/agm-dbus.conf -D ${D}${sysconfdir}/dbus-1/system.d/agm-dbus.conf
 }
@@ -27,7 +25,7 @@ do_install:append:gen5() {
 
 RM_WORK_EXCLUDE += "${PN}"
 
-inherit autotools pkgconfig qprebuilt
+inherit autotools pkgconfig
 
 EXTRA_OECONF += "\
     --with-glib \

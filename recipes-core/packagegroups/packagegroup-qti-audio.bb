@@ -33,8 +33,21 @@ AUDIOLITE_RDEPENDS = "\
     audiolite-dlkm \
 "
 
+AUDIOREACH_RDEPENDS = "\
+    ar2-audio-service \
+    agm \
+    ar-dev-plugin \
+    audioreach-conf \
+    ar-audio-init-service \
+"
+
 RDEPENDS:${PN} += "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', '${AUDIOLITE_RDEPENDS} alsa-utils', \
         bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', '${AUDIOLITE_RDEPENDS} alsa-utils', '${KMD_RDEPENDS}', d), \
+    d)} \
+"
+# Gen5 AUDIOREACH
+RDEPENDS:${PN}:append:gen5 = " \
+    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-ar', '${AUDIOREACH_RDEPENDS}', '', \
     d)} \
 "

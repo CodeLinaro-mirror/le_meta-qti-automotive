@@ -26,7 +26,8 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'lttng-modules lttng-tools lttng-ust', '', d)} \
     ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'lttng-modules lttng-tools lttng-ust', '', d)} \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'devmem2', d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'cntvct-log rtla', '', d)} \
+    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd qti-gvm', 'cntvct-log', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'rtla', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'evtest lsof', '', d), d)} \
     "
 

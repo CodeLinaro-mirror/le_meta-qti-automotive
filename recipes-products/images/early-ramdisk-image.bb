@@ -22,6 +22,7 @@ EARLY_RAMDISK_KERNEL_MODULES ?= ""
 IMAGE_INSTALL = "\
     early-ramdisk-init libgcc kmod util-linux-libblkid \
     ${EARLY_RAMDISK_KERNEL_MODULES} \
+    ${@bb.utils.contains('PACKAGE_CLASSES', 'package_rpm', 'busybox', '', d)} \
 "
 do_rootfs[depends] += "virtual/kernel:do_shared_workdir"
 

@@ -5,7 +5,7 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "display/display-hal", d)}"
+DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "${TARGET_DIR}display/display-hal", d)}"
 DISPLAY_DIR:sa8775 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:sa7255 = "${TARGET_DIR}display/display-hal"
 

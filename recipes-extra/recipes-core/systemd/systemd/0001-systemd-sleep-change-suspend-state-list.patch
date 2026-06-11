@@ -1,6 +1,6 @@
-From 736a38d02167fd345badfa6a414235908eab8ecf Mon Sep 17 00:00:00 2001
-From: Feng Chen <quic_fch@quicinc.com>
-Date: Thu, 22 Sep 2022 17:40:36 +0530
+From 346519f99215d7b4398bce0e565ff796ad628e2a Mon Sep 17 00:00:00 2001
+From: pengy <quic_pengy@quicinc.com>
+Date: Wed, 30 Oct 2024 06:31:47 +0000
 Subject: [PATCH] systemd-sleep: change suspend state list
 
 Gvm does not support s2idle, remove it in systemd.
@@ -14,18 +14,18 @@ Signed-off-by: Feng Chen <quic_fch@quicinc.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/sleep/sleep.conf b/src/sleep/sleep.conf
-index dc2ed37f70..eb967c5fb9 100644
+index fad95b3897..750862f2b3 100644
 --- a/src/sleep/sleep.conf
 +++ b/src/sleep/sleep.conf
-@@ -17,7 +17,7 @@
+@@ -21,7 +21,7 @@
+ #AllowHibernation=yes
  #AllowSuspendThenHibernate=yes
  #AllowHybridSleep=yes
- #SuspendMode=
 -#SuspendState=mem standby freeze
 +SuspendState=mem mem mem
  #HibernateMode=platform shutdown
- #HibernateState=disk
- #HybridSleepMode=suspend platform shutdown
--- 
-2.17.1
+ #HibernateDelaySec=
+ #SuspendEstimationSec=60min
+--
+2.44.0
 

@@ -15,11 +15,11 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
 ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-SRC_URI = "${PATH_TO_REPO}/device/qcom/wlan/.git;protocol=${PROTO};destsuffix=device/qcom/wlan;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}device/qcom/wlan/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}device/qcom/wlan;usehead=1"
 SRCREV = "${AUTOREV}"
 PR = "r0"
 
-S = "${WORKDIR}/device"
+S = "${WORKDIR}/${TARGET_DIR}device"
 
 do_install(){
     install -d ${D}${sysconfdir}/misc/wifi
