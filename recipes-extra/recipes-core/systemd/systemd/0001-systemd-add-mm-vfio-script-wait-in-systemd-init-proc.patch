@@ -1,0 +1,36 @@
+From 192ea80ecc249cca5b6d0e12cfc561cd28c36bb5 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Tue, 12 May 2026 16:33:31 +0800
+Subject: [PATCH] systemd:add mm-vfio script wait in systemd init process
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ src/core/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 71718c3a7a..2987e9e48d 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -154,6 +154,7 @@ static usec_t arg_reload_limit_interval_sec;
+ static unsigned arg_reload_limit_burst;
+ 
+ #define VFIO_COMPLETE_PATH  "/dev/vfio-complete"
++#define MM_VFIO_COMPLETE_PATH  "/dev/mm-vfio-complete"
+ #define VFIO_POLL_INTERVAL_MS  10
+ #define VFIO_POLL_MAX_RETRIES  500
+ 
+@@ -3139,7 +3140,7 @@ int main(int argc, char *argv[]) {
+         };
+ 
+         for (int i = 0; i < VFIO_POLL_MAX_RETRIES; i++) {
+-                if (access(VFIO_COMPLETE_PATH, F_OK) == 0) {
++                if (access(VFIO_COMPLETE_PATH, F_OK) == 0 && access(MM_VFIO_COMPLETE_PATH, F_OK) == 0) {
+                         log_error("vfio script completes, flag found at '%s'", VFIO_COMPLETE_PATH);
+                         break;  /* Path exists, continue execution */
+                 }
+-- 
+2.34.1
+

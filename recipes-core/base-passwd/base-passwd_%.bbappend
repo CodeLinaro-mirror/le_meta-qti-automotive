@@ -1,5 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append = " \
-    file://sh_login.patch \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' file://sh_login.patch', '', d)} \
 "

@@ -41,6 +41,9 @@ do_compile:prepend() {
     sed -i -e "/$(CONFIG_QCA_CLD_WLAN_PROFILE)_defconfig$/i${FRAME_SIZE_FLAG}" ${S}/Kbuild
 }
 
+# lock to avoid parallel compiling
+do_compile[lockfiles] += "${TMPDIR}/qti-techpack.lock"
+
 RPROVIDES:${PN} += "${PROVIDES_NAME}-${KERNEL_VERSION}"
 
 FILES:${PN} += "${nonarch_base_libdir}/firmware/wlan/*"
