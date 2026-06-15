@@ -9,6 +9,7 @@ DEPENDS += "\
     glib-2.0 \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'libuhab', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'ptp-vk', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'power-utils', '', d)} \
 "
 
 SRC_URI = "\
@@ -19,7 +20,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/external/open-avb"
 
 inherit systemd pkgconfig useradd autotools-brokensep
-
+inherit ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'sleep-notify-service', '', d)}
 # Add non-root user vnw for gptp-daemon.service
 USERADD_PACKAGES = "${PN}"
 
@@ -36,7 +37,8 @@ EXTRA_OEMAKE += "ENABLE_LIBGPTP_TEST=1"
 EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'ENABLE_GPTP_SERVICE=1', d)}"
 EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'AVB_FEATURE_GVM_MODE=1', '', d)}"
 #EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'GPTP_VFIO=1', '', d)}"
-SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'gptp.service', d)}"
+EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'GPTP_DSQB_ENABLED=1', 'GPTP_DSQB_ENABLED=0', d)}"
+SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'gptp.service sleep-notify@gptp.service', d)}"
 
 do_compile() {
     oe_runmake gptp

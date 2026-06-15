@@ -32,8 +32,10 @@
 
 [Unit]
 Description=Memory Hotplug
-After=sysinit.target
-Before=usb.service
+After=vidc-test-app.service video-driver.service awe-audio.service qcx_server.service qcarcam_rvc.service openwfd_server_@0.service openwfd_server_@1.service
+Before=usb.service shutdown.target qcrosvm.service
+DefaultDependencies=no
+Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
