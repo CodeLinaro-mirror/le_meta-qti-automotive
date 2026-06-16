@@ -1,0 +1,6 @@
+wlan-sigma-dut (1.0.0) noble; urgency=medium
+
+  * Converted from BitBake recipe wlan-sigma-dut_git.bb.
+  * Build with NL80211_SUPPORT=y; installs sigma_dut to /usr/sbin/.
+
+ -- Ben Wang <benw@qti.qualcomm.com>  Mon, 16 Jun 2026 07:00:00 +0000

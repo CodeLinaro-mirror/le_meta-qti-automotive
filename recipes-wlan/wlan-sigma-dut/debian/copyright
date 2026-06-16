@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: sigma-dut
+Upstream-Contact: https://github.com/qca/sigma-dut
+Source: https://github.com/qca/sigma-dut
+
+Files: *
+Copyright: (c) 2010-2011, Atheros Communications, Inc
+           (c) 2011-2017, Qualcomm Atheros, Inc
+           (c) 2018-2021, The Linux Foundation
+           (c) 2003-2012, Jouni Malinen <j@w1.fi> and contributors
+           (c) 2014 Wi-Fi Alliance
+License: BSD-3-Clause
