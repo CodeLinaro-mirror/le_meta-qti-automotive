@@ -12,7 +12,7 @@ LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=f3b90e78ea0cffb20bf5cca7947a896d"
 
 PR = "r8"
-SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=${TARGET_DIR}wlan/qcacld-3.0;usehead=1 \
+SRC_URI = "${PATH_TO_REPO}/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=wlan/qcacld-3.0;usehead=1 \
            ${PATH_TO_REPO}/${TARGET_DIR}wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=${TARGET_DIR}wlan/qca-wifi-host-cmn;usehead=1 \
            ${PATH_TO_REPO}/${TARGET_DIR}wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=${TARGET_DIR}wlan/fw-api/;usehead=1 \
            ${PATH_TO_REPO}/${TARGET_DIR}device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=${TARGET_DIR}device/qcom/wlan;usehead=1 \
@@ -29,7 +29,7 @@ FW_PATH_NAME = "qca6390"
 FIRMWARE_PATH = "${D}${nonarch_base_libdir}/firmware/wlan/qca_cld/${_MODNAME}"
 
 S1 = "${WORKDIR}/${TARGET_DIR}wlan/qca-wifi-host-cmn"
-S = "${WORKDIR}/${TARGET_DIR}wlan/qcacld-3.0"
+S = "${WORKDIR}/wlan/qcacld-3.0"
 
 # Explicitly disable HL to enable LL as current WLAN driver is not having
 # simultaneous support of HL and LL.
