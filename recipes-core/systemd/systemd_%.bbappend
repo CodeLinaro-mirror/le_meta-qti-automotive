@@ -118,9 +118,6 @@ do_install:append () {
         install -m 0664 ${WORKDIR}/linux-msm-6.12_modules_load.conf ${D}${sysconfdir}/modules-load.d/
     fi
 
-    # Create by-partlabel symlink for la/lv/bluetooth/modem/dsp devices in disksymlink-service service, remove these operations from plain udev rules
-    sed -i 's#ENV{ID_PART_ENTRY_SCHEME}=="gpt", ENV{ID_PART_ENTRY_NAME}=="?\*", SYMLINK+="disk/by-partlabel/$env{ID_PART_ENTRY_NAME}"#ENV{ID_PART_ENTRY_SCHEME}=="gpt", ENV{ID_PART_ENTRY_NAME}=="?\*", ENV{ID_PART_ENTRY_NAME}!="la_*", ENV{ID_PART_ENTRY_NAME}!="lv_*", ENV{ID_PART_ENTRY_NAME}!="bluetooth*", ENV{ID_PART_ENTRY_NAME}!="modem*", ENV{ID_PART_ENTRY_NAME}!="dsp*", SYMLINK+="disk/by-partlabel/$env{ID_PART_ENTRY_NAME}"#' ${D}${rootlibexecdir}/udev/rules.d/60-persistent-storage.rules
-
     # Mask serial-getty on hvc0 to prevent auto getty on hypervisor console
     ln -sf /dev/null ${D}${sysconfdir}/systemd/system/serial-getty@hvc0.service
 }
