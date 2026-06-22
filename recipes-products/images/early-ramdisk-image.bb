@@ -27,7 +27,7 @@ IMAGE_INSTALL = "\
     ${@bb.utils.contains('PACKAGE_CLASSES', 'package_rpm', 'busybox', '', d)} \
 "
 do_rootfs[depends] += "virtual/kernel:do_shared_workdir"
-do_rootfs[depends] += "${@'platformdlkm:do_packagedata' if d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-ack' else ''}"
+do_rootfs[depends] += "${@'platformdlkm:do_packagedata' if d.getVar('MACHINE_FEATURES') == 'qti-hypervisor' else ''}"
 
 python do_rootfs:prepend() {
     import re
