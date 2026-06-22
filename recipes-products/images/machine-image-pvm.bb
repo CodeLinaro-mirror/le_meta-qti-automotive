@@ -46,6 +46,11 @@ IMAGE_INSTALL += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'packagegroup-selinux-minimal packagegroup-selinux-policycoreutils checkpolicy secilc auditd selinux-policy', '', d)} \
 "
 
+IMAGE_INSTALL:append:pn-machine-image-pvm = " \
+    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-bluetooth', 'packagegroup-qti-bluetooth', '', d)} \
+    ${@bb.utils.contains('COMBINED_FEATURES', 'qti-wlan', 'packagegroup-qti-wlan', '', d)} \
+"
+
 do_rootfs[postfuncs] += "prune_busybox_unused"
 
 prune_busybox_unused () {
