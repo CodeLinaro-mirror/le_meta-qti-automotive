@@ -9,7 +9,7 @@ PACKAGES = "\
 ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
-    ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'platformdlkm ', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'platformdlkm ', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'ab-boot-support', 'abctl ab-status-updater', '', d)} \
     packagegroup-core-boot \
     "

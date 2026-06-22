@@ -17,6 +17,7 @@ SRC_URI:append:sa81x5 = " file://0001-systemd-add-slotselect-support-in-fstab.pa
 
 SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.12", "file://linux-msm-6.12_modules_load.conf", "", d)}"
 SRC_URI:append:qclinux-gvm-gen5 = " ${@bb.utils.contains("PREFERRED_VERSION_linux-qcom-custom-rt", "6.6", "file://linux-qcom-gvm-6.6_modules_load.conf", "", d)}"
+SRC_URI:remove:qclinux-gvm-gen5 = "file://0001-systemd-add-vfio-script-wait-in-systemd-init-process.patch"
 
 SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0035-systemd-Make-systemd-init-run-in-high-priority.patch', '', d)} "
 
