@@ -56,6 +56,7 @@ _WLAN_CFG_OVERRIDE = "\
                         CONFIG_FEATURE_DELAYED_PEER_OBJ_DESTROY=n \
                         "
 EXTRA_OEMAKE:append = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE}"
+EXTRA_OEMAKE:append:gen5 = " CONFIG_WLAN_MAX_CPUS=18"
 
 do_install() {
     module_do_install
