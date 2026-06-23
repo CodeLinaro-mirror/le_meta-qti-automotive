@@ -123,11 +123,11 @@ merge_ddr_dtbos_single () {
 
     if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
         # prefix 0gvm: for pvm only; prefix 1gvm: for single LAGVM; no prefix: for multigvm LAGVM + LVGVM
-        ddr_sizes="0gvm-64gb:0x700 0gvm-48gb:0x600 0gvm-36gb:0x500 0gvm-32gb:0x500 0gvm-24gb:0x400 0gvm-16gb:0x300 0gvm-12gb:0x200 0gvm-8gb:0x100"
-        ddr_sizes="$ddr_sizes 1gvm-64gb:0x700 1gvm-48gb:0x600 1gvm-36gb:0x500 1gvm-32gb:0x500 1gvm-24gb:0x400 1gvm-16gb:0x300 1gvm-12gb:0x200 1gvm-8gb:0x100"
-        ddr_sizes="$ddr_sizes 64gb:0x700 48gb:0x600 36gb:0x500 32gb:0x500 24gb:0x400 16gb:0x300 12gb:0x200 8gb:0x100"
+        ddr_sizes="0gvm-128gb:0xE00 0gvm-96gb:0xD00 0gvm-64gb:0xC00 0gvm-48gb:0xB00 0gvm-36gb:0xA00 0gvm-32gb:0x900 0gvm-24gb:0x800 0gvm-18gb:0x700 0gvm-16gb:0x600 0gvm-12gb:0x500 0gvm-8gb:0x400 0gvm-4gb:0x300 0gvm-2gb:0x200 0gvm-1gb:0x100"
+        ddr_sizes="$ddr_sizes 1gvm-128gb:0xE00 1gvm-96gb:0xD00 1gvm-64gb:0xC00 1gvm-48gb:0xB00 1gvm-36gb:0xA00 1gvm-32gb:0x900 1gvm-24gb:0x800 1gvm-18gb:0x700 1gvm-16gb:0x600 1gvm-12gb:0x500 1gvm-8gb:0x400 1gvm-4gb:0x300 1gvm-2gb:0x200 1gvm-1gb:0x100"
+        ddr_sizes="$ddr_sizes 128gb:0xE00 96gb:0xD00 64gb:0xC00 48gb:0xB00 36gb:0xA00 32gb:0x900 24gb:0x800 18gb:0x700 16gb:0x600 12gb:0x500 8gb:0x400 4gb:0x300 2gb:0x200 1gb:0x100"
     else
-        ddr_sizes="0gvm-64gb:0x700 0gvm-48gb:0x600 0gvm-36gb:0x500 0gvm-32gb:0x500 0gvm-24gb:0x400 0gvm-16gb:0x300 0gvm-12gb:0x200 0gvm-8gb:0x100"
+        ddr_sizes="0gvm-128gb:0xE00 0gvm-96gb:0xD00 0gvm-64gb:0xC00 0gvm-48gb:0xB00 0gvm-36gb:0xA00 0gvm-32gb:0x900 0gvm-24gb:0x800 0gvm-18gb:0x700 0gvm-16gb:0x600 0gvm-12gb:0x500 0gvm-8gb:0x400 0gvm-4gb:0x300 0gvm-2gb:0x200 0gvm-1gb:0x100"
     fi
 
     dtb_files=$(find $dtb_dir -name "*.dtb")
