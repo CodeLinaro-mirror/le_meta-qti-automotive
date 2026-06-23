@@ -1,0 +1,22 @@
+Source: wlan-sigma-dut
+Section: net
+Priority: optional
+Maintainer: Ben Wang <benw@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13),
+               libnl-3-dev,
+               libnl-genl-3-dev,
+               pkg-config
+Standards-Version: 4.6.0
+Homepage: https://github.com/qca/sigma-dut
+
+Package: wlan-sigma-dut
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: WFA Certification Test Tool
+ sigma_dut is an application used for WFA certification testing.
+ The WFA has developed an interoperability test suite; working in
+ conjunction with an authorized test lab, these tests are performed
+ on vendor products.
+ .
+ The tool supports all kinds of test cases, including WMM-PS,
+ TGn, WPS, Wi-Fi Direct, DPP, NAN, and more.

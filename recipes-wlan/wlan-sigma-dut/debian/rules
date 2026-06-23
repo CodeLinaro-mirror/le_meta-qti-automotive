@@ -1,0 +1,53 @@
+#!/usr/bin/make -f
+# Debian rules for wlan-sigma-dut
+#
+# sigma-dut uses a plain Makefile (no autotools/configure).
+# Key build options translated from wlan-sigma-dut_git.bb:
+#   NL80211_SUPPORT=y  -> -DNL80211_SUPPORT, links -lnl-3 -lnl-genl-3
+#   BINDIR=/usr/sbin/  -> installs sigma_dut to /usr/sbin/ (sbindir)
+#
+# CURDIR == layers/meta-qti-automotive/recipes-wlan/wlan-sigma-dut/
+# Source is accessed via the src symlink -> ../../../../wlan/utils/sigma-dut
+# (the build system resolves this symlink before invoking sbuild)
+
+export DH_VERBOSE = 1
+
+SRC_DIR := $(CURDIR)/src
+PKG_DIR := $(CURDIR)/debian/wlan-sigma-dut
+
+# Parallel jobs: honour DEB_BUILD_OPTIONS=parallel=N, default to nproc
+NJOBS := $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+ifeq ($(NJOBS),)
+NJOBS := $(shell nproc)
+endif
+
+%:
+	dh $@
+
+# ---------------------------------------------------------------------------
+# do_configure: plain Makefile - no configure step
+# ---------------------------------------------------------------------------
+override_dh_auto_configure:
+	# Nothing to do - sigma-dut uses a plain Makefile
+
+# ---------------------------------------------------------------------------
+# do_compile
+# ---------------------------------------------------------------------------
+override_dh_auto_build:
+	$(MAKE) -C $(SRC_DIR) -j$(NJOBS) \
+		CC=$(DEB_HOST_GNU_TYPE)-gcc \
+		NL80211_SUPPORT=y
+
+# ---------------------------------------------------------------------------
+# do_install: install sigma_dut binary to /usr/sbin/
+# ---------------------------------------------------------------------------
+override_dh_auto_install:
+	$(MAKE) -C $(SRC_DIR) install \
+		DESTDIR=$(PKG_DIR) \
+		BINDIR=/usr/sbin/
+
+# ---------------------------------------------------------------------------
+# do_clean
+# ---------------------------------------------------------------------------
+override_dh_auto_clean:
+	$(MAKE) -C $(SRC_DIR) clean || true
