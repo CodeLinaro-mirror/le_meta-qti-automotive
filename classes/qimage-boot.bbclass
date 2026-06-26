@@ -13,18 +13,36 @@ DEPENDS += "\
 
 DTB_OFFSET = "0x9300000"
 DTB_OFFSET:gvm-gen5 = "0x9700000"
+DTB_OFFSET:qclinux-gvm-gen5 = "0x9700000"
+
+DTB_FILE_LIST:gvm-gen5 = "\
+    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-gunyah-vm-lv-qam.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-v2-gunyah-vm-lv-qam.dtb \
+"
+DTB_FILE_LIST:gvm-gen4-5 = "\
+    ${DEPLOY_DIR_IMAGE}/dtbs/monaco-gh-vm-lv-qam-ridesx.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gh-vm-lv-qam-ridesx.dtb \
+"
+
+DTB_FILE_LIST:qclinux-gvm-gen5 = "\
+    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-gunyah-vm-lv-qam.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-v2-gunyah-vm-lv-qam.dtb \
+"
 
 gvm_pilsplitter() {
     PILTOOLS_PATH="${STAGING_BINDIR_NATIVE}/scripts/pil_tools"
-    DTB_FILE_LIST=$(find ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb -name "*.dtb" | sort)
-    if [ -z "${DTB_FILE_LIST}" ]; then
+    DTB_CHECK=$(find ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb -name "*.dtb" | sort)
+    if [ -z "${DTB_CHECK}" ]; then
         echo "No *.dtb files found in $DEPLOY_DIR_IMAGE/dtbs"
         exit 1
     else
-        ${STAGING_BINDIR_NATIVE}/build/prebuilts/kernel-build-tools/linux-x86/bin/mkdtimg create ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img \
-            ${DEPLOY_DIR_IMAGE}/dtbs/monaco-gh-vm-lv-qam-ridesx.dtb \
-            ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gh-vm-lv-qam-ridesx.dtb \
-            ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-gunyah-vm-qam.dtb
+        # Use vb-dtb.img to avoid overwriting dtbs/dtb.img used by do_makeboot.
+        # dtbs/dtb.img is the full cat *.dtb result for boot.img;
+        # vb-dtb.img is the mkdtimg format for PIL signing (bootloader.img).
+        # DTB_FILE_LIST defines per-machine DTBs with full paths.
+        ${STAGING_BINDIR_NATIVE}/build/prebuilts/kernel-build-tools/linux-x86/bin/mkdtimg create \
+            ${DEPLOY_DIR_IMAGE}/dtbs/vb-dtb.img \
+            ${DTB_FILE_LIST}
     fi
 
     install -d ${DEPLOY_DIR_IMAGE}/signing
@@ -34,15 +52,15 @@ gvm_pilsplitter() {
     cp ${DEPLOY_DIR_IMAGE}/LinuxLoader.efi ${DEPLOY_DIR_IMAGE}/signing
     cp ${DEPLOY_DIR_IMAGE}/FVMAIN_COMPACT.Fv ${DEPLOY_DIR_IMAGE}/signing
     cp ${DEPLOY_DIR_IMAGE}/ramdisk.img ${DEPLOY_DIR_IMAGE}/signing
-    cp ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img ${DEPLOY_DIR_IMAGE}/signing
+    cp ${DEPLOY_DIR_IMAGE}/dtbs/vb-dtb.img ${DEPLOY_DIR_IMAGE}/signing/vb-dtb.img
 
     cd ${DEPLOY_DIR_IMAGE}/signing
 
     # autoghgvmlv-boot.elf is not a standard elf file, verify_elf in image_header.py
     # will fail and return 1.bypass yocto by adding 'set +e' and 'set -e'
     set +e
-    python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-boot.elf Image,0x0 dtb.img,0x3000000 ramdisk.img,0x3100000 --32
-    python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-bootloader.elf FVMAIN_COMPACT.Fv,0x0 dtb.img,${DTB_OFFSET} LinuxLoader.efi,0x9800000 --32
+    python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-boot.elf Image,0x0 vb-dtb.img,0x3000000 ramdisk.img,0x3100000 --32
+    python3 ${PILTOOLS_PATH}/image_header.py autoghgvmlv-bootloader.elf FVMAIN_COMPACT.Fv,0x0 vb-dtb.img,${DTB_OFFSET} LinuxLoader.efi,0x9800000 --32
     set -e
 
     sectools secure-image autoghgvmlv-boot.elf --image-id GVM2 --security-profile ${STAGING_BINDIR_NATIVE}/${SECTOOLS_SECURITY_PROFILE} --sign --signing-mode TEST --outfile autoghgvmlv_signed-boot.elf
@@ -77,42 +95,28 @@ python () {
 }
 
 do_merge_dtbs[depends] += "virtual/kernel:do_deploy"
+do_merge_dtbs[depends] += "virtual/kernel:do_shared_workdir"
 
 do_merge_dtbs() {
-     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
-     install -d ${DEPLOY_DIR_IMAGE}/dtbs
+    export PATH="${STAGING_KERNEL_BUILDDIR}/bin:${PATH}"
+    install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
+    install -d ${DEPLOY_DIR_IMAGE}/dtbs
 
-     if ${@oe.utils.version_less_or_equal('PREFERRED_VERSION_linux-msm', '6.0', 'true', 'false', d)}; then
-         ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
-         ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb \
-         ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs \
-         ${DEPLOY_DIR_IMAGE}/dtbs
+    KERNEL_TARGET=autogvm ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
+    --base ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb \
+    --techpack ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs \
+    --out ${DEPLOY_DIR_IMAGE}/dtbs
 
-         if ${@bb.utils.contains('MACHINE_FEATURES', 'dt-overlay', 'true', 'false', d)}; then
-             install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos
-             install -d ${DEPLOY_DIR_IMAGE}/dtbos
-             ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
-             ${DEPLOY_DIR_IMAGE}/build-artifacts/dtbo \
-             ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos \
-             ${DEPLOY_DIR_IMAGE}/dtbos
-         fi
-     else
-         ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
-         --base ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb \
-         --techpack ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs \
-         --out ${DEPLOY_DIR_IMAGE}/dtbs
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'dt-overlay', 'true', 'false', d)}; then
+        install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos
+        install -d ${DEPLOY_DIR_IMAGE}/dtbos
+        KERNEL_TARGET=autogvm  ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
+        --base ${DEPLOY_DIR_IMAGE}/build-artifacts/dtbo \
+        --techpack ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos \
+        --out ${DEPLOY_DIR_IMAGE}/dtbos
+    fi
 
-         if ${@bb.utils.contains('MACHINE_FEATURES', 'dt-overlay', 'true', 'false', d)}; then
-             install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos
-             install -d ${DEPLOY_DIR_IMAGE}/dtbos
-             ${STAGING_BINDIR_NATIVE}/build/android/merge_dtbs.py \
-             --base ${DEPLOY_DIR_IMAGE}/build-artifacts/dtbo \
-             --techpack ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbos \
-             --out ${DEPLOY_DIR_IMAGE}/dtbos
-         fi
-     fi
-
-     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
+    cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
 }
 do_merge_dtbs[cleandirs] = " \
      ${DEPLOY_DIR_IMAGE}/dtbs \

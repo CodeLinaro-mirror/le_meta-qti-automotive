@@ -143,15 +143,14 @@ BBMASK:append:qclinux-gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
 BBMASK:append:gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
 BBMASK:append:qclinux-gvm-gen5 = " \
     recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
-    recipes-kernel/edk2/edk2_5.0.bb \
     recipes/kernel-tests/kernel-tests.bb \
-    recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
     meta-qti-automotive/recipes-qcvirtio \
     meta-qti-automotive/recipes-audio \
     meta-qti-automotive-prop/recipes-audio \
     meta-qti-automotive/recipes-graphics \
     meta-qti-automotive-prop/recipes-mmframeworks/mm-frameworks-core/mm-frameworks-core_git.bb \
-    recipes-products/images/qti-image-boot.bb \
+    meta-qti-auto-kernel/recipes-kernel/linux/linux-qcom-custom_6.6.bbappend \
+    meta-qti-auto-kernel/recipes-kernel/linux/linux-qcom-custom-rt_6.6.bbappend \
 "
 
 

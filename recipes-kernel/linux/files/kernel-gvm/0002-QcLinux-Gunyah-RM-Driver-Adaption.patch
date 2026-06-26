@@ -1,0 +1,178 @@
+From ce3f56f68c5a93c52af5d92197df87dc176f04a3 Mon Sep 17 00:00:00 2001
+From: Zhuo Yang <zhuyan@qti.qualcomm.com>
+Date: Mon, 18 May 2026 11:04:42 +0800
+Subject: [PATCH] QcLinux Gunyah RM Driver Adaption
+
+To enable Gunyah RM driver for Nord LVGVM of Qclinux Kernel,
+some function in kernel should be export to soc-repo,
+and some compatible changes are added.
+
+Change-Id: I53b9c2c38b373871cf8c7b7a0c7ca8aaf493638c
+Signed-off-by: Zhuo Yang <zhuyan@qti.qualcomm.com>
+---
+ drivers/base/Kconfig          |  1 +
+ drivers/virt/gunyah/rsc_mgr.c | 40 +++++++++++++++++++++++++++++++++++
+ kernel/kallsyms.c             |  1 +
+ kernel/printk/printk.c        |  1 +
+ kernel/sched/core.c           |  2 ++
+ mm/percpu.c                   |  1 +
+ 6 files changed, 46 insertions(+)
+
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index 2b8fd6bb7da0..6fa3ef642f89 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -3,6 +3,7 @@ menu "Generic Driver Options"
+ 
+ config AUXILIARY_BUS
+ 	bool
++	default y
+ 
+ config UEVENT_HELPER
+ 	bool "Support for uevent helper"
+diff --git a/drivers/virt/gunyah/rsc_mgr.c b/drivers/virt/gunyah/rsc_mgr.c
+index 3255ae185599..b44e0f6c8997 100644
+--- a/drivers/virt/gunyah/rsc_mgr.c
++++ b/drivers/virt/gunyah/rsc_mgr.c
+@@ -16,6 +16,7 @@
+ #include <linux/gunyah_rsc_mgr.h>
+ #include <linux/platform_device.h>
+ #include <linux/miscdevice.h>
++#include <linux/auxiliary_bus.h>
+ 
+ #include <asm/gunyah.h>
+ 
+@@ -155,6 +156,7 @@ struct gh_rm {
+ 
+ 	struct miscdevice miscdev;
+ 	struct irq_domain *irq_domain;
++	struct auxiliary_device adev;
+ };
+ 
+ /**
+@@ -704,6 +706,7 @@ int gh_rm_call(struct gh_rm *rm, u32 message_id, const void *req_buf, size_t req
+ 	kfree(connection);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(gh_rm_call);
+ 
+ 
+ int gh_rm_notifier_register(struct gh_rm *rm, struct notifier_block *nb)
+@@ -791,6 +794,33 @@ static int gh_identify(void)
+ 	return 0;
+ }
+ 
++static void gh_rm_adev_release(struct device *dev)
++{
++	/* no-op */
++}
++
++static int gh_adev_init(struct gh_rm *rm, const char *name)
++{
++	struct auxiliary_device *adev = &rm->adev;
++	int ret;
++
++	adev->name = name;
++	adev->dev.platform_data = rm;
++	adev->dev.parent = rm->miscdev.this_device;
++	adev->dev.release = gh_rm_adev_release;
++	ret = auxiliary_device_init(adev);
++	if (ret)
++		return ret;
++
++	ret = auxiliary_device_add(adev);
++	if (ret) {
++		auxiliary_device_uninit(adev);
++		return ret;
++	}
++
++	return ret;
++}
++
+ static int gh_rm_drv_probe(struct platform_device *pdev)
+ {
+ 	struct irq_domain *parent_irq_domain;
+@@ -867,7 +897,15 @@ static int gh_rm_drv_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto err_irq_domain;
+ 
++	ret = gh_adev_init(rm, "gh_rm_core");
++	if (ret) {
++		pr_err("Failed to add gh_rm_core device\n");
++		goto err_misc_device;
++	}
++
+ 	return 0;
++err_misc_device:
++	misc_deregister(&rm->miscdev);
+ err_irq_domain:
+ 	irq_domain_remove(rm->irq_domain);
+ err_msgq:
+@@ -881,6 +919,8 @@ static int gh_rm_drv_remove(struct platform_device *pdev)
+ {
+ 	struct gh_rm *rm = platform_get_drvdata(pdev);
+ 
++	auxiliary_device_delete(&rm->adev);
++	auxiliary_device_uninit(&rm->adev);
+ 	misc_deregister(&rm->miscdev);
+ 	irq_domain_remove(rm->irq_domain);
+ 	gh_msgq_remove(&rm->msgq);
+diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
+index 07f33601cac2..0a3dbab10c4e 100644
+--- a/kernel/kallsyms.c
++++ b/kernel/kallsyms.c
+@@ -280,6 +280,7 @@ unsigned long kallsyms_lookup_name(const char *name)
+ 
+ 	return module_kallsyms_lookup_name(name);
+ }
++EXPORT_SYMBOL_GPL(kallsyms_lookup_name);
+ 
+ /*
+  * Iterate over all symbols in vmlinux.  For symbols from modules use
+diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
+index 51c43e0f9b29..b2086178b64c 100644
+--- a/kernel/printk/printk.c
++++ b/kernel/printk/printk.c
+@@ -3984,6 +3984,7 @@ int _printk_deferred(const char *fmt, ...)
+ 
+ 	return r;
+ }
++EXPORT_SYMBOL_GPL(_printk_deferred);
+ 
+ /*
+  * printk rate limiting, lifted from the networking subsystem.
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e6a05c0594e8..64451b93acf1 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -116,6 +116,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_util_est_se_tp);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_update_nr_running_tp);
+ 
+ DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
++EXPORT_SYMBOL_GPL(runqueues);
+ DEFINE_PER_CPU(struct rnd_state, sched_rnd_state);
+ 
+ #ifdef CONFIG_SCHED_DEBUG
+@@ -7880,6 +7881,7 @@ int sched_setscheduler(struct task_struct *p, int policy,
+ {
+ 	return _sched_setscheduler(p, policy, param, true);
+ }
++EXPORT_SYMBOL_GPL(sched_setscheduler);
+ 
+ int sched_setattr(struct task_struct *p, const struct sched_attr *attr)
+ {
+diff --git a/mm/percpu.c b/mm/percpu.c
+index 54c2988a7496..46254fbca522 100644
+--- a/mm/percpu.c
++++ b/mm/percpu.c
+@@ -2417,6 +2417,7 @@ phys_addr_t per_cpu_ptr_to_phys(void *addr)
+ 		return page_to_phys(pcpu_addr_to_page(addr)) +
+ 		       offset_in_page(addr);
+ }
++EXPORT_SYMBOL_GPL(per_cpu_ptr_to_phys);
+ 
+ /**
+  * pcpu_alloc_alloc_info - allocate percpu allocation info
+-- 
+2.34.1
+
