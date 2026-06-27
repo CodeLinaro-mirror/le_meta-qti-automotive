@@ -9,6 +9,7 @@ SRC_URI:append = " \
              file://0001-udev-make-block-input-rules-be-triggered-earlier.patch \
              file://0001-systemd-add-vfio-script-wait-in-systemd-init-process.patch \
              ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', '', 'file://qti_sleep.sh', d)} \
+             file://0001-journald-keep-O_RDONLY-fds-open-to-sealed-archive-fi.patch \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0037-systemd-Add-wdt_ping-in-dispatch_runqueue.patch', '', d)} \
              ${@bb.utils.contains('DISTRO_FEATURES', 'qti-rumi', 'file://0031-udev-trigger-only-enable-must-part-while-leave-other.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0001-systemd-sleep-change-suspend-state-list.patch', '', d)} \
