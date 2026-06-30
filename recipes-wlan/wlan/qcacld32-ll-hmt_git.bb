@@ -23,6 +23,7 @@ SRCREV_FORMAT = "qcacld_cmn_fw_msm"
 
 _MODNAME = "qca6797"
 _WLAN_CTRL_NAME = "wlan"
+FW_PATH_NAME = "kiwi"
 FIRMWARE_PATH = "${D}${nonarch_base_libdir}/firmware/wlan/qca_cld/${_MODNAME}"
 
 S1 = "${WORKDIR}/${TARGET_DIR}wlan/qca-wifi-host-cmn"
@@ -67,4 +68,12 @@ do_install() {
     install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6797.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
     install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/wlan_mac.bin ${FIRMWARE_PATH}/wlan_mac.bin
 
+    ln -sf /firmware/image/${FW_PATH_NAME} ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}
+
+}
+
+# Disable idle shutdown for HGY
+do_install:append() {
+    sed -i "s/gInterfaceChangeWait=500/gInterfaceChangeWait=0/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
+    sed -i "s/gSuspendMode=3/gSuspendMode=2/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
 }

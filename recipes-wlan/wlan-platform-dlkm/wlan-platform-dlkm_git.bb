@@ -5,10 +5,11 @@ LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
 ${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
-SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/wlan/platform/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/wlan/platform;;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/wlan/platform/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/wlan/platform;;usehead=1 \
+"
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/vendor/qcom/opensource/wlan/platform"
+S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/wlan/platform"
 
 TECHPACK_MODULE_OUT = "${WORKDIR}/wlan-platform-dlkm"
 TECHPACK_MODULES = "cnss2/cnss2.ko"
@@ -51,6 +52,7 @@ WLAN_PLATFORM_CFG_PROD = "\
                      "
 
 EXTRA_OEMAKE:append = " ${WLAN_PLATFORM_CFG}"
+EXTRA_OEMAKE:append = " CONFIG_PINCTRL_MSM=n CONFIG_QCOM_MEMORY_DUMP_V2=y CONFIG_PINCTRL_MSM_NO_EXT=y"
 TECHPACK_MAKE_ARGS = "${EXTRA_OEMAKE} QTI_TECHPACK=true"
 
 do_install:append(){
