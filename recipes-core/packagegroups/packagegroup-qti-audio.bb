@@ -39,6 +39,7 @@ AUDIOREACH_RDEPENDS = "\
     ar-dev-plugin \
     audioreach-conf \
     ar-audio-init-service \
+    audio-device-manager \
 "
 
 RDEPENDS:${PN} += "\

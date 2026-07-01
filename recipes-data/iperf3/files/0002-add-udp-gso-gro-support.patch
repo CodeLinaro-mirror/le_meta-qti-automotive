@@ -1,9 +1,21 @@
-Backport from upstream, and rebased.
+Backport from upstream, rebased, and folded with GRO fast-path race fix.
 
 Author: Guillaume Egles <gegles@us.ibm.com>
 Date:   Fri Sep 5 17:30:22 2025 +0000
-Subject: Add UDP GSO/GRO support (Linux) and --no-gsro switch
+Subject: Add UDP GSO/GRO support (Linux), --no-gsro switch; fix GRO recv race (SIGSEGV)
 Upstream-status: Pending
+
+Add UDP GSO (Generic Segmentation Offload) and GRO (Generic Receive
+Offload) support for iperf3 on Linux. When the kernel exposes
+UDP_SEGMENT and/or UDP_GRO socket options, iperf3 enables them by
+default for improved UDP throughput. Use --no-gsro to opt out.
+
+Also fix a race condition in the GRO fast-path: the worker thread blocks
+in poll() for up to 10 seconds. During this window the main thread may
+receive TEST_END, close sp->socket (waking poll() via POLLHUP/POLLERR),
+set sp->done = 1, and free the stream. The worker then dereferences
+sp->test->state pointing to freed memory, causing SIGSEGV.
+
 Signed-off-by: Guillaume Egles <gegles@us.ibm.com>
 
 diff --git a/configure b/configure
@@ -488,7 +500,7 @@ index 150b8c69..6de592de 100644
  
  #include "iperf.h"
  #include "iperf_api.h"
-@@ -47,146 +54,156 @@
+@@ -47,146 +54,170 @@
  #include "net.h"
  #include "cjson.h"
  
@@ -546,7 +558,21 @@ index 150b8c69..6de592de 100644
 +#endif
 +        if (sel_r < 0) return NET_HARDERROR;
 +        if (sel_r == 0) return 0; /* timeout */
-+        
++
++        /*
++         * Guard against a race condition introduced by the GRO fast-path:
++         * The main thread may have closed sp->socket (which causes poll/select
++         * above to return with sel_r > 0 via POLLHUP/POLLERR) and concurrently
++         * set sp->done = 1 as part of test teardown (TEST_END handling in
++         * iperf_handle_message_server). If we proceed past this point after
++         * teardown has started, sp->test may point to freed/invalid memory,
++         * causing the SIGSEGV at the "sp->test->state" dereference below.
++         * Returning 0 here is safe: the caller (iperf_server_worker_run) will
++         * re-check test->done at the top of its while-loop and exit cleanly.
++         */
++        if (sp->done)
++            return 0;
++
 +        /*
 +         * ZERO-COPY KERNEL DROP OPTIMIZATION:
 +         * If recvmmsg didn't yield much improvement, the bottleneck is likely memory 

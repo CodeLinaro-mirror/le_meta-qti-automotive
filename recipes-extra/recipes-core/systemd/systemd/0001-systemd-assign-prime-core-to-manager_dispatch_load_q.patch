@@ -23,7 +23,7 @@ index 12c49e7fca..3c8db636ac 100644
 
 +        cpu_set_t cpu_set;
 +        CPU_ZERO(&cpu_set);
-+        CPU_SET(0, &cpu_set);
++        CPU_SET(2, &cpu_set);
 +        sched_setaffinity(0, sizeof(cpu_set_t), &cpu_set);
 +
          while ((u = m->load_queue)) {

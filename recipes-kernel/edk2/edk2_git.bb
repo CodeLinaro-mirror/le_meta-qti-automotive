@@ -74,7 +74,8 @@ EXTRA_OEMAKE:append:gen5 = " 'SUPPORT_AB_BOOT_LXC=1' \
                                'ENABLE_SAIL_BOOT=1' \
                                'BOOTIMAGE_LOAD_VERIFY_IN_PARALLEL=1' \
                                'LOAD_TWO_KM_TAS=1' \
-                               'FLASHING_LOCK_WITHOUT_MISC_PART=1' "
+                               'FLASHING_LOCK_WITHOUT_MISC_PART=1' \
+                               'SOC_OP_MODE_IN_CMDLINE=1' "
 
 EXTRA_OEMAKE:append:sa7255 = " 'SUPPORT_AB_BOOT_LXC=1' \
                                'AB_RETRYCOUNT_DISABLE=1' \
