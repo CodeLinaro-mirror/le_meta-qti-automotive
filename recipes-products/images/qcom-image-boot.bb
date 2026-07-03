@@ -70,7 +70,7 @@ do_make_dtb() {
         #Copy pvm only dtb from interout to separate directory
 
         for file in "$inter_out_dir"/*; do
-            case "$file" in
+            case "$(basename $file)" in
                 *vm*) ;;
                 *) mv "$file" "$pvm_only_directory" ;;
             esac
