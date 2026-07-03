@@ -296,6 +296,7 @@ GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive-prop/recipes-kernel/kernel-devicetree/kernel-devicetree.bb \
     meta-qti-automotive-prop/recipes-graphics/owfds-ship/owfds-ship.bb \
     meta-qti-automotive-prop/recipes-graphics/owfds/owfds.bb \
+    meta-qti-automotive-prop/recipes-graphics/owfds/owfds-headers.bb \
     meta-qti-automotive-prop/recipes-graphics/owfds/openwfd-client.bb \
     meta-qti-automotive-prop/recipes-graphics/owfds/display-drvconfig.bb \
     meta-qti-automotive-prop/recipes-graphics/libgbm/gbm_git \
