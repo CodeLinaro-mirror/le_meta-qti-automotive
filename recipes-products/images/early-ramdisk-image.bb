@@ -3,6 +3,7 @@ LICENSE = "BSD-3-Clause-Clear"
 
 DEPENDS += "mkbootimg-native virtual/kernel"
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'audiolite-dlkm safelinux-system-cfg safelinux-sec-modules safelinux-cfg-modules msmhab hyp-udmabuf gunyah-drivers ', '', d)}"
+DEPENDS:qclinux-gvm-gen5:append = " soc-repo"
 
 IMAGE_CLASSES:remove = "qimage qimage-boot"
 
