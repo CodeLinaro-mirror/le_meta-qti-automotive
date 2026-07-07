@@ -86,7 +86,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-data/ptp-virtual/ptp-virtual_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
-    meta-qti-automotive/recipes-graphics/graphics-driver/graphicsdlkm_git.bb \
     meta-qti-automotive/recipes-graphics/graphics-hgsl/graphics-hgsldlkm_git.bb \
     meta-qti-automotive/recipes-kernel/dtc/dtc-aosp.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_5.0.bb \
@@ -158,7 +157,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
-    meta-qti-automotive/recipes-graphics/graphics-driver/graphicsdlkm_git.bb \
     meta-qti-automotive/recipes-graphics/graphics-hgsl/graphics-hgsldlkm_git.bb \
     meta-qti-automotive/recipes-kernel/dtc/dtc-aosp.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_5.0.bb \
