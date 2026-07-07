@@ -57,6 +57,7 @@ _WLAN_CFG_OVERRIDE = "\
                         CONFIG_WLAN_FEATURE_MULTI_LINK_SAP=y \
                         "
 EXTRA_OEMAKE:append = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE}"
+EXTRA_OEMAKE:append:gen5 = " CONFIG_WLAN_MAX_CPUS=18"
 
 do_install() {
     module_do_install
