@@ -12,3 +12,6 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'dspfirmware-mount-bt', '', d)} \
     bt-dlkm \
     "
+RDEPENDS:${PN}:append:sa8255-ivi = " \
+    bt-dlkm-secondary \
+    "

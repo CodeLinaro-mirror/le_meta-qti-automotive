@@ -10,7 +10,6 @@ PE = "1"
 
 SRC_URI = "https://hewlettpackard.github.io/wireless-tools/wireless_tools.${PV}.tar.gz \
            file://remove.ldconfig.call.patch \
-           file://man.patch \
            file://avoid_strip.patch \
            file://ldflags.patch \
           "

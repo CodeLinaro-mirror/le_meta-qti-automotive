@@ -3,9 +3,9 @@ include conf/machine/include/basemachine.inc
 SOC_FAMILY ?= "sa-common"
 include conf/machine/include/soc-family.inc
 
-PREFERRED_PROVIDER_virtual/kernel = "linux-msm"
-PREFERRED_PROVIDER_virtual/kernel-headers = "linux-msm-headers"
-preferred-kernel = "PREFERRED_VERSION_linux-msm"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-msm"
+PREFERRED_PROVIDER_virtual/kernel-headers ?= "linux-msm-headers"
+preferred-kernel ?= "PREFERRED_VERSION_linux-msm"
 
 PREFERRED_VERSION_edk2 ?= "5.0"
 
@@ -46,3 +46,4 @@ IMAGE_CLASSES += "qimage"
 EXTRA_IMAGEDEPENDS += "qti-image-boot:do_sign_boot_img"
 EXTRA_IMAGEDEPENDS:remove:qti-dpk = "qti-image-boot:do_sign_boot_img"
 EXTRA_IMAGEDEPENDS:remove:sa7255 = "qti-image-boot:do_sign_boot_img"
+EXTRA_IMAGEDEPENDS:remove:qclinux-gvm-gen5 = "qti-image-boot:do_sign_boot_img"
