@@ -140,15 +140,17 @@ BBMASK:append:qclinux-gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
 BBMASK:append:gvm-gen5 = " ${GVM_MISSING_RECIPE_SRCLIST}"
 BBMASK:append:qclinux-gvm-gen5 = " \
     recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
-    recipes-kernel/edk2/edk2_5.0.bb \
     recipes/kernel-tests/kernel-tests.bb \
-    recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
     meta-qti-automotive/recipes-qcvirtio \
     meta-qti-automotive/recipes-audio \
     meta-qti-automotive-prop/recipes-audio \
     meta-qti-automotive/recipes-graphics \
     meta-qti-automotive-prop/recipes-mmframeworks/mm-frameworks-core/mm-frameworks-core_git.bb \
-    recipes-products/images/qti-image-boot.bb \
+    meta-qti-auto-kernel/recipes-kernel/linux/linux-qcom-custom_6.6.bbappend \
+    meta-qti-auto-kernel/recipes-kernel/linux/linux-qcom-custom-rt_6.6.bbappend \
+    meta-qti-auto-kernel/recipes-kernel/edk2/edk2_git.bbappend \
+    meta-qti-auto-kernel/recipes-kernel/oot-dtbo/oot-dtbo.bbappend \
+    meta-qti-automotive/recipes-core/edk2/edk2_git.bbappend \
 "
 
 
@@ -416,4 +418,34 @@ GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive-internal/recipes/cv-internal/cvp-test_git.bb \
     meta-qti-automotive-internal/recipes-compute-platform/qcipc/qcipc_1.0.bb \
     meta-qti-automotive-internal/recipes/apdf-internal/apdf-internal.bb \
+    meta-qti-automotive-prop/recipes-data/hsi2s/hsi2s-qmi_git.bb \
+    meta-qti-automotive-prop/recipes-graphics/mm-gfx-auto-prop/mm-gfx-auto-prop_git.bb \
+    meta-qti-automotive-prop/recipes-graphics/display-ship/display-ship-linux_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/media-codec2/media-codec2_auto.1.0.bb \
+    meta-qti-automotive-prop/recipes-multimedia/hyp-video/hyp-video-be_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/camera-camx-test/camera-camx-test.bb \
+    meta-qti-automotive-prop/recipes-data/hsi2s/hsi2s-interface_git.bb \
+    meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
+    meta-qti-automotive-prop/recipes-tools/can-firmware/mpc5746-firmware_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/media-noship/media-noship_auto.1.0.bb \
+    meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
+    meta-qti-automotive-prop/recipes-tools/can-flash/can-flash_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/mm-osal/mm-osal_git.bb \
+    meta-qti-automotive-prop/recipes-cv/fastcv-noship/fastcv-noship_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/media-codec2/libvideotxr_auto.1.0.bb \
+    meta-qti-automotive-prop/recipes-multimedia/media-codec2/codec2-service_auto.1.0.bb \
+    meta-qti-automotive-prop/recipes-camera/camx/camx_0.2.bb \
+    meta-qti-automotive-prop/recipes-multimedia/camera-camx/camera-camx_0.1.bb \
+    meta-qti-automotive-prop/recipes-multimedia/hyp-vpp/hyp-vpp_git.bb \
+    meta-qti-automotive-prop/recipes-data/hsi2s/hsi2s-umd_0.1.bb \
+    meta-qti-automotive-prop/recipes-tools/canwrapper/canwrapper-hdr_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/aosal/aosal.bb \
+    meta-qti-automotive-prop/recipes-multimedia/hyp-video/hyp-video_0.1.bb \
+    meta-qti-automotive-prop/recipes-security/securemsm-noship/securemsm-noship_git.bb \
+    meta-qti-automotive-prop/recipes-graphics/drm-fe/drm-fe_git.bb \
+    meta-qti-automotive-prop/recipes-graphics/display-ship/display-vendor-headers_git.bb \
+    meta-qti-automotive-prop/recipes-tools/canwrapper/canwrapper_git.bb \
+    meta-qti-automotive-prop/recipes-graphics/libgbm/gbm-headers_git.bb \
+    meta-qti-automotive-prop/recipes-tools/aurixflasher/aurixflasher_git.bb \
+    meta-qti-automotive-prop/recipes-multimedia/hyp-vpp-be/hyp-vpp-be_git.bb \
 "

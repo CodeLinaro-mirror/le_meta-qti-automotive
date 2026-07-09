@@ -1,0 +1,43 @@
+From e1e9c32531c1fabfc2a32fe50c1997972a60c04e Mon Sep 17 00:00:00 2001
+From: Naiwen Yu <naiwyu@qti.qualcomm.com>
+Date: Mon, 22 Jun 2026 22:33:16 +0800
+Subject: [PATCH] lat_rpc: fix SIGSEGV caused by uninitialized state.server in -S path
+
+In the '-S <host>' (shutdown) case, when clnt_create() fails,
+clnt_pcreateerror() is called with state.server which has not been
+initialized yet.
+
+The garbage pointer value may be passed as a %s argument to snprintf 
+inside clnt_spcreateerror(), causing strlen() to dereference an invalid
+address and crash with SIGSEGV.
+
+The server hostname is already available in optarg at this point (set by
+getopt for the -S option), so use that instead.
+
+Backtrace from coredump:
+  #7 main (lat_rpc.c:116)        clnt_pcreateerror(state.server)  <- uninitialized
+  #6 clnt_pcreateerror()
+  #5 clnt_spcreateerror()
+  #4 snprintf(..., "%s: ", s)     s = 0xffff00000000
+  #0 __strlen_generic()           SIGSEGV
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Naiwen Yu <naiwyu@qti.qualcomm.com>
+---
+ src/lat_rpc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lat_rpc.c b/src/lat_rpc.c
+index 1111111..2222222 100644
+--- a/src/lat_rpc.c
++++ b/src/lat_rpc.c
+@@ -113,7 +113,7 @@ main(int ac, char **av)
+ 		case 'S': /* shutdown serverhost */
+ 		{
+ 			cl = clnt_create(optarg, XACT_PROG, XACT_VERS, "udp");
+ 			if (!cl) {
+-				clnt_pcreateerror(state.server);
++				clnt_pcreateerror(optarg);
+ 				exit(1);
+ 			}

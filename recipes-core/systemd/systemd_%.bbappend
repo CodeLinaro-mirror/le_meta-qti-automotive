@@ -11,10 +11,12 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:gvm-gen5 = " file://60-vblk.rules"
+SRC_URI:append:qclinux-gvm-gen5 = " file://60-vblk.rules"
 SRC_URI:append:gvm-gen4-5 = " file://60-vblk.rules"
 SRC_URI:append:sa81x5 = " file://0001-systemd-add-slotselect-support-in-fstab.patch"
 
 SRC_URI:append = " ${@bb.utils.contains("PREFERRED_VERSION_linux-msm", "6.12", "file://linux-msm-6.12_modules_load.conf", "", d)}"
+SRC_URI:append:qclinux-gvm-gen5 = " ${@bb.utils.contains("PREFERRED_VERSION_linux-qcom-custom-rt", "6.6", "file://linux-qcom-gvm-6.6_modules_load.conf", "", d)}"
 
 SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0035-systemd-Make-systemd-init-run-in-high-priority.patch', '', d)} "
 
@@ -124,6 +126,11 @@ do_install:append () {
 
 do_install:append:gvm-gen5() {
     install -m 0644 ${WORKDIR}/60-vblk.rules ${D}${sysconfdir}/udev/rules.d/
+}
+
+do_install:append:qclinux-gvm-gen5() {
+    install -m 0644 ${WORKDIR}/60-vblk.rules ${D}${sysconfdir}/udev/rules.d/
+    install -m 0664 ${WORKDIR}/linux-qcom-gvm-6.6_modules_load.conf ${D}${sysconfdir}/modules-load.d/
 }
 
 do_install:append:gvm-gen4-5() {

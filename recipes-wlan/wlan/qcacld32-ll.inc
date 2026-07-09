@@ -1,7 +1,7 @@
 PROVIDES_NAME = "kernel-module-${_MODNAME}"
 
 DEPENDS += "wlan-platform-dlkm virtual/kernel"
-inherit autotools-brokensep module qperf module-sign ${@oe.utils.ifelse(d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-msm',"qti-kernel-arch-clang", "")}
+inherit autotools-brokensep module qperf module-sign
 
 WLAN_PLATFORM_PATH = "${STAGING_INCDIR}/wlan-platform"
 WLAN_KBUILD_EXTRA = "KBUILD_EXTRA_SYMBOLS=${WLAN_PLATFORM_PATH}/Module.symvers"
