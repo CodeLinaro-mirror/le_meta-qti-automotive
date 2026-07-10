@@ -1,0 +1,5 @@
+cntvct-log (1.0.0) noble; urgency=medium
+
+  * Initial Debian packaging.
+
+ -- Qualcomm Technologies, Inc. <zhijunl@qti.qualcomm.com>  Tue, 01 Jul 2026 00:00:00 +0000

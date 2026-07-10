@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: cntvct-log
+Source: https://git.codelinaro.org/clo/le/platform/external/boot-time-analysis-tools
+
+Files: *
+Copyright: 2024 Dustin Black
+License: Apache-2.0
+
