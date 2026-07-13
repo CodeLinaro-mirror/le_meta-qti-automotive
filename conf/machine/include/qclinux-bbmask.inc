@@ -265,31 +265,7 @@ GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive-prop/recipes-multimedia/media-codec2/codec2-service_git.bb \
     meta-qti-automotive-prop/recipes-multimedia/libkiumd/libkiumd_git.bb \
     meta-qti-automotive-prop/recipes-multimedia/apdf/apdf_1.0.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/vhost-user-frpc/vhost-user-frpc_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/syscache/syscache-rm_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/ssr-rm/ssr-rm_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/ssctl-service/ssctl-service_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/rpcmem/rpcmem_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/pil-rm/pil-rm_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/nsp-drv/nsp-drv_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libtzbsp/libtzbsp_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libstd/libstd_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libssr-client/libssr-client_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libssloader/libssloader_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libsmp2p/libsmp2p_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libsmem/libsmem_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libqmi-framework/libqmi-framework_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libpil-client/libpil-client_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libipc-router/libipc-router_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libipcc/libipcc_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libglink-core/libglink-core_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/libglink-client/libglink-client_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/ipcc-err-handler/ipcc-err-handler_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/glink-service-lrm/glink-service-lrm_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/glink-passthrough-service/glink-passthrough-service_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/fastrpc-rm/fastrpc-rm_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/fastrpc/fastrpc_git.bb \
-    meta-qti-automotive-prop/recipes-mproc-umd/ecc-err-handler/ecc-err-handler_git.bb \
+    meta-qti-automotive-prop/recipes-mproc-umd/ \
     meta-qti-automotive-prop/recipes-mmframeworks/synx-service/synx-service_git.bb \
     meta-qti-automotive-prop/recipes-mmframeworks/mm-frameworks-ship/mm-frameworks-ship_git.bb \
     meta-qti-automotive-prop/recipes-mmframeworks/mm-frameworks/mm-frameworks_git.bb \
@@ -323,20 +299,7 @@ GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive-prop/recipes-cv/cv-apps/cv-apps_1.0.bb \
     meta-qti-automotive-prop/recipes-core/libvirtdiag/libvirtdiag_git.bb \
     meta-qti-automotive-prop/recipes-core/gearvm-util/gearvm-logs_git.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/powercyclemgr/powercyclemgr_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/pcie-sm/pcie-sm.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/pcie-c2c/pcie-c2c.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/nsp-stl/nsp-stl_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/nsp-service/nsp-service_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/nsp-rsm/nsp-rsm_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/nsp-drv/nsp-drv_git.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/nsp-config/nsp-config_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/hetero-sched/hetero-sched_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/compute-ressched/compute-ressched_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/compute-resmon/compute-resmon_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/compute-resmgr/compute-resmgr_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/compute-osal/compute-osal_1.0.bb \
-    meta-qti-automotive-prop/recipes-compute-platform/compute-cape/compute-cape_1.0.bb \
+    meta-qti-automotive-prop/recipes-compute-platform/ \
     meta-qti-automotive-prop/recipes-camera/cdk/chi-cdk_0.1.bb \
     meta-qti-automotive-prop/recipes-camera/camx-lib/camx-lib_0.1.bb \
     meta-qti-automotive-prop/recipes-camera/camx/camx_0.1.bb \
@@ -417,7 +380,7 @@ GVM_MISSING_RECIPE_SRCLIST = " \
     meta-qti-automotive-internal/recipes/eva-auto-internal/eva-auto-internal.bb \
     meta-qti-automotive-internal/recipes-cv/sv-auto-internal/sv-auto-internal.bb \
     meta-qti-automotive-internal/recipes/cv-internal/cvp-test_git.bb \
-    meta-qti-automotive-internal/recipes-compute-platform/qcipc/qcipc_1.0.bb \
+    meta-qti-automotive-internal/recipes-compute-platform/ \
     meta-qti-automotive-internal/recipes/apdf-internal/apdf-internal.bb \
     meta-qti-automotive-prop/recipes-data/hsi2s/hsi2s-qmi_git.bb \
     meta-qti-automotive-prop/recipes-graphics/mm-gfx-auto-prop/mm-gfx-auto-prop_git.bb \
