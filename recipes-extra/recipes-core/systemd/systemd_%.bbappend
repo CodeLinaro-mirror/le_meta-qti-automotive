@@ -17,6 +17,7 @@ SRC_URI:append = " \
              ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'file://0001-systemd-Change-systemd-modules-load-service-type-to-.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0001-systemd-shutdown-shorten-file-sync-timeout.patch', '', d)} \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0001-systemd-Remove-systemd-watchdog-ping-condition.patch', '', d)} \
+             file://0001-systemd-sleep-ping-watchdog-before-writing-suspend-s.patch \
 "
 
 SRC_URI:append:sa7255 = " \
