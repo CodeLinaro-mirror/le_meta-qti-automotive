@@ -75,6 +75,7 @@ do_install:append:sa8255-ivi() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
         install -m 0644 ${S}/qcrosvm_lv_qcvirtio.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
         install -d ${D}${bindir}
+        install -m 0755 ${S}/qcrosvm_la_qcvirtio.sh ${D}/${bindir}
         install -m 0755 ${S}/qcrosvm_lv_qcvirtio.sh ${D}/${bindir}
     else
         install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
