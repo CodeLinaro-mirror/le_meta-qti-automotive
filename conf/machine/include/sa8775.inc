@@ -79,16 +79,10 @@ MACHINE_FEATURES += "\
     qti-umd \
     qti-gunyah \
     qti-compute-platform \
-"
-
-MACHINE_FEATURES:remove = "\
-"
-
-MACHINE_FEATURES:append = "\
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-bluetooth', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hsp', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hmt', '', d)} \
+    qti-bluetooth \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
 
 MACHINE_FEATURES:remove = "\
