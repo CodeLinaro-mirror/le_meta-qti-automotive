@@ -67,12 +67,12 @@ install_module() {
 }
 
 # Function to trigger PCIe initialization via sysfs.
-# Only runs on gen5 machines whose device tree model contains "SA8x97P".
+# Only runs on gen5 machines whose device tree model contains "SA8x97P"/"SA8x97p".
 qcom_pcie_init_trigger() {
 	local machine
 	machine=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0')
 	case "$machine" in
-		*"SA8x97P"*)
+		*"SA8x97"*)
 			if [ -f /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger ]; then
 				echo "qcom_pcie_init_trigger for $machine"
 				echo 1 > /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger
