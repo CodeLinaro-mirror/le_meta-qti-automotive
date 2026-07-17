@@ -2,6 +2,7 @@
 BBMASK:append = " meta-qcom"
 BBMASK:append = " meta-qti-auto-kernel/recipes-products/images/qti-image-ark-boot.bbappend"
 BBMASK:append = " meta-qti-bsp/dynamic-layers/openembedded-layer/recipes-devtools/rsyslog/rsyslog_%.bbappend"
+BBMASK:append = " meta-qti-bsp/recipes-edgegateway/parser/parser_0.1.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-abctl_1.0.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-libgpt_1.0.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ss-restart"
