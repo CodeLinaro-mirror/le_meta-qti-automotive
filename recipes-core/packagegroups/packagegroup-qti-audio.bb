@@ -46,9 +46,21 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', '${AUDIOLITE_RDEPENDS} alsa-utils', \
         bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', '${AUDIOLITE_RDEPENDS} alsa-utils', '${KMD_RDEPENDS}', d), \
     d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-audio-awe', 'msm-virtio-snd', '', d)} \
 "
+
 # Gen5 AUDIOREACH
 RDEPENDS:${PN}:append:gen5 = " \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-ar', '${AUDIOREACH_RDEPENDS}', '', \
     d)} \
 "
+
+AUDIO_EXTRA_RDEPENDS = "\
+    agl-audio-plugin \
+    pulseaudio-misc \
+    pulseaudio-module-null-source \
+    pulseaudio-server \
+    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-audio-ar qti-audio-awe', bb.utils.contains('MACHINE_FEATURES','qti-hypervisor','', 'pulseaudio-module-codec-control',d), 'pulseaudio-module-acdb pulseaudio-module-codec-control' ,d)} \
+"
+
+RDEPENDS:${PN} += "${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-gunyah qti-umd', '', '${AUDIO_EXTRA_RDEPENDS}', d)}"
