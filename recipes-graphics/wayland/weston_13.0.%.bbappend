@@ -33,8 +33,16 @@ SRC_URI:gvm-gen5 = "${PATH_TO_REPO}/${TARGET_DIR}graphics/weston/.git;protocol=$
            file://xwayland.weston-start \
            file://systemd-notify.weston-start \
 "
+SRC_URI:gvm-gen4-5 = "${PATH_TO_REPO}/${TARGET_DIR}graphics/weston/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}graphics/weston;usehead=1 \
+           file://weston.png \
+           file://weston.desktop \
+           file://xwayland.weston-start \
+           file://systemd-notify.weston-start \
+"
 SRCREV:gvm-gen5 = "${AUTOREV}"
+SRCREV:gvm-gen4-5 = "${AUTOREV}"
 S:gvm-gen5 = "${WORKDIR}/${TARGET_DIR}graphics/weston"
+S:gvm-gen4-5 = "${WORKDIR}/${TARGET_DIR}graphics/weston"
 
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
 
