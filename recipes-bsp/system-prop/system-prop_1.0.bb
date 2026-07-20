@@ -11,7 +11,6 @@ SRC_URI = "\
     file://persist-prop.sh \
     file://persist-prop.service \
     file://system.prop \
-    file://system_qcvirtio.prop \
 "
 
 SYSTEMD_SERVICE:${PN} = "persist-prop.service"
@@ -27,11 +26,7 @@ do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
-    if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
-        install -m 0644 ${WORKDIR}/system_qcvirtio.prop -D ${D}/build.prop
-    else
-        install -m 0644 ${WORKDIR}/system.prop -D ${D}/build.prop
-    fi
+    install -m 0644 ${WORKDIR}/system.prop -D ${D}/build.prop
     # Remove empty lines and lines starting with '#'
     sed -i -e 's/#.*$//' -e '/^$/d' ${D}/build.prop
 
