@@ -191,6 +191,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-security/enable-fde/enable-fde_1.0.bb \
     meta-qti-automotive/recipes-security/securemsm-devicetree/securemsm-devicetree.bb \
     meta-qti-automotive/recipes-security/securemsmdlkm/securemsmdlkm_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.2 (used by gvm-gen4-5/gvm-gen5)
@@ -252,6 +253,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.3 (used by qclinux-gvm-gen5)
@@ -318,4 +320,5 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
