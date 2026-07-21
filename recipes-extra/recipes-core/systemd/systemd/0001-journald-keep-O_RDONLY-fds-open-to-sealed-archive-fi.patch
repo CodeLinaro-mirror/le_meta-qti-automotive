@@ -1,0 +1,96 @@
+From 1d4133c75ab36cfbbe113e78bee89d3a02510915 Mon Sep 17 00:00:00 2001
+From: Lei wang <leiwan@qti.qualcomm.com>
+Date: Fri, 26 Jun 2026 11:14:52 +0800
+Subject: [PATCH] journald: keep O_RDONLY fds open to sealed archive files
+
+Add a Hashmap *archive_fds to Server that pins a read-only fd for each
+sealed archive file, so that /proc/<pid>/fd reflects all journal archives
+held by journald.
+
+Fds are pinned in server_process_deferred_closes() as soon as a file
+enters the deferred_closes set, before offlining completes — f->path is
+already the archive name at that point. When vacuum deletes archive files,
+server_do_vacuum() closes and removes the corresponding entries.
+
+Signed-off-by: Lei wang <leiwan@qti.qualcomm.com>
+
+Upstream-Status: Inappropriate [ramdump parse can collect all journal log by /proc/pid/fd]
+---
+--- a/src/journal/journald-server.c
++++ b/src/journal/journald-server.c
+@@ -560,6 +560,20 @@
+ 
+         /* Perform any deferred closes which aren't still offlining. */
+         SET_FOREACH(f, s->deferred_closes) {
++                /* Pin O_RDONLY fd immediately — f->path is already the archive name
++                 * at this point, regardless of whether offlining has completed. */
++                if (f->path && !hashmap_contains(s->archive_fds, f->path)) {
++                        _cleanup_free_ char *path = strdup(f->path);
++                        int afd = open(f->path, O_RDONLY|O_CLOEXEC);
++                        if (path && afd >= 0) {
++                                if (hashmap_put(s->archive_fds, path, INT_TO_PTR(afd)) >= 0)
++                                        TAKE_PTR(path); /* hashmap owns key now */
++                                else
++                                        safe_close(afd);
++                        } else
++                                safe_close(afd);
++                }
++
+                 if (journal_file_is_offlining(f))
+                         continue;
+ 
+@@ -764,6 +778,16 @@
+                 log_ratelimit_warning_errno(r, JOURNAL_LOG_RATELIMIT,
+                                             "Failed to vacuum %s, ignoring: %m", storage->path);
+ 
++        /* Close and remove archive fd pins for any files that vacuum just deleted. */
++        const char *path;
++        void *fdp;
++        HASHMAP_FOREACH_KEY(fdp, path, s->archive_fds) {
++                if (access(path, F_OK) >= 0)
++                        continue;
++                safe_close(PTR_TO_INT(fdp));
++                (void) hashmap_remove(s->archive_fds, path);
++        }
++
+         cache_space_invalidate(&storage->space);
+ }
+ 
+@@ -2549,6 +2573,10 @@
+         if (!s->deferred_closes)
+                 return log_oom();
+ 
++        s->archive_fds = hashmap_new(&string_hash_ops_free);
++        if (!s->archive_fds)
++                return log_oom();
++
+         r = sd_event_default(&s->event);
+         if (r < 0)
+                 return log_error_errno(r, "Failed to create event loop: %m");
+@@ -2747,6 +2775,11 @@
+ 
+         set_free_with_destructor(s->deferred_closes, journal_file_offline_close);
+ 
++        void *fdp;
++        HASHMAP_FOREACH(fdp, s->archive_fds)
++                safe_close(PTR_TO_INT(fdp));
++        hashmap_free(s->archive_fds);
++
+         while (s->stdout_streams)
+                 stdout_stream_free(s->stdout_streams);
+ 
+--- a/src/journal/journald-server.h
++++ b/src/journal/journald-server.h
+@@ -150,6 +150,10 @@
+ 
+         Set *deferred_closes;
+ 
++        /* O_RDONLY fds kept open to all sealed archive files, so that
++         * /proc/<pid>/fd shows them all. Keyed by file path (owned). */
++        Hashmap *archive_fds;
++
+         uint64_t *kernel_seqnum;
+         bool dev_kmsg_readable:1;
+         RateLimit kmsg_own_ratelimit;
+--
+2.43.0
