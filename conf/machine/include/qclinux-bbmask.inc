@@ -197,6 +197,8 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
 
 # Missing recipes in baseline LV.AU.0.5.2 (used by gvm-gen4-5/gvm-gen5)
 MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
+    meta-qti-automotive/recipes-core/edk2/edk2_git.bbappend \
+    meta-qti-automotive/recipes-kernel/linux/linux-qcom-custom-rt_6.6.bbappend \
     meta-qti-automotive/recipes-audio/acdb/acdb_git.bb \
     meta-qti-automotive/recipes-audio/ar-audio-init-service/ar-audio-init-service_git.bb \
     meta-qti-automotive/recipes-audio/ar-audio-service-utils/ar-audio-service-utils_git.bb \
@@ -227,6 +229,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/auto-gfx-app/auto-gfx-app.bb \
     meta-qti-automotive/recipes-graphics/mm-auto-ksync/ksyncdlkm_git.bb \
+    meta-qti-automotive/recipes-graphics/graphics-driver/graphicsdlkm_git.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_git.bb \
     meta-qti-automotive/recipes-kernel/oot-dtbo/oot-dtbo.bb \
     meta-qti-automotive/recipes-kiumd/dspfirmware-mount/dspfirmware-mount_git.bb \
