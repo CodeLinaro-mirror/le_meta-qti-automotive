@@ -57,7 +57,6 @@ do_install:append:gen5() {
 
 do_install:append:sa8775() {
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${S}/qcrosvm.service ${D}/${systemd_unitdir}/system/qcrosvm.service
 }
 
 do_install:append:sa7255() {
@@ -72,6 +71,7 @@ do_install:append:sa7255-ivi() {
 
 do_install:append:sa8255-ivi() {
     install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${S}/qcrosvm.service ${D}/${systemd_unitdir}/system/qcrosvm.service
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
         install -m 0644 ${S}/qcrosvm_lv_qcvirtio.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
         install -d ${D}${bindir}
@@ -83,7 +83,8 @@ do_install:append:sa8255-ivi() {
 
 do_install:append:sa8775-flex() {
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    install -m 0644 ${S}/qcrosvm_8775.service ${D}/${systemd_unitdir}/system/qcrosvm.service
+    install -m 0644 ${S}/qcrosvm_lv_8775.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
     install -m 0644 ${S}/vm_config_xml/vm_config_la.xml ${D}${sysconfdir}/vm_config_la.xml
     install -m 0644 ${S}/vm_config_xml/vm_config_lalv.xml ${D}${sysconfdir}/vm_config_lalv.xml
 }
