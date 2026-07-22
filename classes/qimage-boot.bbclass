@@ -92,7 +92,7 @@ do_gvm_pilsplitter[depends] += "virtual/guest-bootloader:do_deploy"
 do_gvm_pilsplitter[depends] += "virtual/bootloader:do_deploy"
 
 python () {
-    if bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', True, False, d):
+    if bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', True, False, d):
         bb.build.addtask('do_gvm_pilsplitter', 'do_sign_boot_img', 'do_makeboot', d)
 }
 
@@ -207,7 +207,7 @@ avb_sign_boot_image() {
             --partition_size ${boot_partition_size}  \
             --partition_name boot \
             --algorithm SHA256_RSA4096 \
-            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', '--key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem', '--key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/vbgvm_private_key_4096.pem', d)} \
+            ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '--key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/testkey_rsa4096.pem', '--key ${STAGING_DIR_NATIVE}${sysconfdir}/signing_tools/sigkeys/vbgvm_private_key_4096.pem', d)} \
             --rollback_index 0
             if [ -s ${DEPLOY_DIR_IMAGE}/${PRODUCT}-dtbo.img ]; then
                dtbo_partition_size=$(avbtool calc_min_partition_size \

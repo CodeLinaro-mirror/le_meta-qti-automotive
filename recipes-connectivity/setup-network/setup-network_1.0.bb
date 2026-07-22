@@ -22,7 +22,7 @@ do_install() {
   install -m 0755 ${WORKDIR}/setup-network.sh ${D}${bindir}/setup-network.sh
   install -m 0644 ${WORKDIR}/setup-network.service ${D}${systemd_unitdir}/system/
 
-  if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'true', 'false', d)}; then
+  if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'true', 'false', d)}; then
       install -m 0755 ${WORKDIR}/setup-network-gh-lvgvm.sh ${D}${bindir}/setup-network.sh
       install -m 0644 ${WORKDIR}/setup-network-gh-lvgvm.service ${D}${systemd_unitdir}/system/setup-network.service
   fi
