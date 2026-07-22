@@ -215,6 +215,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
     meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
+    meta-qti-automotive/recipes-extra/recipes-core/scm-user-intf-test/scm-user-intf-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/auto-gfx-app/auto-gfx-app.bb \
     meta-qti-automotive/recipes-graphics/mm-auto-ksync/ksyncdlkm_git.bb \
     meta-qti-automotive/recipes-graphics/graphics-driver/graphicsdlkm_git.bb \
@@ -285,6 +286,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
+    meta-qti-automotive/recipes-extra/recipes-core/scm-user-intf-test/scm-user-intf-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/ \
     meta-qti-automotive/recipes-kernel/edk2/edk2_git.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
