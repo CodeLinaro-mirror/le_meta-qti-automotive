@@ -26,6 +26,7 @@ RDEPENDS:${PN} = "\
     hyp-udmabuf \
     hyp-udmabuf-test \
     vmm-boot-lcm \
+    vm-powerctl \
 "
 
 RDEPENDS:${PN}:append:gen5 = " virtiofsd"
