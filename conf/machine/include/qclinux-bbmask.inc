@@ -281,6 +281,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-audio/sound-card-info-common-header/sound-card-info-common-header_git.bb \
     meta-qti-automotive/recipes-audio/sound-card-info-util/sound-card-info-util_git.bb \
     meta-qti-automotive/recipes-audio/spf/spf_git.bb \
+    meta-qti-automotive/recipes-audio/msm-virtio-snd/msm-virtio-snd.bb \
     meta-qti-automotive/recipes-core/bootkpi-logging/bootkpi-logging.bb \
     meta-qti-automotive/recipes-core/early-service-infra/early-service-infra_git.bb \
     meta-qti-automotive/recipes-core/irqbalance/irqbalance_git.bbappend \
@@ -289,6 +290,8 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-core/power-utils/power-utils_git.bb \
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
+    meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
+    meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/ \
     meta-qti-automotive/recipes-kernel/edk2/edk2_git.bb \
