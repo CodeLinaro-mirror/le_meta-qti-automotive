@@ -8,7 +8,7 @@ IMAGE_INSTALL += "\
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-data', 'packagegroup-qti-data', '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-extra', 'packagegroup-qti-extra', '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-tools', 'packagegroup-qti-tools', '', d)} \
-    ${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar qti-audio-aw', 'packagegroup-qti-audio', '', d)} \
+    ${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar qti-audio-aw qti-audio-awe', 'packagegroup-qti-audio', '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-location', 'packagegroup-qti-location-hal', '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-camera', bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'packagegroup-qti-camera', d), '', d)} \
     ${@bb.utils.contains('COMBINED_FEATURES', 'qti-graphics', 'packagegroup-qti-graphics', '', d)} \

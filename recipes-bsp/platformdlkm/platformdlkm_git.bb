@@ -49,18 +49,32 @@ VIRT_PROVIDES_MODULES:append:gvm-gen5 = " kernel-module-hfastrpc-${KERNEL_VERSIO
 EXT_MODULE = "vendor/qcom/opensource/platform-kernel"
 
 do_configure:prepend:gvm-gen4-5() {
-    if ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'true', 'false', d)}; then
+    if ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'true', 'false', d)} && \
+       [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-msm" ]; then
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_compat.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/adsprpc_compat.h
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_shared.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/adsprpc_shared.h
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/dsp/fastrpc_trace.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc_trace.h
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/fastrpc_shared.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc_shared.h
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_compat.c ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/dsp/adsprpc_compat.c
         ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_rpmsg.c ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/dsp/adsprpc_rpmsg.c
+    elif ${@bb.utils.contains('PREFERRED_VERSION_linux-ack', '6.12', 'true', 'false', d)}; then
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_compat.h ${S}/drivers/virtual_fastrpc/dsp/adsprpc_compat.h
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_shared.h ${S}/drivers/virtual_fastrpc/dsp/adsprpc_shared.h
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/dsp/fastrpc_trace.h ${S}/drivers/virtual_fastrpc/dsp/fastrpc_trace.h
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/fastrpc_shared.h ${S}/drivers/virtual_fastrpc/dsp/fastrpc_shared.h
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_compat.c ${S}/drivers/virtual_fastrpc/dsp/adsprpc_compat.c
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/dsp/adsprpc_rpmsg.c ${S}/drivers/virtual_fastrpc/dsp/adsprpc_rpmsg.c
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${S}/drivers/virtual_fastrpc/include/uapi/fastrpc.h
     fi
 }
 
 do_configure:prepend:gvm-gen5() {
-    ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc.h
+    if ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'true', 'false', d)} && \
+       [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-msm" ]; then
+        ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${BSPDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc.h
+    elif ${@bb.utils.contains('PREFERRED_VERSION_linux-ack', '6.12', 'true', 'false', d)}; then
+        ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${S}/drivers/virtual_fastrpc/include/uapi/fastrpc.h
+    fi
 }
 
 do_install:append:gvm-gen4-5() {
