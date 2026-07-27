@@ -1,0 +1,319 @@
+From 61a7ef9a752a9f14bdb5de628a07fbc0290cde29 Mon Sep 17 00:00:00 2001
+From: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+Date: Mon, 15 Jun 2026 23:50:13 +0800
+Subject: [PATCH] wayland-ivi-extension: fix weston crash when surface id
+ assignment fails
+
+Deterministic scenarios cause ivi-id-agent's get_id() to return
+IVI_FAILED, leaving layout_surface->id_surface at IVI_INVALID_ID
+(0xFFFFFFFF): (A) the default surface-id pool is exhausted because IDs
+are never recycled on surface destroy; (B) the watermark advances to an
+ID already claimed directly by an ivi-protocol client via
+surface_set_id(). In both cases IVI_INVALID_ID cast to int32_t yields
+-1, which accidentally equals the uninitialized bkgnd_surface_id default
+value (-1), causing any unidentified desktop surface to be routed into
+the background-surface path. That path calls weston_layer_entry_insert()
+on a never-initialized bkgnd_layer whose view_list.link.next == NULL,
+triggering a SIGSEGV.
+
+Fix with three layers of defense:
+
+1. introduce a free_id_list to recycle default-pool IDs on surface
+   destroy. get_id() first tries recycled IDs (with ABA re-validation
+against concurrent ivi-protocol claims), then advances the watermark
+while skipping occupied IDs, instead of failing immediately on first
+conflict.
+
+2. add an IVI_INVALID_ID guard in surface_event_create() to bail out
+   early if id-agent still cannot assign a valid ID.
+
+3. replace bkgnd_surface_id default -1 with BKGND_SURFACE_ID_UNSET
+   (INT32_MIN) to eliminate the semantic collision with
+(int32_t)IVI_INVALID_ID == -1, ensuring an unassigned surface can never
+accidentally match the background surface sentinel.
+
+Upstream-Status: Pending
+
+Signed-off-by: Xiaoyu Huang <xiahua@qti.qualcomm.com>
+---
+ .../ivi-id-agent/src/ivi-id-agent.c           | 122 +++++++++++++++---
+ weston-ivi-shell/src/ivi-controller.c         |  30 ++++-
+ 2 files changed, 130 insertions(+), 22 deletions(-)
+
+diff --git a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+index 00089c6..2e18f49 100644
+--- a/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
++++ b/ivi-id-agent-modules/ivi-id-agent/src/ivi-id-agent.c
+@@ -19,6 +19,11 @@
+  * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
++/*
++ * Changes from Qualcomm Technologies, Inc. are provided under the following license:
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ */
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
+@@ -44,11 +49,22 @@ struct db_elem
+     struct ivi_layout_surface *layout_surface;
+ };
+ 
++/* free list node for recycled default-pool surface IDs */
++struct free_id_elem
++{
++    struct wl_list link;
++    uint32_t id;
++};
++
+ struct ivi_id_agent
+ {
+     uint32_t default_behavior_set;
+-    uint32_t default_surface_id;
++    uint32_t default_surface_id;        /* watermark: next ID to allocate from pool */
+     uint32_t default_surface_id_max;
++    /* record pool start for boundary check in recycle logic */
++    uint32_t default_surface_id_start;
++    /* list of recycled IDs ready for reuse (free_id_elem) */
++    struct wl_list free_id_list;
+     struct wl_list app_list;
+     struct weston_compositor *compositor;
+     const struct ivi_layout_interface *interface;
+@@ -137,26 +153,53 @@ get_id(struct ivi_id_agent *ida, struct ivi_layout_surface *layout_surface)
+         goto ivi_failed;
+ 
+     /* Default behavior for unknown applications */
+-    } else if (ida->default_surface_id < ida->default_surface_id_max) {
++    } else if (ida->default_surface_id < ida->default_surface_id_max ||
++               !wl_list_empty(&ida->free_id_list)) {
+         weston_log("ivi-id-agent: No configuration for application adding to "
+                 "default layer\n");
+ 
+-        /*
+-         * Check if ivi-shell application already created an application with
+-         * desired surface_id
+-         */
+-        struct ivi_layout_surface *temp_layout_surf =
+-                ida->interface->get_surface_from_id(
++        /* Prefer recycled IDs from free_id_list before advancing watermark.
++         * Loop through the list to skip any ID that has since been claimed by an
++         * ivi-protocol client directly (ABA scenario). Discarded entries are simply
++         * dropped — they will never be returned to the list. */
++        uint32_t alloc_id = INVALID_ID;
++        while (!wl_list_empty(&ida->free_id_list)) {
++            struct free_id_elem *fe = wl_container_of(
++                    ida->free_id_list.next, fe, link);
++            uint32_t candidate = fe->id;
++            wl_list_remove(&fe->link);
++            free(fe);
++            struct ivi_layout_surface *check =
++                    ida->interface->get_surface_from_id(candidate);
++            if (check == NULL || check == layout_surface) {
++                /* reusing recycled surface_id */
++                alloc_id = candidate;
++                break;
++            }
++            /* else: recycled id already in use, discarding */
++        }
++        if (alloc_id == INVALID_ID) {
++            /* skip IDs already in use (e.g. set directly via ivi protocol),
++             * instead of failing immediately — avoids IVI_INVALID_ID and crash. */
++            while (ida->default_surface_id < ida->default_surface_id_max) {
++                struct ivi_layout_surface *temp_layout_surf =
++                        ida->interface->get_surface_from_id(
++                                ida->default_surface_id);
++                if (temp_layout_surf == NULL || temp_layout_surf == layout_surface)
++                    break;
++                weston_log("ivi-id-agent: surface_id %u in use, skipping\n",
+                         ida->default_surface_id);
+-        if ((temp_layout_surf != NULL) && (temp_layout_surf != layout_surface)) {
+-            weston_log("ivi-id-agent: surface_id already used by an ivi-shell "
+-                                "application\n");
+-            goto ivi_failed;
++                ida->default_surface_id++;
++            }
++            if (ida->default_surface_id >= ida->default_surface_id_max) {
++                weston_log("ivi-id-agent: Interval for default surface_id generation "
++                        "exceeded\n");
++                goto ivi_failed;
++            }
++            alloc_id = ida->default_surface_id++;
+         }
+ 
+-        ida->interface->surface_set_id(layout_surface,
+-                                              ida->default_surface_id);
+-        ida->default_surface_id++;
++        ida->interface->surface_set_id(layout_surface, alloc_id);
+ 
+     } else {
+         weston_log("ivi-id-agent: Interval for default surface_id generation "
+@@ -199,6 +242,42 @@ surface_event_remove(struct wl_listener *listener, void *data) {
+             break;
+         }
+     }
++
++    /* Recycle default-pool IDs so they can be reused by future surfaces.
++     * At this point ivisurf is still valid (free() happens after signal emit),
++     * and ivisurf->link has already been removed from surface_list, so
++     * get_surface_from_id() will return NULL for this id — safe to recycle. */
++    if (ida->default_behavior_set) {
++        uint32_t id = ida->interface->get_id_of_surface(layout_surface);
++        if (id != INVALID_ID &&
++            id >= ida->default_surface_id_start &&
++            id <  ida->default_surface_id_max) {
++            /* dedup — guard against duplicate remove signals for the
++             * same surface (e.g. ivi-layout bug), which would insert the same
++             * ID twice and allow two surfaces to receive the same ID later. */
++            struct free_id_elem *existing;
++            bool already_recycled = false;
++            wl_list_for_each(existing, &ida->free_id_list, link) {
++                if (existing->id == id) {
++                    already_recycled = true;
++                    break;
++                }
++            }
++            if (already_recycled) {
++                weston_log("ivi-id-agent: surface_id %u already in free list, "
++                           "skipping duplicate recycle\n", id);
++            } else {
++                struct free_id_elem *fe = malloc(sizeof(*fe));
++                if (fe) {
++                    fe->id = id;
++                    wl_list_insert(&ida->free_id_list, &fe->link);
++                } else {
++                    weston_log("ivi-id-agent: failed to alloc free_id_elem, "
++                               "surface_id %u not recycled\n", id);
++                }
++            }
++        }
++    }
+ }
+ 
+ static int32_t deinit(struct ivi_id_agent *ida);
+@@ -271,6 +350,10 @@ read_config(struct ivi_id_agent *ida)
+             weston_log("ivi-id-agent: Missing configuration for default "
+                     "behavior\n");
+             ida->default_behavior_set = 0;
++        } else {
++            /* save pool start value for recycle boundary check */
++            ida->default_surface_id_start = ida->default_surface_id;
++            wl_list_init(&ida->free_id_list);
+         }
+     } else {
+         ida->default_behavior_set = 0;
+@@ -378,6 +461,15 @@ deinit(struct ivi_id_agent *ida)
+         free(db_elem);
+     }
+ 
++    /* Release any remaining recycled ID nodes */
++    if (ida->default_behavior_set) {
++        struct free_id_elem *fe, *fe_next;
++        wl_list_for_each_safe(fe, fe_next, &ida->free_id_list, link) {
++            wl_list_remove(&fe->link);
++            free(fe);
++        }
++    }
++
+     wl_list_remove(&ida->id_allocation_listener.link);
+     wl_list_remove(&ida->destroy_listener.link);
+     wl_list_remove(&ida->surface_removed.link);
+diff --git a/weston-ivi-shell/src/ivi-controller.c b/weston-ivi-shell/src/ivi-controller.c
+index 2b51c7c..47aefa0 100644
+--- a/weston-ivi-shell/src/ivi-controller.c
++++ b/weston-ivi-shell/src/ivi-controller.c
+@@ -52,6 +52,7 @@
+ #define IVI_CLIENT_BKGND_COLOR_ENV_NAME "IVI_CLIENT_BKGND_COLOR"
+ #define IVI_CLIENT_DEBUG_SCOPES_ENV_NAME "IVI_CLIENT_DEBUG_STREAM_NAMES"
+ #define IVI_CLIENT_ENABLE_CURSOR_ENV_NAME "IVI_CLIENT_ENABLE_CURSOR"
++#define BKGND_SURFACE_ID_UNSET INT32_MIN
+ 
+ struct ivilayer;
+ struct iviscreen;
+@@ -1596,7 +1597,11 @@ create_surface(struct ivishell *shell,
+     surface = lyt->surface_get_weston_surface(layout_surface);
+     wl_signal_add(&surface->commit_signal, &ivisurf->committed);
+ 
+-    if (shell->bkgnd_surface_id != (int32_t)id_surface) {
++    /* Use explicit BKGND_SURFACE_ID_UNSET check so that
++     * IVI_INVALID_ID (cast to int32_t == -1) never matches the "not configured"
++     * sentinel and triggers the bkgnd surface path by accident. */
++    if (shell->bkgnd_surface_id == BKGND_SURFACE_ID_UNSET ||
++        shell->bkgnd_surface_id != (int32_t)id_surface) {
+         wl_list_insert(&shell->list_surface, &ivisurf->link);
+ 
+         wl_list_for_each(controller, &shell->list_controller, link) {
+@@ -1701,13 +1706,22 @@ surface_event_create(struct wl_listener *listener, void *data)
+         id_surface = lyt->get_id_of_surface(layout_surface);
+     }
+ 
++    /* If id-agent failed to assign a valid id (e.g. default pool
++     * exhausted), bail out here. */
++    if (id_surface == IVI_INVALID_ID) {
++        weston_log("ivi-controller: surface_event_create: no valid id assigned, "
++                   "skipping surface (default pool exhausted?)\n");
++        return;
++    }
++
+     ivisurf = create_surface(shell, layout_surface, id_surface);
+     if (ivisurf == NULL) {
+         weston_log("failed to create surface");
+         return;
+     }
+ 
+-    if (shell->bkgnd_surface_id != (int32_t)id_surface)
++    if (shell->bkgnd_surface_id == BKGND_SURFACE_ID_UNSET ||
++        shell->bkgnd_surface_id != (int32_t)id_surface)
+         wl_signal_emit(&shell->ivisurface_created_signal, ivisurf);
+ }
+ 
+@@ -1770,7 +1784,8 @@ surface_event_remove(struct wl_listener *listener, void *data)
+     id_surface = shell->interface->get_id_of_surface(layout_surface);
+ 
+     if (ivisurf == NULL) {
+-        if (shell->bkgnd_surface_id == (int32_t)id_surface)
++        if (shell->bkgnd_surface_id != BKGND_SURFACE_ID_UNSET &&
++            shell->bkgnd_surface_id == (int32_t)id_surface)
+             remove_bkgnd_surface(shell, shell->bkgnd_surface);
+         else
+             weston_log("id_surface is not created yet\n");
+@@ -1800,7 +1815,8 @@ surface_event_configure(struct wl_listener *listener, void *data)
+         return;
+ 
+     surface_id = lyt->get_id_of_surface(layout_surface);
+-    if (shell->bkgnd_surface_id == (int32_t)surface_id) {
++    if (shell->bkgnd_surface_id != BKGND_SURFACE_ID_UNSET &&
++        shell->bkgnd_surface_id == (int32_t)surface_id) {
+ 
+         if (!shell->bkgnd_view) {
+             wl_list_init(&shell->bkgnd_transform.link);
+@@ -1953,7 +1969,7 @@ get_config(struct weston_compositor *compositor, struct ivishell *shell)
+ 
+ 	weston_config_section_get_int(section,
+                        "bkgnd-surface-id",
+-                       &shell->bkgnd_surface_id, -1);
++                       &shell->bkgnd_surface_id, BKGND_SURFACE_ID_UNSET);
+ 
+ 	weston_config_section_get_string(section,
+ 	                   "debug-scopes",
+@@ -2249,7 +2265,7 @@ wet_module_init(struct weston_compositor *compositor,
+     get_config(compositor, shell);
+ 
+     /* Add background layer*/
+-    if (shell->bkgnd_surface_id && shell->ivi_client_name) {
++    if (shell->bkgnd_surface_id != BKGND_SURFACE_ID_UNSET && shell->ivi_client_name) {
+         weston_layer_init(&shell->bkgnd_layer, compositor);
+         weston_layer_set_position(&shell->bkgnd_layer,
+                                   WESTON_LAYER_POSITION_BACKGROUND);
+@@ -2275,7 +2291,7 @@ wet_module_init(struct weston_compositor *compositor,
+     shell->destroy_listener.notify = ivi_shell_destroy;
+     wl_signal_add(&compositor->destroy_signal, &shell->destroy_listener);
+ 
+-    if (shell->bkgnd_surface_id && shell->ivi_client_name) {
++    if (shell->bkgnd_surface_id != BKGND_SURFACE_ID_UNSET && shell->ivi_client_name) {
+         loop = wl_display_get_event_loop(compositor->wl_display);
+         wl_event_loop_add_idle(loop, launch_client_process, shell);
+     }
+-- 
+2.34.1
+

@@ -44,3 +44,6 @@ TOOLCHAIN_TARGET_TASK:append = " libgomp-dev libgomp-staticdev"
 TOOLCHAIN_TARGET_TASK:append = " ${@bb.utils.contains('COMBINED_FEATURES', 'qti-display', 'display-commonsys-intf-linux-dev', '', d)}"
 
 BAD_RECOMMENDATIONS += "rng-tools"
+
+# Enable systemd-nspawn container tool
+IMAGE_INSTALL += "systemd-container"
