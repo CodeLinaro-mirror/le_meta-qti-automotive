@@ -39,3 +39,19 @@ RDEPENDS:${PN}:remove = "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'gstreamer1.0-plugins-extpoolsink', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'videodlkm', '', d)} \
 "
+
+RDEPENDS:${PN}:remove:gvm-gen4-5 = "\
+        ${@bb.utils.contains('DISTRO_FEATURES', 'qti-codec2', 'gstreamer1.0-plugins-codec2', '', d)} \
+"
+
+RDEPENDS:${PN}:append:gvm-gen4-5 = " \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'qti-codec2', ' gstreamer1.0-plugins-codec2-lemans gstreamer1.0-plugins-codec2-monaco', '', d)} \
+"
+
+RDEPENDS:${PN}:remove:gvm-gen5 = "\
+        ${@bb.utils.contains('DISTRO_FEATURES', 'qti-codec2', 'gstreamer1.0-plugins-codec2', '', d)} \
+"
+
+RDEPENDS:${PN}:append:gvm-gen5 = " \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'qti-codec2', ' gstreamer1.0-plugins-codec2-gen5', '', d)} \
+"
