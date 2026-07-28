@@ -2,7 +2,7 @@
 Description=Weston reference Wayland compositor
 Conflicts=getty@tty2.service shutdown.target
 Requires=dev-dri-card0.device systemd-user-sessions.service
-After=dbus.service rc.pvr.service dev-dri-card0.device systemd-user-sessions.service
+After=dbus.service rc.pvr.service dev-dri-card0.device systemd-user-sessions.service openwfd_splash.service
 DefaultDependencies=no
 Before=shutdown.target
 

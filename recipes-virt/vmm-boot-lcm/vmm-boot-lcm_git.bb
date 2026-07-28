@@ -12,11 +12,14 @@ RDEPENDS:${PN} = "vmm-lib abctl"
 
 SYSTEMD_SERVICE:${PN} = "vmm-boot-lcm.service"
 
+VMM_BOOT_LCM_SERVICE ?= "vmm-boot-lcm.service"
+VMM_BOOT_LCM_SERVICE:gen5 = "vmm-boot-lcm-gen5.service"
+
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit cmake pkgconfig systemd
 
 do_install:append() {
     install -d ${D}/${systemd_unitdir}/system
-    install -m 0644 ${S}/vmm-boot-lcm.service ${D}/${systemd_unitdir}/system/vmm-boot-lcm.service
+    install -m 0644 ${S}/${VMM_BOOT_LCM_SERVICE} ${D}/${systemd_unitdir}/system/vmm-boot-lcm.service
 }

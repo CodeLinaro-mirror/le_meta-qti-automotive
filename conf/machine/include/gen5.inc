@@ -63,6 +63,7 @@ EXTRA_IMAGEDEPENDS += "qcom-image-boot:do_sign_boot_img"
 IMAGE_FEATURES:append = " read-only-rootfs"
 
 MACHINE_FEATURES += "\
+    bluetooth \
     qti-bluetooth \
     qti-core \
     qti-tools \
@@ -81,6 +82,9 @@ MACHINE_FEATURES += "\
     qti-umd \
     qti-vmm \
     qti-compute-platform \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
 
 MACHINE_FEATURES:remove = "${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)}"

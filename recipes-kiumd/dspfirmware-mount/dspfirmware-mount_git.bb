@@ -16,8 +16,7 @@ inherit systemd
 SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
 SYSTEMD_SERVICE:${PN}-bt = "bluetooth-mount.service"
 SYSTEMD_SERVICE:${PN}-vmm:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm-mount.service', '', d)}"
-SYSTEMD_SERVICE:${PN}-lvgvm:append:sa7255 = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
-SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8775 = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
+SYSTEMD_SERVICE:${PN}-lvgvm = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
 SYSTEMD_PACKAGES = "${PN} ${PN}-bt ${PN}-vmm ${PN}-lvgvm"
 
 do_compile[noexec] = "1"
@@ -28,17 +27,14 @@ do_install:append() {
     install -d -p ${D}/vendor/dsp
 
     install -m 0644 ${WORKDIR}/mnt_fs.conf -D ${D}${libdir}/modules-load.d/mnt_fs.conf
-    install -m 0644 ${S}/vendor-dsp.mount -D ${D}${systemd_unitdir}/system/vendor-dsp.mount
-    install -m 0644 ${S}/vendor-dsp.automount -D ${D}${systemd_unitdir}/system/vendor-dsp.automount
+    install -m 0644 ${S}/vendor-dsp-mount.service -D ${D}${systemd_unitdir}/system/vendor-dsp-mount.service
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        sed -i '/^Options=/s/defaults/&,context=system_u:object_r:dsp_file_t:s0/' ${D}${systemd_unitdir}/system/vendor-dsp.mount
+        sed -i '/^Options=/s/defaults/&,context=system_u:object_r:dsp_file_t:s0/' ${D}${systemd_unitdir}/system/vendor-dsp-mount.service
     fi
 
-    ln -sf ${systemd_unitdir}/system/vendor-dsp.mount \
-        ${D}${systemd_unitdir}/system/multi-user.target.wants/vendor-dsp.mount
-    ln -sf ${systemd_unitdir}/system/vendor-dsp.automount \
-        ${D}${systemd_unitdir}/system/multi-user.target.wants/vendor-dsp.automount
+    ln -sf ${systemd_unitdir}/system/vendor-dsp-mount.service \
+        ${D}${systemd_unitdir}/system/multi-user.target.wants/vendor-dsp-mount.service
 
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
         install -d -p ${D}/firmware/vm/boot/autoghgvm
@@ -67,16 +63,12 @@ do_install:append() {
         install -m 0755 ${S}/cdsp1_cfg ${D}${sysconfdir}/sysconfig/cdsp1_cfg
         install -m 0755 ${S}/gpdsp0_cfg ${D}${sysconfdir}/sysconfig/gpdsp0_cfg
         install -m 0755 ${S}/gpdsp1_cfg ${D}${sysconfdir}/sysconfig/gpdsp1_cfg
+    fi
 
-        if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
-            install -d -p ${D}/firmware/vm/boot/autoghgvmlv
-
-            install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv-mount.service ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
-
-            if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-                sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
-            fi
-        fi
+    install -d -p ${D}/firmware/vm/boot/autoghgvmlv
+    install -m 0777 ${S}/firmware-vm-boot-autoghgvmlv-mount.service ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+        sed -i '/^Options=/s/defaults/&,context=system_u:object_r:qcrosvm_boot_t:s0/' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
     fi
 }
 

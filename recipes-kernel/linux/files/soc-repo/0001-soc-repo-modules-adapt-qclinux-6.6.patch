@@ -1,0 +1,847 @@
+From bd516db27e81adf3cd085c625cedf94501af7b72 Mon Sep 17 00:00:00 2001
+From: Zhuo Yang <zhuyan@qti.qualcomm.com>
+Date: Wed, 10 Jun 2026 10:33:31 +0800
+Subject: [PATCH] soc-repo: modules adapt qclinux-6.6
+
+Soc-repo OOT module adapts on qclinux kernel for LVGVM,
+including SMMU, hab, minidump, gunyah rm driver, watchdog.
+
+Change-Id: I1eb790be0db56873f564b949fcd839cfd708642d
+Signed-off-by: Zhuo Yang <zhuyan@qti.qualcomm.com>
+---
+ drivers/iommu/arm/arm-smmu/arm-smmu-impl.c  |  5 --
+ drivers/iommu/arm/arm-smmu/arm-smmu-trace.h | 10 ++--
+ drivers/iommu/arm/arm-smmu/arm-smmu.c       | 13 ++++-
+ drivers/iommu/dma-mapping-fast.c            |  5 +-
+ drivers/iommu/io-pgtable-fast.c             |  4 +-
+ drivers/iommu/qcom-dma-iommu-generic.c      |  4 +-
+ drivers/iommu/qcom-io-pgtable-alloc.c       | 28 ++++-----
+ drivers/iommu/qcom-iommu-util.c             |  6 +-
+ drivers/soc/qcom/debug_symbol.c             |  8 ++-
+ drivers/soc/qcom/hab/hab_virq_hgy.c         |  2 +-
+ drivers/soc/qcom/hab/hab_virq_qvm.c         |  2 +-
+ drivers/soc/qcom/hab/hab_virtio.c           | 36 +++++++-----
+ drivers/soc/qcom/hab/hab_virtio.h           | 13 +++--
+ drivers/soc/qcom/minidump_log.c             | 16 +++++-
+ drivers/soc/qcom/msm_minidump.c             |  6 +-
+ drivers/soc/qcom/qcom_soc_wdt.c             |  2 +-
+ drivers/soc/qcom/qcom_wdt_core.c            |  2 +-
+ drivers/virt/gunyah/gh_rm_core.c            |  6 +-
+ drivers/virt/gunyah/gh_rm_drv_private.h     |  6 +-
+ drivers/virt/gunyah/gh_rm_iface.c           | 64 +--------------------
+ drivers/virtio/virtio_mmio.c                | 14 +++--
+ include/linux/gunyah/gh_errno.h             | 31 +---------
+ include/linux/gunyah/gh_rm_drv.h            | 16 +-----
+ include/linux/gunyah/gh_vm.h                |  2 +
+ 24 files changed, 121 insertions(+), 180 deletions(-)
+
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+index 7034a089..4526df57 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-impl.c
+@@ -214,11 +214,6 @@ struct arm_smmu_device *arm_smmu_impl_init(struct arm_smmu_device *smmu)
+ 	if (of_property_read_bool(np, "calxeda,smmu-secure-config-access"))
+ 		smmu->impl = &calxeda_impl;
+ 
+-	if (of_device_is_compatible(np, "nvidia,tegra234-smmu") ||
+-	    of_device_is_compatible(np, "nvidia,tegra194-smmu") ||
+-	    of_device_is_compatible(np, "nvidia,tegra186-smmu"))
+-		return nvidia_smmu_impl_init(smmu);
+-
+ 	if (of_device_is_compatible(smmu->dev->of_node, "qcom,qsmmu-v500"))
+ 		return qsmmuv500_impl_init(smmu);
+ 
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu-trace.h b/drivers/iommu/arm/arm-smmu/arm-smmu-trace.h
+index c6770325..9269660b 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu-trace.h
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu-trace.h
+@@ -28,7 +28,7 @@ DECLARE_EVENT_CLASS(iommu_tlbi,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(group_name);
++		__assign_str(group_name, dev_name(domain->dev));
+ 	),
+ 
+ 	TP_printk("group=%s",
+@@ -65,7 +65,7 @@ DECLARE_EVENT_CLASS(iommu_pgtable,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(group_name);
++		__assign_str(group_name, dev_name(domain->dev));
+ 		__entry->iova = iova;
+ 		__entry->ipa = ipa;
+ 		__entry->granule = granule;
+@@ -108,7 +108,7 @@ DECLARE_EVENT_CLASS(iommu_map_pages,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(group_name);
++		__assign_str(group_name, dev_name(domain->dev));
+ 		__entry->iova = iova;
+ 		__entry->pgsize = pgsize;
+ 		__entry->pgcount = pgcount;
+@@ -164,7 +164,7 @@ TRACE_EVENT(tlbsync_timeout,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(device);
++		__assign_str(device, dev_name(dev));
+ 	),
+ 
+ 	TP_printk("smmu=%s",
+@@ -191,7 +191,7 @@ TRACE_EVENT(smmu_init,
+ #endif /* _TRACE_ARM_SMMU_H */
+ 
+ #undef TRACE_INCLUDE_PATH
+-#define TRACE_INCLUDE_PATH ../../drivers/iommu/arm/arm-smmu
++#define TRACE_INCLUDE_PATH .
+ 
+ #undef TRACE_INCLUDE_FILE
+ #define TRACE_INCLUDE_FILE arm-smmu-trace
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu.c b/drivers/iommu/arm/arm-smmu/arm-smmu.c
+index 77d16d46..f11d77c7 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu.c
+@@ -1804,6 +1804,15 @@ static struct iommu_domain *arm_smmu_domain_alloc_paging(struct device *dev)
+ 	return &smmu_domain->domain;
+ }
+ 
++/* Adapter for kernel 6.6 domain_alloc(type) API */
++static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
++{
++	if (type != IOMMU_DOMAIN_UNMANAGED && type != IOMMU_DOMAIN_DMA &&
++	    type != IOMMU_DOMAIN_IDENTITY)
++		return NULL;
++	return arm_smmu_domain_alloc_paging(NULL);
++}
++
+ static void arm_smmu_domain_free(struct iommu_domain *domain)
+ {
+ 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+@@ -3198,10 +3207,8 @@ static struct qcom_iommu_ops arm_smmu_ops = {
+ 	},
+ 
+ 	.iommu_ops = {
+-		.identity_domain	= &arm_smmu_identity_domain,
+-		.blocked_domain		= &arm_smmu_blocked_domain,
+ 		.capable		= arm_smmu_capable,
+-		.domain_alloc_paging		= arm_smmu_domain_alloc_paging,
++		.domain_alloc		= arm_smmu_domain_alloc,
+ 		.probe_device		= arm_smmu_probe_device,
+ 		.release_device		= arm_smmu_release_device,
+ 		.probe_finalize		= arm_smmu_probe_finalize,
+diff --git a/drivers/iommu/dma-mapping-fast.c b/drivers/iommu/dma-mapping-fast.c
+index 3b5b6f73..8d6fccbd 100644
+--- a/drivers/iommu/dma-mapping-fast.c
++++ b/drivers/iommu/dma-mapping-fast.c
+@@ -17,7 +17,9 @@
+ #include <linux/iova.h>
+ #include <linux/io-pgtable.h>
+ #include <linux/qcom-iommu-util.h>
++#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
+ #include <trace/hooks/iommu.h>
++#endif
+ #include "qcom-dma-iommu-generic.h"
+ 
+ /* some redundant definitions... :( TODO: move to io-pgtable-fast.h */
+@@ -1110,7 +1112,6 @@ EXPORT_SYMBOL(fast_smmu_setup_dma_ops);
+ 
+ int __init dma_mapping_fast_init(void)
+ {
+-	return register_trace_android_rvh_iommu_setup_dma_ops(
+-			__fast_smmu_setup_dma_ops, NULL);
++	return 0;
+ }
+ 
+diff --git a/drivers/iommu/io-pgtable-fast.c b/drivers/iommu/io-pgtable-fast.c
+index 4b8a2619..d879e078 100644
+--- a/drivers/iommu/io-pgtable-fast.c
++++ b/drivers/iommu/io-pgtable-fast.c
+@@ -19,7 +19,9 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/qcom-iommu-util.h>
+ #include <linux/qcom-io-pgtable.h>
+-#include "drivers/iommu/iommu-pages.h"
++/* iommu-pages.h not available in kernel 6.6, use standard page alloc */
++#define __iommu_alloc_pages(gfp, order)  alloc_pages(gfp, order)
++#define __iommu_free_pages(page, order)  __free_pages(page, order)
+ 
+ #define AV8L_FAST_MAX_ADDR_BITS		48
+ 
+diff --git a/drivers/iommu/qcom-dma-iommu-generic.c b/drivers/iommu/qcom-dma-iommu-generic.c
+index 61d52b41..9075bbd8 100644
+--- a/drivers/iommu/qcom-dma-iommu-generic.c
++++ b/drivers/iommu/qcom-dma-iommu-generic.c
+@@ -311,8 +311,8 @@ static int atomic_pool_expand(struct gen_pool *pool, size_t pool_size,
+ 	void *addr;
+ 	int ret = -ENOMEM;
+ 
+-	/* Cannot allocate larger than MAX_PAGE_ORDER - 1 */
+-	order = min(get_order(pool_size),  MAX_PAGE_ORDER - 1);
++	/* Cannot allocate larger than MAX_ORDER - 1 (NR_PAGE_ORDERS - 2) */
++	order = min(get_order(pool_size),  MAX_ORDER - 1);
+ 
+ 	do {
+ 		pool_size = 1 << (PAGE_SHIFT + order);
+diff --git a/drivers/iommu/qcom-io-pgtable-alloc.c b/drivers/iommu/qcom-io-pgtable-alloc.c
+index d71f045f..f4d48628 100644
+--- a/drivers/iommu/qcom-io-pgtable-alloc.c
++++ b/drivers/iommu/qcom-io-pgtable-alloc.c
+@@ -9,7 +9,11 @@
+ #include <linux/firmware/qcom/qcom_scm.h>
+ 
+ #include <soc/qcom/secure_buffer.h>
+-#include "drivers/iommu/iommu-pages.h"
++#include <linux/mm.h>
++
++/* iommu-pages.h not available in kernel 6.6, use standard page alloc */
++#define __iommu_alloc_pages(gfp, order)  alloc_pages(gfp, order)
++#define __iommu_free_pages(page, order)  __free_pages(page, order)
+ 
+ struct io_pgtable_pool {
+ 	u32 vmid;
+@@ -308,23 +312,21 @@ static unsigned long io_pgtable_alloc_scan_objects(struct shrinker *shrinker,
+ 
+ static struct shrinker *io_pgtable_alloc_shrinker;
+ 
++/* Kernel 6.6 uses static shrinker with register_shrinker */
++static struct shrinker io_pgtable_alloc_shrinker_static = {
++	.seeks = DEFAULT_SEEKS,
++};
++
+ int qcom_io_pgtable_alloc_init(void)
+ {
+-	io_pgtable_alloc_shrinker = shrinker_alloc(0, "io_pgtable_alloc");
+-	if (!io_pgtable_alloc_shrinker)
+-		return -ENOMEM;
+-
+-	io_pgtable_alloc_shrinker->count_objects = io_pgtable_alloc_count_objects;
+-	io_pgtable_alloc_shrinker->scan_objects = io_pgtable_alloc_scan_objects;
+-
+-	io_pgtable_alloc_shrinker->seeks = DEFAULT_SEEKS;
+-
+-	shrinker_register(io_pgtable_alloc_shrinker);
++	io_pgtable_alloc_shrinker_static.count_objects = io_pgtable_alloc_count_objects;
++	io_pgtable_alloc_shrinker_static.scan_objects = io_pgtable_alloc_scan_objects;
++	io_pgtable_alloc_shrinker = &io_pgtable_alloc_shrinker_static;
+ 
+-	return 0;
++	return register_shrinker(io_pgtable_alloc_shrinker, "io_pgtable_alloc");
+ }
+ 
+ void qcom_io_pgtable_alloc_exit(void)
+ {
+-	shrinker_free(io_pgtable_alloc_shrinker);
++	unregister_shrinker(io_pgtable_alloc_shrinker);
+ }
+diff --git a/drivers/iommu/qcom-iommu-util.c b/drivers/iommu/qcom-iommu-util.c
+index fd37b095..f4163123 100644
+--- a/drivers/iommu/qcom-iommu-util.c
++++ b/drivers/iommu/qcom-iommu-util.c
+@@ -17,7 +17,9 @@
+ #include <linux/qcom-io-pgtable.h>
+ #include "drivers/iommu/iommu-priv.h"
+ #include <linux/xarray.h>
++#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
+ #include <trace/hooks/iommu.h>
++#endif
+ #include "qcom-dma-iommu-generic.h"
+ #include "qcom-io-pgtable-alloc.h"
+ 
+@@ -823,10 +825,6 @@ out_undo:
+ 	}
+ 	return ret;
+ }
+-#if IS_MODULE(CONFIG_QCOM_IOMMU_UTIL)
+ module_init(qcom_iommu_util_init);
+-#else
+-arch_initcall_sync(qcom_iommu_util_init);
+-#endif
+ 
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/soc/qcom/debug_symbol.c b/drivers/soc/qcom/debug_symbol.c
+index 9f83739a..7edbc646 100644
+--- a/drivers/soc/qcom/debug_symbol.c
++++ b/drivers/soc/qcom/debug_symbol.c
+@@ -26,7 +26,7 @@
+ #include <linux/of_reserved_mem.h>
+ #include <linux/kallsyms.h>
+ #include "debug_symbol.h"
+-#include "drivers/android/debug_kinfo.h"
++#include "../../android/debug_kinfo.h"
+ 
+ struct debug_symbol_data {
+ 	const unsigned long *addresses;
+@@ -84,7 +84,7 @@ bool debug_symbol_available(void)
+ 
+ 	if (!debug_symbol.addresses) {
+ 		debug_symbol.addresses = (unsigned long *)
+-						__phys_to_kimg(kinfo->_text_pa);
++						__phys_to_kimg(kinfo->_stext_pa);
+ 		debug_symbol.offsets = (int *)
+ 						__phys_to_kimg(kinfo->_offsets_pa);
+ 		debug_symbol.names = (u8 *)
+@@ -201,6 +201,10 @@ unsigned long debug_symbol_lookup_name(const char *name)
+ 	if (!*name)
+ 		return 0;
+ 
++	/* Fallback to kallsyms if debug_symbol is not available */
++	if (!debug_symbol_available())
++		return kallsyms_lookup_name(name);
++
+ 	ret = find_in_ds_entries(name);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/soc/qcom/hab/hab_virq_hgy.c b/drivers/soc/qcom/hab/hab_virq_hgy.c
+index 4bb369a5..6aa49752 100644
+--- a/drivers/soc/qcom/hab/hab_virq_hgy.c
++++ b/drivers/soc/qcom/hab/hab_virq_hgy.c
+@@ -77,7 +77,7 @@ static void gh_dbl_recv_cb(int irq, void *data)
+ 	spin_lock_irq(&dbl->dbl_lock);
+ 	if (dbl->efd != NULL) {
+ 		pr_info("fd is %d for id %d lbl %d\n", dbl->fd, dbl->id, dbl->virtirq_label);
+-		eventfd_signal(dbl->efd);
++		eventfd_signal(dbl->efd, 1);
+ 	}
+ 	dbl->virq_recv++;
+ 	spin_unlock_irq(&dbl->dbl_lock);
+diff --git a/drivers/soc/qcom/hab/hab_virq_qvm.c b/drivers/soc/qcom/hab/hab_virq_qvm.c
+index aefad697..4830f421 100644
+--- a/drivers/soc/qcom/hab/hab_virq_qvm.c
++++ b/drivers/soc/qcom/hab/hab_virq_qvm.c
+@@ -66,7 +66,7 @@ static irqreturn_t virt_irq_handler(int irq, void *priv)
+ 		return IRQ_NONE;
+ 	}
+ 	if (dbl->efd)
+-		eventfd_signal(dbl->efd);
++		eventfd_signal(dbl->efd, 1);
+ 
+ 	dbl->virq_recv++;
+ 	/* to deassert interrupt status */
+diff --git a/drivers/soc/qcom/hab/hab_virtio.c b/drivers/soc/qcom/hab/hab_virtio.c
+index 8f82d319..211823ad 100644
+--- a/drivers/soc/qcom/hab/hab_virtio.c
++++ b/drivers/soc/qcom/hab/hab_virtio.c
+@@ -490,7 +490,8 @@ EXPORT_SYMBOL(virthab_queue_inbufs);
+ int virthab_init_vqs_pre(struct virtio_hab *vh)
+ {
+ 	struct vq_pchan *vpchans = vh->vqpchans;
+-	struct virtqueue_info *vqs_info = vh->vqs_info;
++	vq_callback **callbacks = vh->vq_callbacks;
++	const char **names = (const char **)vh->vq_names;
+ 	char *temp;
+ 	int i, idx = 0;
+ 	struct hab_device *habdev = NULL;
+@@ -522,17 +523,17 @@ int virthab_init_vqs_pre(struct virtio_hab *vh)
+ 		habdev = &hab_driver.devp[idx + i];
+ 
+ 		/* ToDo: each cb should only apply to one vq */
+-		vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].callback = virthab_recv_txq;
+-		vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].callback = virthab_recv_rxq_task;
++		callbacks[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ] = virthab_recv_txq;
++		callbacks[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ] = virthab_recv_rxq_task;
+ 
+-		strscpy((char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].name,
++		strscpy((char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ],
+ 				habdev->name, sizeof(habdev->name));
+-		temp = (char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].name;
++		temp = (char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ];
+ 		temp[0] = 't'; temp[1] = 'x'; temp[2] = 'q';
+ 
+-		strscpy((char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].name,
++		strscpy((char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ],
+ 				habdev->name, sizeof(habdev->name));
+-		temp = (char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].name;
++		temp = (char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ];
+ 		temp[0] = 'r'; temp[1] = 'x'; temp[2] = 'q';
+ 
+ 		vpchans[i].mmid = habdev->id;
+@@ -604,7 +605,9 @@ static int virthab_init_vqs(struct virtio_hab *vh)
+ 		vh->mmid_range * HAB_PCHAN_VQ_MAX);
+ 
+ 	ret = virtio_find_vqs(vh->vdev, vh->mmid_range * HAB_PCHAN_VQ_MAX,
+-				vh->vqs, vh->vqs_info, NULL);
++				vh->vqs,
++				(vq_callback_t **)vh->vq_callbacks,
++				(const char * const *)vh->vq_names, NULL);
+ 
+ 	if (ret) {
+ 		pr_err("failed to find vqs %d\n", ret);
+@@ -631,10 +634,14 @@ static int virthab_alloc_mmid_device(struct virtio_hab *vh,
+ 	if (!vh->vqs)
+ 		return -ENOMEM;
+ 
+-	vh->vqs_info = kzalloc(sizeof(struct virtqueue_info) * mmid_range *
++	vh->vq_callbacks = kzalloc(sizeof(vq_callback *) * mmid_range *
+ 				HAB_PCHAN_VQ_MAX, GFP_KERNEL);
++	if (!vh->vq_callbacks)
++		return -ENOMEM;
+ 
+-	if (!vh->vqs_info)
++	vh->vq_names = kzalloc(sizeof(char *) * mmid_range *
++				HAB_PCHAN_VQ_MAX, GFP_KERNEL);
++	if (!vh->vq_names)
+ 		return -ENOMEM;
+ 
+ 	vh->vqpchans = kcalloc(hab_driver.ndevices, sizeof(struct vq_pchan),
+@@ -644,8 +651,8 @@ static int virthab_alloc_mmid_device(struct virtio_hab *vh,
+ 
+ 	/* loop through all pchans before vq registration for name creation */
+ 	for (i = 0; i < mmid_range * HAB_PCHAN_VQ_MAX; i++) {
+-		vh->vqs_info[i].name = kzalloc(MAX_VMID_NAME_SIZE + 2, GFP_KERNEL);
+-		if (!vh->vqs_info[i].name)
++		vh->vq_names[i] = kzalloc(MAX_VMID_NAME_SIZE + 2, GFP_KERNEL);
++		if (!vh->vq_names[i])
+ 			return -ENOMEM;
+ 	}
+ 
+@@ -954,8 +961,9 @@ static void virthab_remove(struct virtio_device *vdev)
+ 	kfree(vh->vqs);
+ 
+ 	for (i = 0; i < vh->mmid_range * HAB_PCHAN_VQ_MAX; i++)
+-		kfree(vh->vqs_info[i].name);
+-	kfree(vh->vqs_info);
++		kfree(vh->vq_names[i]);
++	kfree(vh->vq_names);
++	kfree(vh->vq_callbacks);
+ 
+ 	kfree(vh->vqpchans);
+ 
+diff --git a/drivers/soc/qcom/hab/hab_virtio.h b/drivers/soc/qcom/hab/hab_virtio.h
+index 78a4a855..04d18009 100644
+--- a/drivers/soc/qcom/hab/hab_virtio.h
++++ b/drivers/soc/qcom/hab/hab_virtio.h
+@@ -63,7 +63,8 @@ struct virtio_hab {
+ 	 */
+ 	int vqs_offset;
+ 	struct virtqueue **vqs; /* holds total # of vqs for all the pchans. 2 vqs per pchan */
+-	struct virtqueue_info *vqs_info;
++	vq_callback **vq_callbacks; /* callbacks array for virtio_find_vqs */
++	const char **vq_names;      /* names array for virtio_find_vqs */
+ 	struct vq_pchan *vqpchans; /* total # of pchans */
+ 
+ 	spinlock_t mlock; /* master lock for all the pchans */
+@@ -119,28 +120,28 @@ int virthab_init_vqs_post(struct virtio_hab *vh);
+ 
+ struct virtio_device *virthab_get_vdev(int32_t mmid);
+ #else
+-int virthab_queue_inbufs(struct virtio_hab *vh, int alloc)
++static inline int virthab_queue_inbufs(struct virtio_hab *vh, int alloc)
+ {
+ 	return -ENODEV;
+ }
+ 
+-int virthab_alloc(struct virtio_device *vdev, struct virtio_hab **pvh,
++static inline int virthab_alloc(struct virtio_device *vdev, struct virtio_hab **pvh,
+ 			uint32_t mmid_start, int mmid_range)
+ {
+ 	return -ENODEV;
+ }
+ 
+-int virthab_init_vqs_pre(struct virtio_hab *vh)
++static inline int virthab_init_vqs_pre(struct virtio_hab *vh)
+ {
+ 	return -ENODEV;
+ }
+ 
+-int virthab_init_vqs_post(struct virtio_hab *vh)
++static inline int virthab_init_vqs_post(struct virtio_hab *vh)
+ {
+ 	return -ENODEV;
+ }
+ 
+-struct virtio_device *virthab_get_vdev(int32_t mmid)
++static inline struct virtio_device *virthab_get_vdev(int32_t mmid)
+ {
+ 	return NULL;
+ }
+diff --git a/drivers/soc/qcom/minidump_log.c b/drivers/soc/qcom/minidump_log.c
+index afd53c8e..5e0b938d 100644
+--- a/drivers/soc/qcom/minidump_log.c
++++ b/drivers/soc/qcom/minidump_log.c
+@@ -45,7 +45,7 @@
+ #include <asm/memory.h>
+ 
+ #include <linux/sched/cputime.h>
+-#include "kernel/sched/sched.h"
++#include <kernel/sched/sched.h>
+ #include <linux/sched/walt.h>
+ 
+ #include <linux/kdebug.h>
+@@ -58,13 +58,17 @@
+ #include <linux/cma.h>
+ #include <linux/dma-map-ops.h>
+ #include <linux/sched/clock.h>
++#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
+ #include <trace/hooks/cpufreq.h>
++#endif
+ #ifdef CONFIG_QCOM_MINIDUMP_PANIC_CPU_CONTEXT
+ #include <trace/hooks/debug.h>
+ #endif
++#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
+ #include "minidump_memory.h"
+ #endif
+-#include "kernel/time/tick-internal.h"
++#endif /* CONFIG_QCOM_MINIDUMP_PANIC_DUMP */
++#include <kernel/time/tick-internal.h>
+ 
+ #ifdef CONFIG_QCOM_DYN_MINIDUMP_STACK
+ 
+@@ -99,7 +103,9 @@ static struct md_suspend_context_data md_suspend_context;
+ static bool is_vmap_stack __read_mostly;
+ 
+ #ifdef CONFIG_QCOM_MINIDUMP_FTRACE
++#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
+ #include <trace/hooks/ftrace_dump.h>
++#endif
+ #include <linux/ring_buffer.h>
+ #include <linux/trace_seq.h>
+ 
+@@ -1244,7 +1250,9 @@ dump_rq:
+ #ifdef CONFIG_QCOM_MINIDUMP_PANIC_KTASK_STACK
+ 	md_dump_ktask_stack();
+ #endif
++#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
+ 	md_dump_memory();
++#endif
+ 	dump_stack_minidump(0);
+ 	md_in_oops_handler = false;
+ }
+@@ -1319,11 +1327,13 @@ static void md_register_panic_data(void)
+ {
+ 	int ret;
+ 
++#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
+ 	ret = md_minidump_memory_init();
+ 	if (ret) {
+ 		pr_err("Failed to look up all minidump memory symbols, rc: %d\n", ret);
+ 		return;
+ 	}
++#endif
+ 
+ #ifdef CONFIG_QCOM_MINIDUMP_PANIC_CPU_CONTEXT
+ 	md_register_panic_entries(MD_CPU_CNTXT_PAGES, "KCNTXT",
+@@ -1512,9 +1522,11 @@ static void register_cpufreq_log(void)
+ 	if (msm_minidump_add_region(&md_entry) < 0)
+ 		pr_err("Failed to add %s in Minidump\n", md_entry.name);
+ 
++#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
+ 	register_trace_android_vh_cpufreq_resolve_freq(log_cpu_freq, NULL);
+ 	register_trace_android_vh_cpufreq_fast_switch(log_cpu_freq, NULL);
+ 	register_trace_android_vh_cpufreq_target(log_cpu_freq, NULL);
++#endif
+ }
+ #else
+ static inline void register_cpufreq_log(void) {}
+diff --git a/drivers/soc/qcom/msm_minidump.c b/drivers/soc/qcom/msm_minidump.c
+index 2266a895..49aefa97 100644
+--- a/drivers/soc/qcom/msm_minidump.c
++++ b/drivers/soc/qcom/msm_minidump.c
+@@ -312,6 +312,10 @@ static int msm_minidump_add_header(void)
+ 	char *banner, *linux_banner;
+ 
+ 	linux_banner = DEBUG_SYMBOL_LOOKUP(linux_banner);
++	if (!linux_banner) {
++		pr_warn("Minidump: linux_banner lookup failed, using fallback\n");
++		linux_banner = "Linux version unknown (debug_symbol not available)";
++	}
+ 	/* Header buffer contains:
+ 	 * elf header, MAX_NUM_ENTRIES+4 of section and program elf headers,
+ 	 * string table section and linux banner.
+@@ -403,7 +407,7 @@ int msm_minidump_driver_probe(const struct md_init_data *data)
+ 	int ret = 0;
+ 
+ 	if (!debug_symbol_available())
+-		return -EPROBE_DEFER;
++		pr_warn("Minidump: debug_symbol not available, symbol lookup will use kallsyms\n");
+ 
+ 	md_core.ops = data->ops;
+ 
+diff --git a/drivers/soc/qcom/qcom_soc_wdt.c b/drivers/soc/qcom/qcom_soc_wdt.c
+index 9817f709..703a6303 100644
+--- a/drivers/soc/qcom/qcom_soc_wdt.c
++++ b/drivers/soc/qcom/qcom_soc_wdt.c
+@@ -161,7 +161,7 @@ static int __init init_watchdog(void)
+ #if IS_MODULE(CONFIG_QCOM_SOC_WATCHDOG)
+ module_init(init_watchdog);
+ #else
+-pure_initcall(init_watchdog);
++module_init(init_watchdog);
+ #endif
+ 
+ static __exit void exit_watchdog(void)
+diff --git a/drivers/soc/qcom/qcom_wdt_core.c b/drivers/soc/qcom/qcom_wdt_core.c
+index b5d21540..5238d6e9 100644
+--- a/drivers/soc/qcom/qcom_wdt_core.c
++++ b/drivers/soc/qcom/qcom_wdt_core.c
+@@ -22,7 +22,7 @@
+ #include <linux/firmware/qcom/qcom_scm.h>
+ #include <soc/qcom/minidump.h>
+ #include <soc/qcom/watchdog.h>
+-#include <soc/qcom/qcom_sdei.h>
++#include <linux/soc/qcom/qcom_sdei.h>
+ #include <linux/cpumask.h>
+ #include <linux/cpu_pm.h>
+ #include <uapi/linux/sched/types.h>
+diff --git a/drivers/virt/gunyah/gh_rm_core.c b/drivers/virt/gunyah/gh_rm_core.c
+index 9df54997..2f5f0517 100644
+--- a/drivers/virt/gunyah/gh_rm_core.c
++++ b/drivers/virt/gunyah/gh_rm_core.c
+@@ -103,7 +103,7 @@ SRCU_NOTIFIER_HEAD_STATIC(gh_rm_notifier);
+ 
+ /* non-static: used by gh_rm_iface */
+ bool gh_rm_core_initialized;
+-struct gunyah_rm *rm;
++struct gh_rm *rm;
+ 
+ static void gh_rm_get_svm_res_work_fn(struct work_struct *work);
+ static DECLARE_WORK(gh_rm_get_svm_res_work, gh_rm_get_svm_res_work_fn);
+@@ -1239,9 +1239,9 @@ static int gh_vm_probe(struct device *dev, struct device_node *hyp_root)
+ 
+ 	gh_init_vm_prop_table();
+ 
+-	node = of_find_compatible_node(hyp_root, NULL, "qcom,gunyah-vm-id-1.0");
++	node = of_get_compatible_child(hyp_root, "qcom,gunyah-vm-id-1.0");
+ 	if (IS_ERR_OR_NULL(node)) {
+-		node = of_find_compatible_node(hyp_root, NULL, "qcom,haven-vm-id-1.0");
++		node = of_get_compatible_child(hyp_root, "qcom,haven-vm-id-1.0");
+ 		if (IS_ERR_OR_NULL(node)) {
+ 			dev_err(dev, "Could not find vm-id node\n");
+ 			return -ENODEV;
+diff --git a/drivers/virt/gunyah/gh_rm_drv_private.h b/drivers/virt/gunyah/gh_rm_drv_private.h
+index ea97c6a3..8ba13124 100644
+--- a/drivers/virt/gunyah/gh_rm_drv_private.h
++++ b/drivers/virt/gunyah/gh_rm_drv_private.h
+@@ -16,9 +16,11 @@
+ #include "drivers/virt/gunyah/rsc_mgr.h"
+ 
+ extern bool gh_rm_core_initialized;
+-extern struct gunyah_rm *rm;
++extern struct gh_rm *rm;
+ 
+-#define gh_rm_call gunyah_rm_call
++/* gh_rm_call is exported by CSE kernel rsc_mgr.c */
++#define gunyah_rm_notifier_register    gh_rm_notifier_register
++#define gunyah_rm_notifier_unregister  gh_rm_notifier_unregister
+ 
+ /* Resource Manager Header */
+ struct gh_rm_rpc_hdr {
+diff --git a/drivers/virt/gunyah/gh_rm_iface.c b/drivers/virt/gunyah/gh_rm_iface.c
+index 40c7436a..578b50ef 100644
+--- a/drivers/virt/gunyah/gh_rm_iface.c
++++ b/drivers/virt/gunyah/gh_rm_iface.c
+@@ -2947,69 +2947,9 @@ static int __gh_rm_setup_feature_scm_assign(void)
+ 	return 0;
+ }
+ #else
+-static struct notifier_block gh_rm_scm_assign_nb;
+-static struct notifier_block gh_rm_hyp_assign_nb;
+-
+ static int __gh_rm_setup_feature_scm_assign(void)
+ {
+-	int ret, gh_acl_sz, gh_sgl_sz;
+-	int vmid = 0;
+-	gh_vmid_t self_vmid;
+-	struct page *page;
+-	struct gh_acl_desc *gh_acl;
+-	struct gh_sgl_desc *gh_sgl;
+-	gh_memparcel_handle_t handle;
+-
+-	ret = gh_rm_get_this_vmid(&self_vmid);
+-	if (ret)
+-		return ret;
+-
+-	if (self_vmid != QCOM_SCM_VMID_HLOS) {
+-		gh_feature_use_scm_assign = false;
+-		return 0;
+-	}
+-
+-	page = alloc_page(GFP_KERNEL);
+-	if (!page)
+-		return -ENOMEM;
+-
+-	gh_acl_sz = sizeof(*gh_acl) + offsetof(struct gh_acl_desc, acl_entries[1]);
+-	gh_sgl_sz = sizeof(*gh_sgl) + offsetof(struct gh_sgl_desc, sgl_entries[1]);
+-	gh_acl = kzalloc(gh_acl_sz + gh_sgl_sz, GFP_KERNEL);
+-	gh_sgl = (void *)gh_acl + gh_acl_sz;
+-	if (!gh_acl) {
+-		__free_page(page);
+-		return -ENOMEM;
+-	}
+-
+-	ret = gh_rm_vm_alloc_vmid(GH_TRUSTED_VM, &vmid);
+-	if (ret) {
+-		kfree(gh_acl);
+-		__free_page(page);
+-		return -ENOMEM;
+-	}
+-
+-	gh_acl->n_acl_entries = 1;
+-	gh_acl->acl_entries[0].vmid = vmid;
+-	gh_acl->acl_entries[0].perms = GH_RM_ACL_R | GH_RM_ACL_W;
+-
+-	gh_sgl->n_sgl_entries = 1;
+-	gh_sgl->sgl_entries[0].ipa_base = page_to_phys(page);
+-	gh_sgl->sgl_entries[0].size = PAGE_SIZE;
+-
+-	ret = ghd_rm_mem_lend(GH_RM_MEM_TYPE_NORMAL, 0, 0, gh_acl, gh_sgl, NULL, &handle);
+-	if (ret) {
+-		gh_feature_use_scm_assign = true;
+-	} else {
+-		gh_feature_use_scm_assign = false;
+-		qcom_scm_assign_mem_notifier_register(&gh_rm_scm_assign_nb);
+-		hyp_assign_notifier_register(&gh_rm_hyp_assign_nb);
+-	}
+-
+-	if (ret || !ghd_rm_mem_reclaim(handle, 0))
+-		__free_page(page);
+-	gh_rm_vm_dealloc_vmid(vmid);
+-	kfree(gh_acl);
++	gh_feature_use_scm_assign = true;
+ 	return 0;
+ }
+ #endif
+@@ -3033,6 +2973,7 @@ int gh_rm_setup_feature_scm_assign(void)
+ }
+ 
+ #define QCOM_SCM_MAX_MANAGED_VMID 0x3F
++#if 0 /* Not needed for CSE kernel - no SCM assign notifier support */
+ static bool is_gh_vm_or_hlos(int vmid)
+ {
+ 	if (vmid > QCOM_SCM_MAX_MANAGED_VMID)
+@@ -3141,3 +3082,4 @@ static int hyp_assign_notifier(struct notifier_block *nb,
+ static struct notifier_block gh_rm_hyp_assign_nb = {
+ 	.notifier_call = hyp_assign_notifier,
+ };
++#endif /* !CONFIG_GUNYAH_LEGACY */
+diff --git a/drivers/virtio/virtio_mmio.c b/drivers/virtio/virtio_mmio.c
+index 3182d7b5..65d0f90e 100644
+--- a/drivers/virtio/virtio_mmio.c
++++ b/drivers/virtio/virtio_mmio.c
+@@ -532,7 +532,9 @@ error_available:
+ 
+ static int vm_find_vqs(struct virtio_device *vdev, unsigned int nvqs,
+ 		       struct virtqueue *vqs[],
+-		       struct virtqueue_info vqs_info[],
++		       vq_callback_t *callbacks[],
++		       const char * const names[],
++		       const bool *ctx,
+ 		       struct irq_affinity *desc)
+ {
+ 	struct virtio_mmio_device *vm_dev = to_virtio_mmio_device(vdev);
+@@ -555,15 +557,15 @@ static int vm_find_vqs(struct virtio_device *vdev, unsigned int nvqs,
+ 		enable_irq_wake(irq);
+ 
+ 	for (i = 0; i < nvqs; ++i) {
+-		struct virtqueue_info *vqi = &vqs_info[i];
+-
+-		if (!vqi->name) {
++		if (!names[i]) {
+ 			vqs[i] = NULL;
+ 			continue;
+ 		}
+ 
+-		vqs[i] = vm_setup_vq(vdev, queue_idx++, vqi->callback,
+-				     vqi->name, vqi->ctx);
++		vqs[i] = vm_setup_vq(vdev, queue_idx++,
++				     callbacks ? callbacks[i] : NULL,
++				     names[i],
++				     ctx ? ctx[i] : false);
+ 		if (IS_ERR(vqs[i])) {
+ 			vm_del_vqs(vdev);
+ 			return PTR_ERR(vqs[i]);
+diff --git a/include/linux/gunyah/gh_errno.h b/include/linux/gunyah/gh_errno.h
+index f5051ba5..1bf6b8cc 100644
+--- a/include/linux/gunyah/gh_errno.h
++++ b/include/linux/gunyah/gh_errno.h
+@@ -9,36 +9,7 @@
+ #define __GH_ERRNO_H
+ 
+ #include <linux/errno.h>
+-
+-#define GH_ERROR_OK			0
+-#define GH_ERROR_UNIMPLEMENTED		-1
+-#define GH_ERROR_RETRY			-2
+-
+-#define GH_ERROR_ARG_INVAL		1
+-#define GH_ERROR_ARG_SIZE		2
+-#define GH_ERROR_ARG_ALIGN		3
+-
+-#define GH_ERROR_NOMEM			10
+-
+-#define GH_ERROR_ADDR_OVFL		20
+-#define	GH_ERROR_ADDR_UNFL		21
+-#define GH_ERROR_ADDR_INVAL		22
+-
+-#define GH_ERROR_DENIED			30
+-#define GH_ERROR_BUSY			31
+-#define GH_ERROR_IDLE			32
+-
+-#define GH_ERROR_IRQ_BOUND		40
+-#define GH_ERROR_IRQ_UNBOUND		41
+-
+-#define GH_ERROR_CSPACE_CAP_NULL	50
+-#define GH_ERROR_CSPACE_CAP_REVOKED	51
+-#define GH_ERROR_CSPACE_WRONG_OBJ_TYPE	52
+-#define GH_ERROR_CSPACE_INSUF_RIGHTS	53
+-#define GH_ERROR_CSPACE_FULL		54
+-
+-#define GH_ERROR_MSGQUEUE_EMPTY		60
+-#define GH_ERROR_MSGQUEUE_FULL		61
++#include <linux/gunyah.h>
+ 
+ static inline int gh_remap_error(int gh_error)
+ {
+diff --git a/include/linux/gunyah/gh_rm_drv.h b/include/linux/gunyah/gh_rm_drv.h
+index 2fccc33c..541ab818 100644
+--- a/include/linux/gunyah/gh_rm_drv.h
++++ b/include/linux/gunyah/gh_rm_drv.h
+@@ -28,8 +28,7 @@
+ #define GH_RM_NOTIF_MEM_RELEASED	0x51100012
+ #define GH_RM_NOTIF_MEM_ACCEPTED	0x51100013
+ 
+-#define GH_RM_MEM_TYPE_NORMAL	0
+-#define GH_RM_MEM_TYPE_IO	1
++/* GH_RM_MEM_TYPE_NORMAL and GH_RM_MEM_TYPE_IO are defined as enums in gunyah_rsc_mgr.h */
+ 
+ #define GH_RM_TRANS_TYPE_DONATE	0
+ #define GH_RM_TRANS_TYPE_LEND	1
+@@ -184,18 +183,7 @@ struct gh_notify_vmid_desc {
+ /* AUTH_PARAM_TYPE mechanisms */
+ #define GH_VM_AUTH_PARAM_PAS_ID		0 /* Used to pass peripheral auth id */
+ 
+-#define GH_RM_VM_STATUS_NO_STATE	0
+-#define GH_RM_VM_STATUS_INIT		1
+-#define GH_RM_VM_STATUS_READY		2
+-#define GH_RM_VM_STATUS_RUNNING		3
+-#define GH_RM_VM_STATUS_PAUSED		4
+-#define GH_RM_VM_STATUS_LOAD		5
+-#define GH_RM_VM_STATUS_AUTH		6
+-/* 7 is reserved */
+-#define GH_RM_VM_STATUS_INIT_FAILED	8
+-#define GH_RM_VM_STATUS_EXITED		9
+-#define GH_RM_VM_STATUS_RESETTING	10
+-#define GH_RM_VM_STATUS_RESET		11
++/* GH_RM_VM_STATUS_* are defined as enums in gunyah_rsc_mgr.h */
+ #define GH_RM_VM_STATUS_RESET_FAILED	12
+ 
+ #define GH_RM_OS_STATUS_NONE		0
+diff --git a/include/linux/gunyah/gh_vm.h b/include/linux/gunyah/gh_vm.h
+index 15b74c01..be5fe567 100644
+--- a/include/linux/gunyah/gh_vm.h
++++ b/include/linux/gunyah/gh_vm.h
+@@ -6,7 +6,9 @@
+ #ifndef _GH_VM_H
+ #define _GH_VM_H
+ 
++#ifdef CONFIG_QTVM_WITH_AVF
+ #include <linux/gunyah_qtvm.h>
++#endif
+ 
+ #ifdef CONFIG_QTVM_WITH_AVF
+ #define GH_VM_BEFORE_POWERUP		GUNYAH_QTVM_BEFORE_POWERUP
+-- 
+2.34.1
+

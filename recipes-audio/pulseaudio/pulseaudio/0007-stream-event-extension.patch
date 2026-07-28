@@ -2,7 +2,7 @@ From a89a1c8cb549713511d1fce63da178795f213b90 Mon Sep 17 00:00:00 2001
 From: Erin Yan <xinyey@codeaurora.org>
 Date: Thu, 24 Nov 2016 15:14:24 +0800
 Subject: [PATCH] stream event extension
-
+Upstream-Status: Inappropriate [oe specific]
 Signed-off-by: Erin Yan <xinyey@codeaurora.org>
 ---
  src/pulse/def.h | 3 +++

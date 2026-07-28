@@ -1,15 +1,15 @@
 include conf/machine/include/basemachine.inc
 
 SOC_FAMILY ?= "sa-common"
-SOC_FAMILY:prepend = "qcom:"
 include conf/machine/include/soc-family.inc
 
-# PREFERRED_PROVIDER_virtual/kernel ?= "linux-kernel-qcom"
-# PREFERRED_PROVIDER_virtual/kernel-headers = "linux-msm-headers"
+PREFERRED_PROVIDER_virtual/kernel ?= "linux-msm"
+PREFERRED_PROVIDER_virtual/kernel-headers ?= "linux-msm-headers"
+preferred-kernel ?= "PREFERRED_VERSION_linux-msm"
 
-# TODO: transfer to use QCLninux nhlos bins provider
-# Recipe provider for boot critical nhlos bins
-# PREFERRED_PROVIDER_virtual/bootbins ?= "firmware-qcom-bootbins"
+PREFERRED_VERSION_linux-ack ?= "6.12"
+
+PREFERRED_VERSION_edk2 ?= "5.0"
 
 # Prefer camx
 PREFERRED_VERSION_camx ?= "0.1"
@@ -26,6 +26,10 @@ PREFERRED_PROVIDER_virtual/wayland-egl  = "adreno"
 PREFERRED_PROVIDER_virtual/egl          = "adreno"
 PREFERRED_PROVIDER_virtual/libgles1     = "adreno"
 PREFERRED_PROVIDER_virtual/libgles2     = "adreno"
+VIRTUAL-RUNTIME_wayland-egl  = "adreno"
+VIRTUAL-RUNTIME_egl          = "adreno"
+VIRTUAL-RUNTIME_libgles1     = "adreno"
+VIRTUAL-RUNTIME_libgles2     = "adreno"
 
 # mesa provides these packags and others like virtual/libgl.
 # This is to enable mesa, adreno and gbm work together, and pass

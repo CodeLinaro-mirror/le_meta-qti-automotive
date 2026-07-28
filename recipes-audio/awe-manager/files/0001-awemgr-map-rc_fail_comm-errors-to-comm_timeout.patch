@@ -1,0 +1,41 @@
+From 5a6d781074216a9f8c402d2b9c03919222ee9d49 Mon Sep 17 00:00:00 2001
+From: Ali Raza <aliraza@qti.qualcomm.com>
+Date: Fri, 5 Jun 2026 13:58:33 -0700
+Subject: [PATCH] awe_manager: Map comm errors (AWECOMM_RC_FAIL_COMM) to COMM_TIMEOUT
+
+Signed-off-by: Ali Raza <aliraza@qti.qualcomm.com>
+---
+ awe_manager/src/awemgr_util.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/awe_manager/src/awemgr_util.c b/awe_manager/src/awemgr_util.c
+index b502b92..42aa0bd 100644
+--- a/awe_manager/src/awemgr_util.c
++++ b/awe_manager/src/awemgr_util.c
+@@ -22,5 +22,12 @@
+ **/
+ 
++/*
++** Changes from Qualcomm Technologies, Inc. are provided under the following license:
++**
++** Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++** SPDX-License-Identifier: BSD-3-Clause-Clear
++*/
++
+ #include "awemgr_util.h"
+ #include "awemgr_api_logging.h"
+ #include "types/awemgr_limits.h"
+@@ -147,7 +154,10 @@ enum awemgr_rc safe_transact(struct awecomm_data *comm_p, struct awecmd_st *buf_
+     int comm_rc = awecomm_transact_on_cmdbuf(comm_p, buf_p);
+     if(comm_rc != AWECOMM_RC_OK)
+     {
+-        if(comm_rc == AWECOMM_RC_TIMEOUT)
++        //!TODO: QC internal start (f431a31)
++        // AWECOMM_RC_FAIL_COMM can happen during SSR/restart; treat like timeout
++        if(comm_rc == AWECOMM_RC_TIMEOUT || comm_rc == AWECOMM_RC_FAIL_COMM)
++        //!TODO: QC internal end
+         {
+             return awemgr_RC_COMM_TIMEOUT;
+         }
+--
+2.54.0

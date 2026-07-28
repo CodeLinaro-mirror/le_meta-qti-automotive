@@ -1,0 +1,39 @@
+From b9661fe51bb02910332db991d8e578d18caaa86d Mon Sep 17 00:00:00 2001
+From: Zhuo Yang <zhuyan@qti.qualcomm.com>
+Date: Thu, 16 Apr 2026 14:23:18 +0800
+Subject: [PATCH] QcLinux kernel adapt LVGVM
+
+Change-Id: I9d2305d13681bc9ca8ca48fe5e0e8e56bc6068da
+Signed-off-by: Zhuo Yang <zhuyan@qti.qualcomm.com>
+---
+ mm/cma.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mm/cma.c b/mm/cma.c
+index ac363f16d3923..16859f0f26fea 100644
+--- a/mm/cma.c
++++ b/mm/cma.c
+@@ -523,6 +523,7 @@ struct page *cma_alloc(struct cma *cma, unsigned long count,
+ 
+ 	return page;
+ }
++EXPORT_SYMBOL_GPL(cma_alloc);
+ 
+ bool cma_pages_valid(struct cma *cma, const struct page *pages,
+ 		     unsigned long count)
+@@ -573,6 +574,7 @@ bool cma_release(struct cma *cma, const struct page *pages,
+ 
+ 	return true;
+ }
++EXPORT_SYMBOL_GPL(cma_release);
+ 
+ int cma_for_each_area(int (*it)(struct cma *cma, void *data), void *data)
+ {
+@@ -587,3 +589,4 @@ int cma_for_each_area(int (*it)(struct cma *cma, void *data), void *data)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(cma_for_each_area);
+-- 
+2.34.1
+

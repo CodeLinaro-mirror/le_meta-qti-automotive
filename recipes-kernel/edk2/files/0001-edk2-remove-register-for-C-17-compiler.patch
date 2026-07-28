@@ -1,0 +1,97 @@
+#/* This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+# *
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+#*/ SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From dd76b81d0e1c0c63f33a31fd7d5266783562d6ec Mon Sep 17 00:00:00 2001
+From: mafeng <mafeng@qti.qualcomm.com>
+Date: Fri, 21 Nov 2025 13:59:23 +0800
+Subject: [PATCH] edk2: remove register for C++17 compiler
+
+remove register for C++17 compiler on uefi.lnx.6.0.
+
+Change-Id: Id40eb88dbb668ed0385b0030541c62ff147ed321
+Signed-off-by: mafeng <mafeng@qti.qualcomm.com>
+---
+ .../Source/C/VfrCompile/Pccts/h/AParser.cpp   | 20 +++++++++----------
+ .../Source/C/VfrCompile/Pccts/h/DLexer.h      |  4 ++--
+ .../C/VfrCompile/Pccts/h/DLexerBase.cpp       |  2 +-
+ 3 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp b/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp
+index 720fe75af1..10b06d2306 100644
+--- a/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp
++++ b/BaseTools/Source/C/VfrCompile/Pccts/h/AParser.cpp
+@@ -472,15 +472,15 @@ set_deg(SetWordType *a)
+ 	   of elements present in the set.  Assumes
+ 	   that all word bits are used in the set
+ 	*/
+-	register SetWordType *p = a;
+-	register SetWordType *endp = &(a[bsetsize]);
+-	register int degree = 0;
++	SetWordType *p = a;
++	SetWordType *endp = &(a[bsetsize]);
++	int degree = 0;
+ 
+ 	if ( a == NULL ) return 0;
+ 	while ( p < endp )
+ 	{
+-		register SetWordType t = *p;
+-		register SetWordType *b = &(bitmask[0]);
++		SetWordType t = *p;
++		SetWordType *b = &(bitmask[0]);
+ 		do {
+ 			if (t & *b) ++degree;
+ 		} while (++b < &(bitmask[sizeof(SetWordType)*8]));
+@@ -493,14 +493,14 @@ set_deg(SetWordType *a)
+ void ANTLRParser::
+ edecode(SetWordType *a)
+ {
+-	register SetWordType *p = a;
+-	register SetWordType *endp = &(p[bsetsize]);
+-	register unsigned e = 0;
++	SetWordType *p = a;
++	SetWordType *endp = &(p[bsetsize]);
++	unsigned e = 0;
+ 
+ 	if ( set_deg(a)>1 ) /* MR23 */ printMessage(stderr, " {");
+ 	do {
+-		register SetWordType t = *p;
+-		register SetWordType *b = &(bitmask[0]);
++		SetWordType t = *p;
++		SetWordType *b = &(bitmask[0]);
+ 		do {
+ 			if ( t & *b ) /* MR23 */ printMessage(stderr, " %s", token_tbl[e]);
+ 			e++;
+diff --git a/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h b/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h
+index f15bff1187..75ce142685 100644
+--- a/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h
++++ b/BaseTools/Source/C/VfrCompile/Pccts/h/DLexer.h
+@@ -65,9 +65,9 @@ mode( int m )
+ ANTLRTokenType DLGLexer::
+ nextTokenType(void)
+ {
+-	register int state, newstate;
++	int state, newstate;
+ 	/* last space reserved for the null char */
+-	register DLGChar *lastpos;
++	DLGChar *lastpos;
+ 	ANTLRTokenType tk;
+ 
+ skip:
+diff --git a/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp b/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp
+index b218afc038..d7a37236a1 100644
+--- a/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp
++++ b/BaseTools/Source/C/VfrCompile/Pccts/h/DLexerBase.cpp
+@@ -193,7 +193,7 @@ replchar(DLGChar c)
+ void DLGLexerBase::
+ replstr(const DLGChar *s) /* MR20 const */
+ {
+-	register DLGChar *l= &_lextext[_bufsize -1];
++	DLGChar *l= &_lextext[_bufsize -1];
+ 
+ 	nextpos = _begexpr;
+ 	if (s){
+-- 
+2.34.1
+

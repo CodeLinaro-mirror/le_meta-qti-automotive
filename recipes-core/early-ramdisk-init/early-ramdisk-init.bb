@@ -19,6 +19,7 @@ CFLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'early_init', '-DEARLY_INIT',
 CFLAGS:append:sa8775 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DVENDOR_DSP_MOUNT -DFIRMWARE_MOUNT -DPRELOAD_UNIT', '', d)}"
 CFLAGS:append:sa7255 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DVENDOR_DSP_MOUNT -DFIRMWARE_MOUNT -DPRELOAD_UNIT', '', d)}"
 CFLAGS:append:gen5 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-DVFIO_BIND_DEVICE -DMM_VFIO_BIND_DEVICE -DVENDOR_DSP_MOUNT -DFIRMWARE_MOUNT -DPRELOAD_UNIT', '', d)}"
+CFLAGS:append:gvm-gen4-5 = " -DLIB_UNIFICATION"
 
 TARGET_PATH_NAME ?= "${MACHINE}"
 TARGET_PATH_NAME:sa8775 = "sa8775-qclinux"

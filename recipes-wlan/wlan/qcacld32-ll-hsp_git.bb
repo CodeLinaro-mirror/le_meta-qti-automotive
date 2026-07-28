@@ -14,7 +14,7 @@ PR = "r8"
 SRC_URI = "${PATH_TO_REPO}/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=wlan/qcacld-3.0;usehead=1 \
            ${PATH_TO_REPO}/${TARGET_DIR}wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=${TARGET_DIR}wlan/qca-wifi-host-cmn;usehead=1 \
            ${PATH_TO_REPO}/${TARGET_DIR}wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=${TARGET_DIR}wlan/fw-api/;usehead=1 \
-           ${PATH_TO_REPO}/${TARGET_DIR}device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=${TARGET_DIR}device/qcom/wlan;usehead=1 \
+           ${PATH_TO_REPO}/device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=device/qcom/wlan;usehead=1 \
            "
 SRCREV_qcacld = "${AUTOREV}"
 SRCREV_qca-wifi-host-cmn = "${AUTOREV}"
@@ -57,6 +57,7 @@ _WLAN_CFG_OVERRIDE = "\
                         CONFIG_FEATURE_DELAYED_PEER_OBJ_DESTROY=n \
                         "
 EXTRA_OEMAKE:append = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE}"
+EXTRA_OEMAKE:append:gen5 = " CONFIG_WLAN_MAX_CPUS=18"
 
 do_install() {
     module_do_install
@@ -70,13 +71,14 @@ do_install() {
     install -d ${WLAN_KO}/wlan
     install -m 0644 ${S}/${_MODNAME}.ko ${WLAN_KO}/wlan/
 
-    install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6490.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
-    install -D -m 0644 ${WORKDIR}/${TARGET_DIR}device/qcom/wlan/msm_auto/wlan_mac_hst_1.bin ${FIRMWARE_PATH}/wlan_mac.bin
+    install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6490.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
+    install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/wlan_mac_hst_1.bin ${FIRMWARE_PATH}/wlan_mac.bin
 
-    install -d ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
-    ln -sf /firmware/image/${FW_PATH_NAME}/amss20.bin ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
-    ln -sf /firmware/image/${FW_PATH_NAME}/bdwlan02.e03 ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
-    ln -sf /firmware/image/${FW_PATH_NAME}/bdwlan02.e02 ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
-    ln -sf /firmware/image/${FW_PATH_NAME}/bdwlan.elf ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
-    ln -sf /firmware/image/${FW_PATH_NAME}/m3.bin ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}/
+    ln -sf /firmware/image/${FW_PATH_NAME} ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}
+}
+
+# Disable idle shutdown for HGY
+do_install:append() {
+    sed -i "s/gInterfaceChangeWait=500/gInterfaceChangeWait=0/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
+    sed -i "s/gSuspendMode=3/gSuspendMode=2/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
 }

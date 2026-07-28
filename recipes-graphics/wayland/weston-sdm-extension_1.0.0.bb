@@ -62,8 +62,8 @@ PACKAGECONFIG ??= "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'pmsnserv
 # early-init
 PACKAGECONFIG[early] = "-Denable-early-boot=true,-Denable-early-boot=false"
 # pm
-PACKAGECONFIG[pmsnservice] = "-Denable-pm-snservice=true,-Denable-pm-snservice=false"
-PACKAGECONFIG[pmdbus] = "-Denable-pm-dbus=true,-Denable-pm-dbus=false"
+PACKAGECONFIG[pmsnservice] = "-Denable-pm-snservice=true,"
+PACKAGECONFIG[pmdbus] = "-Denable-pm-dbus=true,"
 
 do_install:append() {
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'true', 'false', d)}; then
@@ -75,7 +75,7 @@ do_install:append() {
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'sleep-notify@weston.service', '', d)}"
 
 # rt_schedule
-PACKAGECONFIG[rt_schedule] = "-Denable-rt_schedule=true,-Denable-rt_schedule=false"
+PACKAGECONFIG[rt_schedule] = "-Denable-rt_schedule=true,"
 
 FILES:${PN} += "\
     ${libdir}/libweston-${WESTON_MAJOR_VERSION}/* \
