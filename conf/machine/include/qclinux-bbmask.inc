@@ -152,6 +152,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/spf/spf_git.bb \
     meta-qti-automotive/recipes-bsp/libsensors/libsensors_git.bb \
     meta-qti-automotive/recipes-bsp/platformdlkm/platformdlkm_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-data/ptp-virtual/ptp-virtual_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
@@ -224,6 +225,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-core/platform-config/platform-config_git.bb \
     meta-qti-automotive/recipes-core/power-utils/power-utils_git.bb \
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/auto-gfx-app/auto-gfx-app.bb \
     meta-qti-automotive/recipes-graphics/mm-auto-ksync/ksyncdlkm_git.bb \
@@ -289,6 +291,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-core/platform-config/platform-config_git.bb \
     meta-qti-automotive/recipes-core/power-utils/power-utils_git.bb \
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
