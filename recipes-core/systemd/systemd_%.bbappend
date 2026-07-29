@@ -10,6 +10,8 @@ SRC_URI:append = " \
     file://0001-systemd-config-linger-for-root-user.patch \
 "
 
+SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0033-systemd-Make-root-s-home-directory-configurable-2.patch', '', d)}"
+
 SRC_URI:append:gvm-gen5 = " file://60-vblk.rules"
 SRC_URI:append:qclinux-gvm-gen5 = " file://60-vblk.rules"
 SRC_URI:append:gvm-gen4-5 = " file://60-vblk.rules"
