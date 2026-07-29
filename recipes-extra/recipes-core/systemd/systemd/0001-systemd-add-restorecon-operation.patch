@@ -1,0 +1,31 @@
+From 19844e8d1c1fb81019155ded138b59246bf533a1 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Thu, 30 Jul 2026 13:33:49 +0800
+Subject: [PATCH] systemd: add restorecon operation
+
+Some modules need selinux label to get correct
+permissions.
+
+Add the operations in systemd-modules-load.service
+directly to ensure the sequence.
+
+Upstream-Status: Inappropriate [configuration]
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ units/systemd-modules-load.service.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/systemd-modules-load.service.in b/units/systemd-modules-load.service.in
+index ad262fa13a..2ad4da0c80 100644
+--- a/units/systemd-modules-load.service.in
++++ b/units/systemd-modules-load.service.in
+@@ -28,4 +28,5 @@ ConditionKernelCommandLine=|rd.modules_load
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart={{LIBEXECDIR}}/systemd-modules-load
++ExecStartPost=/bin/sh -c 'restorecon -vFR /dev'
+ TimeoutSec=90s
+-- 
+2.34.1
+
