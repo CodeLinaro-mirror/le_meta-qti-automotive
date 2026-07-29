@@ -5,7 +5,6 @@ BBMASK:append = " meta-qti-bsp/dynamic-layers/openembedded-layer/recipes-devtool
 BBMASK:append = " meta-qti-bsp/recipes-edgegateway/parser/parser_0.1.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-abctl_1.0.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-libgpt_1.0.bb"
-BBMASK:append = " meta-qti-bsp/recipes-bsp/ss-restart"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/u-boot/u-boot-tools_2025.01.bb"
 BBMASK:append = " meta-qti-bsp/recipes-connectivity/bluez5/"
 BBMASK:append = " meta-qti-bsp/recipes-core/uutils-coreutils/uutils-coreutils_%.bbappend"
