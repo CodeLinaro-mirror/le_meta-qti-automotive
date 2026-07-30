@@ -6,7 +6,7 @@ SRC_URI:append = " \
              file://0001-journald-disable-audit-support-completely-from-the-j.patch \
              file://0036-systemd-journald-optimize-kmsg-reading-performance.patch \
              file://0001-udev-make-block-input-rules-be-triggered-earlier.patch \
-             file://0001-systemd-add-vfio-script-wait-in-systemd-init-process.patch \
+             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0001-systemd-add-vfio-script-wait-in-systemd-init-process.patch', '', d)} \
              ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', '', 'file://qti_sleep.sh', d)} \
              file://0001-journald-keep-O_RDONLY-fds-open-to-sealed-archive-fi.patch \
              ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'file://0037-systemd-Add-wdt_ping-in-dispatch_runqueue.patch', '', d)} \
