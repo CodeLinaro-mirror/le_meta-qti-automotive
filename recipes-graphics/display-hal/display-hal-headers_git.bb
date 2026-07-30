@@ -9,6 +9,7 @@ DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'li
 DISPLAY_DIR:sa8775 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:sa7255 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:gvm-gen5 = "vendor/qcom/opensource/display-core"
+DISPLAY_DIR:gvm-gen4-5 = "vendor/qcom/opensource/display-core"
 
 SRC_URI = "${PATH_TO_REPO}/${DISPLAY_DIR}/.git;protocol=${PROTO};destsuffix=${DISPLAY_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
