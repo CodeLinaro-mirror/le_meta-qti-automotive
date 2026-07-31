@@ -25,6 +25,7 @@ SRC_URI += "file://0001-Weston-support-SDM-backend-on-weston-13.0.1.patch \
             file://0009-gl-renderer-Make-YUV-format-choose-EXTERNAL_OES-text.patch \
             file://0010-weston-enable-ASAN-and-fix-odr-violation-error.patch \
             file://0011-gl-renderer-disable-partial-update.patch \
+            file://0012-libweston-add-touch_only-surface-label.patch \
 "
 
 SRC_URI:gvm-gen5 = "${PATH_TO_REPO}/${TARGET_DIR}graphics/weston/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}graphics/weston;usehead=1 \
@@ -46,11 +47,17 @@ S:gvm-gen4-5 = "${WORKDIR}/${TARGET_DIR}graphics/weston"
 
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
 
-RRECOMMENDS_${PN}:remove = "weston-init"
+RRECOMMENDS:${PN}:remove = "weston-init"
 
 do_install:append() {
     install -d ${D}${datadir}/weston
     mv ${D}${libdir}/libweston-${WESTON_MAJOR_VERSION}/drm-backend.so ${D}${datadir}/weston/drm-backend.so
+}
+
+do_install:append:gen5() {
+    # Install ivi-application.xml for gen5 clients that look in weston/protocol/
+    install -d ${D}${datadir}/weston/protocol
+    install -m 0644 ${S}/protocol/ivi-application.xml ${D}${datadir}/weston/protocol/ivi-application.xml
 }
 
 FILES:${PN}-dev = "${includedir} \
