@@ -16,6 +16,7 @@ SRC_URI:append:qclinux-gvm-gen5 = " \
     file://configs/kernel_defconfig \
     file://kernel-gvm/0001-QcLinux-kernel-adapt-LVGVM.patch \
     file://kernel-gvm/0002-QcLinux-Gunyah-RM-Driver-Adaption.patch \
+    file://kernel-gvm/0003-PENDING-remoteproc-qcom-Export-SSR-subsystem-APIs-fo.patch \
 "
 
 S = "${WORKDIR}/kernel/kernel_platform/kernel"
