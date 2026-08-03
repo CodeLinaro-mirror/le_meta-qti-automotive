@@ -11,11 +11,13 @@ SRC_URI = "${BASE_GIT_PATH}/build/kernel/.git;protocol=${PROTO};destsuffix=${BAS
            ${BASE_GIT_PATH}/prebuilts/kernel-build-tools/.git;protocol=${PROTO};destsuffix=${BASE_PATH}/prebuilts/kernel-build-tools \
            "
 
+SRC_URI:gen5 = "${PATH_TO_REPO}/kernel/kernel_platform/prebuilts/kernel-build-tools/.git;protocol=${PROTO};destsuffix=kernel/kernel_platform/prebuilts/kernel-build-tools"
+
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}"
 
-inherit native
+inherit deploy native
 
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
@@ -31,3 +33,21 @@ do_install () {
     install -d ${D}/${bindir}/build/prebuilts
     cp -rf ${S}/${BASE_PATH}/prebuilts/kernel-build-tools ${D}/${bindir}/build/prebuilts
 }
+
+do_install:gen5() {
+    :
+}
+
+do_deploy() {
+    :
+}
+
+do_deploy:append:gen5() {
+    install -d ${DEPLOYDIR}/kernel-tools
+    install -m 0755 ${S}/kernel/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin/mke2fs ${DEPLOYDIR}/kernel-tools
+    install -m 0755 ${S}/kernel/kernel_platform/prebuilts/kernel-build-tools/linux-x86/bin/e2fsdroid ${DEPLOYDIR}/kernel-tools
+}
+
+addtask do_deploy after do_install
+
+MACHINEOVERRIDES = "${MACHINE}:${SOC_FAMILY}"
