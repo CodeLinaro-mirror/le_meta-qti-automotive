@@ -5,7 +5,8 @@ LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a"
 
 SRC_URI = "file://load_bt_modules.sh \
-           file://bt_module_load.service"
+           file://bt_module_load.service \
+           file://99-bt-ssr-recovery.rules"
 
 inherit systemd
 
@@ -21,11 +22,14 @@ do_install() {
     install -D -m 0755 ${WORKDIR}/load_bt_modules.sh ${D}${bindir}/
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/bt_module_load.service -D ${D}${systemd_unitdir}/system/
+    install -d ${D}${sysconfdir}/udev/rules.d/
+    install -m 0644 ${WORKDIR}/99-bt-ssr-recovery.rules -D ${D}${sysconfdir}/udev/rules.d/
 }
 
 FILES:${PN} += "${bindir}/load_bt_modules.sh \
                 ${nonarch_base_libdir}/firmware/qca \
                 ${systemd_unitdir}/system/* \
+                ${sysconfdir}/udev/rules.d/ \
 "
 
 RDEPENDS:${PN} += "rfkill"
