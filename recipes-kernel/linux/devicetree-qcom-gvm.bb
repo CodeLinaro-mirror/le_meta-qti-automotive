@@ -6,17 +6,16 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 COMPATIBLE_MACHINE = "qclinux-gvm-gen5"
 
-SRC_URI = "${PATH_TO_REPO}/kernel_platform/qcom/opensource/devicetree/.git;protocol=${PROTO};destsuffix=kernel_platform/qcom/opensource/devicetree;usehead=1"
+SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/soc-modules/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/soc-modules;usehead=1"
 SRCREV = "${AUTOREV}"
 
-S = "${WORKDIR}/kernel_platform/qcom/opensource/devicetree/qcom"
+S = "${WORKDIR}/vendor/qcom/opensource/soc-modules/devicetree"
 
 CLEANBROKEN = "1"
 
 inherit qti-techpack
 
-TECHPACK_DTBS = "sa8797p-gunyah-vm-lv-qam.dtb \
-                  sa8797p-v2-gunyah-vm-lv-qam.dtb"
+TECHPACK_DTBS = "sa8797p-v2-gunyah-vm-qclv-qam.dtb"
 TECHPACK_DTBOS = "sa8797p-gunyah-vm-lv-qam-overlay.dtbo"
 
 # The devicetree/qcom/Makefile already exists in the source tree.
@@ -35,6 +34,7 @@ do_compile[depends] += "soc-repo:do_configure"
 # Makefile uses $(build)=$(dtstree) which prepends srctree internally.
 # Build only the targets listed in TECHPACK_DTBS/TECHPACK_DTBOS to avoid
 # compiling unrelated DTBs that may have missing header dependencies.
+# always-y targets are declared in ${S}/Makefile directly (no dynamic append needed).
 do_compile() {
     unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
     DTSTREE_REL=$(realpath --relative-to="${STAGING_KERNEL_DIR}" "${S}")

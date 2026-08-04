@@ -14,9 +14,7 @@ SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/di
 
 SRCREV = "${AUTOREV}"
 
-
 S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/commonsys-intf/display"
-
 
 inherit autotools pkgconfig
 
@@ -46,5 +44,10 @@ do_install:append:gvm-gen5() {
     rm -f ${D}${includedir}/color_extensions.h
 }
 
+do_install:append:gvm-gen4-5() {
+    rm -f ${D}${includedir}/color_extensions.h
+}
+
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
+ALLOW_EMPTY:${PN}:gvm-gen4-5 = "1"

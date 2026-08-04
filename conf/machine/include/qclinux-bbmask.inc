@@ -5,7 +5,6 @@ BBMASK:append = " meta-qti-bsp/dynamic-layers/openembedded-layer/recipes-devtool
 BBMASK:append = " meta-qti-bsp/recipes-edgegateway/parser/parser_0.1.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-abctl_1.0.bb"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/ab-update/qcom-libgpt_1.0.bb"
-BBMASK:append = " meta-qti-bsp/recipes-bsp/ss-restart"
 BBMASK:append = " meta-qti-bsp/recipes-bsp/u-boot/u-boot-tools_2025.01.bb"
 BBMASK:append = " meta-qti-bsp/recipes-connectivity/bluez5/"
 BBMASK:append = " meta-qti-bsp/recipes-core/uutils-coreutils/uutils-coreutils_%.bbappend"
@@ -17,18 +16,6 @@ BBMASK:append = " meta-qti-internal"
 BBMASK:append = " meta-qti-realtime/recipes-core/packagegroups/packagegroup-qcom-initscripts.bbappend"
 BBMASK:append = " meta-qti-realtime/recipes-kernel/images/linux-qcom-uki.bbappend"
 BBMASK:append = " meta-qti-realtime/recipes-products/images/qcom-guestvm-image.bbappend"
-
-# Added temporarily: the following MM modules not found SRC_URI in gvm-gen4-5
-BBMASK:append:gvm-gen4-5 = " \
-    meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
-    meta-qti-automotive/recipes-display/displaydlkm/displaydlkm_git.bb \
-    meta-qti-automotive/recipes-graphics/display-hal/display-hal-linux_git.bb \
-    meta-qti-automotive/recipes-graphics/display-hal/display-hal-headers_git.bb \
-    meta-qti-automotive-prop/recipes-graphics/display-noship/display-noship-linux_git.bb \
-    meta-qti-automotive-prop/recipes-graphics/display-ship/display-ship-linux_git.bb \
-    meta-qti-automotive-prop/recipes-graphics/display-ship/display-vendor-headers_git.bb \
-    meta-qti-automotive-prop/recipes-graphics/adreno/adreno_0.1.bb \
-"
 
 # BBMASK drops some recipe that checksum file not found
 BBMASK:append = " ${MISSING_RECIPE_SRCLIST}"
