@@ -9,7 +9,6 @@ DEPENDS += "\
     codec2 \
     glib-2.0 \
     gstreamer1.0 \
-    gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-base \
     libdrm \
     libxml2 \
