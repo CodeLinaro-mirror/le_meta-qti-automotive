@@ -38,7 +38,6 @@ AUDIOREACH_RDEPENDS = "\
     agm \
     ar-dev-plugin \
     audioreach-conf \
-    ar-audio-init-service \
     audio-device-manager \
 "
 

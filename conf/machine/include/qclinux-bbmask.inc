@@ -152,6 +152,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/spf/spf_git.bb \
     meta-qti-automotive/recipes-bsp/libsensors/libsensors_git.bb \
     meta-qti-automotive/recipes-bsp/platformdlkm/platformdlkm_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-data/ptp-virtual/ptp-virtual_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-display/display-intf/display-intf-headers.bb \
@@ -191,6 +192,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-security/enable-fde/enable-fde_1.0.bb \
     meta-qti-automotive/recipes-security/securemsm-devicetree/securemsm-devicetree.bb \
     meta-qti-automotive/recipes-security/securemsmdlkm/securemsmdlkm_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.2 (used by gvm-gen4-5/gvm-gen5)
@@ -224,6 +226,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-core/platform-config/platform-config_git.bb \
     meta-qti-automotive/recipes-core/power-utils/power-utils_git.bb \
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/auto-gfx-app/auto-gfx-app.bb \
     meta-qti-automotive/recipes-graphics/mm-auto-ksync/ksyncdlkm_git.bb \
@@ -252,6 +255,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.3 (used by qclinux-gvm-gen5)
@@ -289,6 +293,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-core/platform-config/platform-config_git.bb \
     meta-qti-automotive/recipes-core/power-utils/power-utils_git.bb \
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
+    meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-display/display-la/display-la-headers.bb \
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
@@ -321,4 +326,5 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
+    meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
 "

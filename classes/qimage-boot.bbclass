@@ -27,8 +27,7 @@ DTB_FILE_LIST:gvm-gen4-5 = "\
 "
 
 DTB_FILE_LIST:qclinux-gvm-gen5 = "\
-    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-gunyah-vm-lv-qam.dtb \
-    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-v2-gunyah-vm-lv-qam.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-v2-gunyah-vm-qclv-qam.dtb \
 "
 
 gvm_pilsplitter() {

@@ -1,0 +1,414 @@
+From 40544cbbceb452d934cdd2e4ee9a280582bfca0d Mon Sep 17 00:00:00 2001
+From: Yimin Peng <yiminp@qti.qualcomm.com>
+Date: Sat, 11 Jul 2026 18:33:40 +0530
+Subject: [PATCH] edk2: add VMS DTB partition selection via osconfig
+
+Add VMS boot support when VMS_BOOT_MODE is defined:
+
+VmsDtbLayout.h / VmsDtbLayout.c:
+- VmsOsConfigMap[][2]: {osconfig, prop_name} pairs for partition selection
+- VmsOsConfigValue: resolved osconfig string set by UpdateCmdLine()
+- GetVmsDtbPartitionOffset(): match VmsOsConfigValue against map to
+  read partition offset from vms-header.dtb; EFI_NOT_FOUND if absent
+
+UpdateCmdLine.c:
+- VMS_BOOT_MODE=0: use SoftSKU osconfig, set VmsOsConfigValue
+- VMS_BOOT_MODE>0: use VmsOsConfigMap[VMS_BOOT_MODE-1][0] directly
+
+LocateDeviceTree.c:
+- Call GetVmsDtbPartitionOffset() to advance dtb_offset to VMS partition
+
+Change-Id: Iddda0d9808259b04482e215f8ccce1899a8cac6d
+Signed-off-by: Yimin Peng <yiminp@qti.qualcomm.com>
+---
+ QcomModulePkg/Include/Library/VmsDtbLayout.h  |  48 ++++++
+ QcomModulePkg/Library/BootLib/BootLib.inf     |   1 +
+ .../Library/BootLib/LocateDeviceTree.c        |  62 ++++++++
+ QcomModulePkg/Library/BootLib/UpdateCmdLine.c |  14 ++
+ QcomModulePkg/Library/BootLib/VmsDtbLayout.c  | 146 ++++++++++++++++++
+ QcomModulePkg/QcomModulePkg.dsc               |   3 +
+ makefile                                      |   1 +
+ 7 files changed, 275 insertions(+)
+ create mode 100644 QcomModulePkg/Include/Library/VmsDtbLayout.h
+ create mode 100644 QcomModulePkg/Library/BootLib/VmsDtbLayout.c
+
+diff --git a/QcomModulePkg/Include/Library/VmsDtbLayout.h b/QcomModulePkg/Include/Library/VmsDtbLayout.h
+new file mode 100644
+index 0000000000..393fdb5d51
+--- /dev/null
++++ b/QcomModulePkg/Include/Library/VmsDtbLayout.h
+@@ -0,0 +1,48 @@
++/* Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ *
++ * VmsDtbLayout.h - VMS DTB partition selection from dtb.img.
++ *
++ * dtb.img layout:
++ *   [vms-header.dtb][pvm dtbs][64B pad][lagvm dtbs][64B pad][mgvm dtbs]...
++ *
++ * vms-header.dtb /vms-dtb-layout carries the byte offset of each partition
++ * (0 = absent). VmsOsConfigValue selects the partition via VmsOsConfigMap[].
++ */
++
++#ifndef __VMS_DTB_LAYOUT_H__
++#define __VMS_DTB_LAYOUT_H__
++
++#include <Uefi.h>
++
++#define VMS_DTB_HEADER_COMPATIBLE  "qcom,vms-dtb-header"
++#define VMS_DTB_LAYOUT_NODE        "/vms-dtb-layout"
++
++/* {osconfig_value, partition_offset_prop} mapping table */
++STATIC CONST CHAR8 *VmsOsConfigMap[][2] = {
++  { "PVMOnly",    "pvm-offset"    },
++  { "PVM+GVM",    "lagvm-offset"  },
++  { "PVM+2GVM",   "mgvm-offset"   },
++  { "PVM+QCLGVM", "qclgvm-offset" },
++};
++
++/* Set by UpdateCmdLine() to the resolved osconfig string (e.g. "PVM+GVM").
++ * Used by GetVmsDtbPartitionOffset() to select the DTB partition. */
++extern CONST CHAR8 *VmsOsConfigValue;
++
++/*
++ * GetVmsDtbPartitionOffset - select DTB partition from dtb.img.
++ *
++ * Reads vms-header.dtb at DtbBase+DtbOffset; matches VmsOsConfigValue
++ * against VmsOsConfigMap[][0] to find the partition offset property.
++ * Returns EFI_NOT_FOUND if no vms-header (plain dtb.img).
++ */
++EFI_STATUS
++GetVmsDtbPartitionOffset (
++  IN  VOID        *DtbBase,
++  IN  UINT32       DtbOffset,
++  IN  uintptr_t    KernelEnd,
++  OUT UINT32       *PartOffset
++  );
++
++#endif /* __VMS_DTB_LAYOUT_H__ */
+diff --git a/QcomModulePkg/Library/BootLib/BootLib.inf b/QcomModulePkg/Library/BootLib/BootLib.inf
+index 190f9645be..268da578cd 100644
+--- a/QcomModulePkg/Library/BootLib/BootLib.inf
++++ b/QcomModulePkg/Library/BootLib/BootLib.inf
+@@ -62,6 +62,7 @@
+ 	UpdateDeviceTree.c
+ 	LinuxLoaderLib.c
+ 	UpdateCmdLine.c
++	VmsDtbLayout.c
+ 	KeyPad.c
+ 	Recovery.c
+ 	BootStats.c
+diff --git a/QcomModulePkg/Library/BootLib/LocateDeviceTree.c b/QcomModulePkg/Library/BootLib/LocateDeviceTree.c
+index a85ae528a0..85635f4df8 100644
+--- a/QcomModulePkg/Library/BootLib/LocateDeviceTree.c
++++ b/QcomModulePkg/Library/BootLib/LocateDeviceTree.c
+@@ -38,6 +38,9 @@
+ #include <Library/BootLinux.h>
+ #include <Library/PartitionTableUpdate.h>
+ #include <Library/Rtic.h>
++#ifdef VMS_BOOT_MODE
++#include <Library/VmsDtbLayout.h>
++#endif
+ // Variables to initialize board data
+ 
+ STATIC int
+@@ -667,6 +670,27 @@ DeviceTreeAppended (VOID *kernel,
+   if (((uintptr_t)kernel + (uintptr_t)dtb_offset) < (uintptr_t)kernel) {
+     goto out;
+   }
++
++#ifdef VMS_BOOT_MODE
++  {
++    UINT32     VmsPartOffset = 0;
++    EFI_STATUS VmsStatus;
++
++    VmsStatus = GetVmsDtbPartitionOffset (
++                    kernel,
++                    dtb_offset,
++                    (uintptr_t)kernel_end,
++                    &VmsPartOffset);
++
++    if (VmsStatus == EFI_SUCCESS) {
++      DEBUG ((EFI_D_INFO, "DeviceTreeAppended: VMS offset=0x%x\n", VmsPartOffset));
++      dtb_offset += VmsPartOffset;
++    } else {
++      DEBUG ((EFI_D_VERBOSE, "DeviceTreeAppended: no vms-header, plain dtb.img\n"));
++    }
++  }
++#endif /* VMS_BOOT_MODE */
++
+   dtb = kernel + dtb_offset;
+   while (((uintptr_t)dtb + sizeof (struct fdt_header)) <
+          (uintptr_t)kernel_end) {
+@@ -707,6 +731,15 @@ DeviceTreeAppended (VOID *kernel,
+             best_match_dt_entry->pmic_rev[0], best_match_dt_entry->pmic_rev[1],
+             best_match_dt_entry->pmic_rev[2], best_match_dt_entry->pmic_rev[3],
+             best_match_dt_entry->offset, best_match_dt_entry->size));
++
++#ifdef VMS_BOOT_MODE
++    DEBUG ((EFI_D_INFO,
++            "DeviceTreeAppended: best match VMS idx=%d offset=0x%x size=0x%x\n",
++            best_match_dt_entry->Idx - 1,
++            (UINT32)(best_match_dt_entry->offset - (UINT64)(uintptr_t)kernel) - dtb_offset,
++            best_match_dt_entry->size));
++#endif
++
+     DEBUG ((EFI_D_INFO, "Using pmic info 0x%0x/0x%x/0x%x/0x%0x for device "
+                         "0x%0x/0x%x/0x%x/0x%0x\n",
+             best_match_dt_entry->pmic_rev[0], best_match_dt_entry->pmic_rev[1],
+@@ -1246,6 +1279,27 @@ GetSocDtb (VOID *Kernel, UINT32 KernelSize, UINT32 DtbOffset, VOID *DtbLoadAddr)
+   if (((uintptr_t)Kernel + (uintptr_t)DtbOffset) < (uintptr_t)Kernel) {
+     return NULL;
+   }
++
++#ifdef VMS_BOOT_MODE
++  {
++    UINT32     VmsPartOffset = 0;
++    EFI_STATUS VmsStatus;
++
++    VmsStatus = GetVmsDtbPartitionOffset (
++                    Kernel,
++                    DtbOffset,
++                    KernelEnd,
++                    &VmsPartOffset);
++
++    if (VmsStatus == EFI_SUCCESS) {
++      DEBUG ((EFI_D_INFO, "GetSocDtb: VMS offset=0x%x\n", VmsPartOffset));
++      DtbOffset += VmsPartOffset;
++    } else {
++      DEBUG ((EFI_D_VERBOSE, "GetSocDtb: no vms-header, plain dtb.img\n"));
++    }
++  }
++#endif /* VMS_BOOT_MODE */
++
+   Dtb = Kernel + DtbOffset;
+   while (((uintptr_t)Dtb + sizeof (struct fdt_header)) < (uintptr_t)KernelEnd) {
+     /* the DTB could be unaligned, so extract the header,
+@@ -1289,6 +1343,14 @@ GetSocDtb (VOID *Kernel, UINT32 KernelSize, UINT32 DtbOffset, VOID *DtbLoadAddr)
+     return NULL;
+   }
+ 
++#ifdef VMS_BOOT_MODE
++  DEBUG ((EFI_D_INFO,
++          "GetSocDtb: best match VMS osconfig=%a idx=%d offset=0x%x size=0x%x\n",
++          VmsOsConfigValue, DtbIdx,
++          (UINT32)((uintptr_t)BestDtbInfo.Dtb - (uintptr_t)Kernel) - DtbOffset,
++          (UINT32)fdt_totalsize (BestDtbInfo.Dtb)));
++#endif
++
+   return BestDtbInfo.Dtb;
+ }
+ 
+diff --git a/QcomModulePkg/Library/BootLib/UpdateCmdLine.c b/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
+index 55ed7bc325..afed369260 100644
+--- a/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
++++ b/QcomModulePkg/Library/BootLib/UpdateCmdLine.c
+@@ -55,6 +55,9 @@
+ #include "AutoGen.h"
+ #include <DeviceInfo.h>
+ #include "UpdateCmdLine.h"
++#ifdef VMS_BOOT_MODE
++#include <Library/VmsDtbLayout.h>
++#endif
+ #include "Recovery.h"
+ #include "LECmdLine.h"
+ #include "EarlyEthernet.h"
+@@ -1679,6 +1682,17 @@ UpdateCmdLine (BootParamlist *BootParamlistPtr,
+     } else {
+       DEBUG ((EFI_D_ERROR, "Failed to get OS config info\n"));
+     }
++#ifdef VMS_BOOT_MODE
++    if (VMS_BOOT_MODE > 0) {
++      AsciiSPrint (OsConfigCmdLine, sizeof (OsConfigCmdLine), " osconfig=%a",
++                   VmsOsConfigMap[VMS_BOOT_MODE - 1][0]);
++      CmdLineLen += AsciiStrLen(OsConfigCmdLine);
++      Param.OsConfigCmdLine = OsConfigCmdLine;
++      VmsOsConfigValue = VmsOsConfigMap[VMS_BOOT_MODE - 1][0];
++    } else {
++      VmsOsConfigValue = OsConfigs[SkuParam];
++    }
++#endif
+ 
+ #ifdef SOC_OP_MODE_IN_CMDLINE
+     Status = GetSoftSKUFeatureInfo (SOFT_SKU_SWCFG_SOC_OPERATION_MODE, &SkuParam);
+diff --git a/QcomModulePkg/Library/BootLib/VmsDtbLayout.c b/QcomModulePkg/Library/BootLib/VmsDtbLayout.c
+new file mode 100644
+index 0000000000..fa254a7116
+--- /dev/null
++++ b/QcomModulePkg/Library/BootLib/VmsDtbLayout.c
+@@ -0,0 +1,146 @@
++/* Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ * SPDX-License-Identifier: BSD-3-Clause-Clear
++ *
++ * VmsDtbLayout.c - VMS DTB partition selection from dtb.img.
++ */
++
++#include <Library/DebugLib.h>
++#include <Library/LocateDeviceTree.h>
++#include "UpdateDeviceTree.h"
++#include <Library/VmsDtbLayout.h>
++#if defined(VMS_BOOT_MODE)
++#include <Library/Board.h>
++#include <Protocol/EFISoftSKU.h>
++#endif
++
++CONST CHAR8 *VmsOsConfigValue = NULL;
++
++#if defined(VMS_BOOT_MODE)
++/* SoftSKU OS_CFG index -> osconfig string. Must match OsConfigs[] in
++ * UpdateCmdLine.c so the sku ABL (VMS_BOOT_MODE=0) selects the DTB
++ * partition matching the fused OS configuration. */
++STATIC CONST CHAR8 *VmsSkuOsConfigs[] = {
++  "PVM+GVM", "PVMOnly", "PVM+2GVM",
++};
++#endif
++
++/* Read a 64-bit big-endian property (two u32 cells). Returns 0 if absent. */
++STATIC UINT64
++ReadU64Prop (
++  IN CONST VOID  *Fdt,
++  IN INT32        NodeOffset,
++  IN CONST CHAR8 *PropName
++  )
++{
++  INT32        Len = 0;
++  CONST UINT32 *Prop;
++
++  Prop = fdt_getprop (Fdt, NodeOffset, PropName, &Len);
++  if (!Prop || Len != (INT32)(2 * sizeof (UINT32))) {
++    return 0;
++  }
++  return ((UINT64)fdt32_to_cpu (Prop[0]) << 32) |
++          (UINT64)fdt32_to_cpu (Prop[1]);
++}
++
++EFI_STATUS
++GetVmsDtbPartitionOffset (
++  IN  VOID        *DtbBase,
++  IN  UINT32       DtbOffset,
++  IN  uintptr_t    KernelEnd,
++  OUT UINT32       *PartOffset
++  )
++{
++  VOID               *DtbSection;
++  struct fdt_header   Hdr;
++  UINT32              HdrSize;
++  INT32               LayoutNode;
++  UINT64              Offset;
++  CONST CHAR8        *PropName;
++  UINTN               Idx;
++  UINTN               NumEntries;
++
++  if (!DtbBase || !PartOffset) {
++    return EFI_INVALID_PARAMETER;
++  }
++
++#if defined(VMS_BOOT_MODE)
++  /* DeviceTreeAppended() runs before UpdateCmdLine() sets VmsOsConfigValue,
++   * so resolve the boot mode here as a fallback to avoid defaulting to the
++   * pvm partition. */
++  if (VmsOsConfigValue == NULL) {
++    if (VMS_BOOT_MODE > 0) {
++      /* Forced mode: use the compile-time VMS_BOOT_MODE. */
++      VmsOsConfigValue = VmsOsConfigMap[VMS_BOOT_MODE - 1][0];
++    } else if (IsSoftSkuProtocolAvailable) {
++      /* SKU (auto) mode: read the fused OS config and map it to an
++       * osconfig string, mirroring UpdateCmdLine()'s OsConfigs[]. */
++      UINT32     SkuParam = 0;
++      EFI_STATUS SkuStatus;
++
++      SkuStatus = GetSoftSKUFeatureInfo (SOFT_SKU_SWCFG_OS_CFG, &SkuParam);
++      if (SkuStatus == EFI_SUCCESS &&
++          SkuParam < (sizeof (VmsSkuOsConfigs) / sizeof (VmsSkuOsConfigs[0]))) {
++        VmsOsConfigValue = VmsSkuOsConfigs[SkuParam];
++      }
++    }
++  }
++#endif
++
++  /* Find PropName by matching VmsOsConfigValue against VmsOsConfigMap[][0] */
++  PropName   = NULL;
++  NumEntries = sizeof (VmsOsConfigMap) / sizeof (VmsOsConfigMap[0]);
++  if (VmsOsConfigValue != NULL) {
++    for (Idx = 0; Idx < NumEntries; Idx++) {
++      if (AsciiStrCmp (VmsOsConfigValue, VmsOsConfigMap[Idx][0]) == 0) {
++        PropName = VmsOsConfigMap[Idx][1];
++        break;
++      }
++    }
++  }
++  if (PropName == NULL) {
++    return EFI_UNSUPPORTED;
++  }
++
++  DtbSection = (VOID *)((uintptr_t)DtbBase + DtbOffset);
++
++  if ((uintptr_t)DtbSection + sizeof (struct fdt_header) >= KernelEnd) {
++    return EFI_INVALID_PARAMETER;
++  }
++
++  gBS->CopyMem (&Hdr, DtbSection, sizeof (struct fdt_header));
++
++  if (fdt_check_header ((CONST VOID *)&Hdr) != 0 ||
++      fdt_check_header_ext ((VOID *)&Hdr) != 0) {
++    return EFI_NOT_FOUND;
++  }
++
++  HdrSize = fdt_totalsize ((CONST VOID *)&Hdr);
++
++  if ((uintptr_t)DtbSection + HdrSize > KernelEnd) {
++    return EFI_INVALID_PARAMETER;
++  }
++
++  if (fdt_node_check_compatible (DtbSection, 0, VMS_DTB_HEADER_COMPATIBLE) != 0) {
++    return EFI_NOT_FOUND;
++  }
++
++  LayoutNode = fdt_path_offset (DtbSection, VMS_DTB_LAYOUT_NODE);
++  if (LayoutNode < 0) {
++    return EFI_NOT_FOUND;
++  }
++
++  Offset = ReadU64Prop (DtbSection, LayoutNode, PropName);
++
++  if (Offset == 0) {
++    return EFI_UNSUPPORTED;
++  }
++
++  if (Offset > (UINT64)(KernelEnd - (uintptr_t)DtbBase - DtbOffset)) {
++    return EFI_BAD_BUFFER_SIZE;
++  }
++
++  *PartOffset = (UINT32)Offset;
++
++  return EFI_SUCCESS;
++}
+diff --git a/QcomModulePkg/QcomModulePkg.dsc b/QcomModulePkg/QcomModulePkg.dsc
+index cbbc141578..22f4410e9c 100644
+--- a/QcomModulePkg/QcomModulePkg.dsc
++++ b/QcomModulePkg/QcomModulePkg.dsc
+@@ -223,6 +223,9 @@
+   !if $(FLASHING_LOCK_WITHOUT_MISC_PART) == 1
+       GCC:*_*_*_CC_FLAGS = -DFLASHING_LOCK_WITHOUT_MISC_PART
+   !endif
++  !ifdef $(VMS_BOOT_MODE)
++      GCC:*_*_*_CC_FLAGS = -DVMS_BOOT_MODE=$(VMS_BOOT_MODE)
++  !endif
+ 
+ [PcdsFixedAtBuild.common]
+ 
+diff --git a/makefile b/makefile
+index a8f9053189..2af416dd17 100644
+--- a/makefile
++++ b/makefile
+@@ -390,6 +390,7 @@ ABL_FV_IMG: $(EDK_TOOLS_PATH_MARK_FILE)
+ 	-D QSPA_BOOTCONFIG_ENABLE=$(QSPA_BOOTCONFIG_ENABLE) \
+ 	-D SOC_OP_MODE_IN_CMDLINE=$(SOC_OP_MODE_IN_CMDLINE) \
+ 	-D FLASHING_LOCK_WITHOUT_MISC_PART=$(FLASHING_LOCK_WITHOUT_MISC_PART) \
++	$(if $(VMS_BOOT_MODE),-D VMS_BOOT_MODE=$(VMS_BOOT_MODE)) \
+ 	-j build_modulepkg.log $*
+ 
+ 	cp $(BUILD_ROOT)/FV/FVMAIN_COMPACT.Fv $(ABL_FV_IMG)
+-- 
+2.34.1
+
