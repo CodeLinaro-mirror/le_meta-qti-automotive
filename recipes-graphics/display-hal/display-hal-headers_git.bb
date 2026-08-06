@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "${TARGET_DIR}display/display-hal", d)}"
 DISPLAY_DIR:sa8775 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:sa7255 = "${TARGET_DIR}display/display-hal"
+DISPLAY_DIR:gvm-gen5 = "vendor/qcom/opensource/display-core"
 
 SRC_URI = "${PATH_TO_REPO}/${DISPLAY_DIR}/.git;protocol=${PROTO};destsuffix=${DISPLAY_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
@@ -19,7 +20,9 @@ do_install() {
     install -d ${D}${includedir}
     install -m 644 ${S}/include/*.h ${D}${includedir}
     if ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'false', 'true', d)}; then
-      install -m 644 ${S}/libqservice/*.h ${D}${includedir}
+      if ls ${S}/libqservice/*.h >/dev/null 2>&1; then
+         install -m 644 ${S}/libqservice/*.h ${D}${includedir}
+      fi
     fi
 }
 

@@ -24,9 +24,6 @@ do_install() {
     install -d ${D}${bindir}
     install -D -m 0755 ${WORKDIR}/load_bt_modules.sh ${D}${bindir}/
     install -d ${D}${systemd_unitdir}/system/
-}
-
-do_install:append:gen5() {
     install -m 0644 ${WORKDIR}/bt_module_load.service -D ${D}${systemd_unitdir}/system/
 }
 

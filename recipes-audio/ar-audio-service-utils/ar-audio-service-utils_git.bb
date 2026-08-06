@@ -27,5 +27,13 @@ EXTRA_OECONF += "\
     --with-glib \
 "
 
+OEM_CONF_SRC_DIR = "config/etc/audio_oem_cfg"
+OEM_CONF_DEST_DIR = "/etc/audio_oem_cfg"
+
+do_install:append:gen5() {
+    install -d ${D}${OEM_CONF_DEST_DIR}/
+    install -m 0666 ${S}/${OEM_CONF_SRC_DIR}/gen5/ar_prm_mclk.cfg ${D}${OEM_CONF_DEST_DIR}/
+}
+
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""

@@ -40,7 +40,7 @@ do_install:append() {
     install -m 0755 ${WORKDIR}/vmm_pwr_key.conf -D ${D}${libdir}/modules-load.d/vmm_pwr_key.conf
     if ${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'true', 'false', d)}; then
         sed -i '/After=systemd-modules-load.service/d' ${D}${systemd_unitdir}/system/vfio-device-probe.service
-        sed -i 's#/usr/bin/vfio-device-bind.sh#/bin/echo "vfio already run in early-ramdisk"#g' ${D}${systemd_unitdir}/system/vfio-device-probe.service
+        sed -i 's#/usr/bin/vfio-device-bind.sh#-/bin/echo "vfio already run in early-ramdisk"#g' ${D}${systemd_unitdir}/system/vfio-device-probe.service
     fi
 }
 

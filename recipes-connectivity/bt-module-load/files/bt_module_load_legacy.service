@@ -13,7 +13,7 @@ RemainAfterExit=yes
 Environment=ENABLE_LOG=0
 Environment=LOG_PATH=/var/log
 
-ExecStart=/usr/bin/load_bt_modules.sh start
+ExecStart=/usr/bin/load_bt_modules.sh -l $ENABLE_LOG -p $LOG_PATH start
 ExecStop=/usr/bin/load_bt_modules.sh stop
 
 [Install]

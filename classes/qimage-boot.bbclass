@@ -5,6 +5,7 @@ DEPENDS += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'avbtool-native', '', d)} \
     dtc-native \
     kernel-aosp-tools-native \
+    ${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'qcom-dtc-native', '', d)} \
     mkdtimg-native \
     sectools-native \
     virtual/kernel \
@@ -22,6 +23,7 @@ DTB_FILE_LIST:gvm-gen5 = "\
 DTB_FILE_LIST:gvm-gen4-5 = "\
     ${DEPLOY_DIR_IMAGE}/dtbs/monaco-gh-vm-lv-qam-ridesx.dtb \
     ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gh-vm-lv-qam-ridesx.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/lemans-gh-vm-lv-flex-qam-ridesx.dtb \
 "
 
 DTB_FILE_LIST:qclinux-gvm-gen5 = "\
@@ -96,6 +98,7 @@ python () {
 
 do_merge_dtbs[depends] += "virtual/kernel:do_deploy"
 do_merge_dtbs[depends] += "virtual/kernel:do_shared_workdir"
+do_merge_dtbs[depends] += "${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'qcom-devicetree:do_deploy', '', d)}"
 
 do_merge_dtbs() {
     export PATH="${STAGING_KERNEL_BUILDDIR}/bin:${PATH}"

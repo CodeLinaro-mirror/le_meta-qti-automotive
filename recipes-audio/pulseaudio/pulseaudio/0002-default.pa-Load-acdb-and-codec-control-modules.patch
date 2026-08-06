@@ -6,19 +6,19 @@ Subject: [PATCH 2/2] default.pa: Load acdb and codec-control modules
 Automatically load acdb and codec-control modules for audio
 calibration database loader and 3rd-party codec control support
 of automotive platform.
-
+Upstream-Status: Inappropriate [oe specific]
 Signed-off-by: Hugh Guan <hhguan@codeaurora.org>
 ---
  src/daemon/default.pa.in | 8 ++++++++
  1 file changed, 8 insertions(+)
 
 diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
-index d157da7..afbd8b3 100755
+index 30bb77c..05c0f27 100755
 --- a/src/daemon/default.pa.in
 +++ b/src/daemon/default.pa.in
-@@ -77,6 +77,14 @@ load-module module-udev-detect tsched=0
- load-module module-detect
+@@ -74,6 +74,14 @@ load-module module-devd-detect
  .endif
+ ])dnl
  
 +### Automatically load acdb and codec-control modules by QC
 +.ifexists module-acdb@PA_SOEXT@
@@ -32,5 +32,5 @@ index d157da7..afbd8b3 100755
  .ifexists module-jackdbus-detect@PA_SOEXT@
  .nofail
 -- 
-1.9.1
+2.17.1
 
