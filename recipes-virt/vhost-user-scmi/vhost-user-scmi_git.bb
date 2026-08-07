@@ -5,9 +5,9 @@ LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 
 SYSTEMD_SERVICE:${PN} = "vhost-user-scmi.service"
-SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " vhost-user-scmi-lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " vhost-user-scmi-lv.service"
-SYSTEMD_SERVICE:${PN}:append:gen5 = " vhost-user-scmi-qclinux-lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8255-ivi = " vhost-user-scmi-lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8775-flex = " vhost-user-scmi-lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:gen5 = " vhost-user-scmi-lv.service"
 
 DEPENDS += "safelinux-cfg-modules vhost-user-lib"
 
@@ -19,7 +19,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/vhost-user-scmi"
 do_install:append:gen5() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/vhost-user-scmi-sa8797.service ${D}/${systemd_unitdir}/system/vhost-user-scmi.service
-    install -m 0644 ${S}/vhost-user-scmi-sa8797-qclinux-lv.service ${D}/${systemd_unitdir}/system/vhost-user-scmi-qclinux-lv.service
+    install -m 0644 ${S}/vhost-user-scmi-sa8797-lv.service ${D}/${systemd_unitdir}/system/vhost-user-scmi-lv.service
 }
 
 do_install:append:sa8775() {
@@ -43,3 +43,8 @@ do_install:append:sa8775-flex() {
 }
 
 inherit cmake systemd
+
+PACKAGES =+ "${PN}-lvgvm"
+SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
+
+FILES:${PN}-lvgvm += "${systemd_system_unitdir}/vhost-user-scmi-lv.service"

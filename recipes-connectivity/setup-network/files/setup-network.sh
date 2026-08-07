@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (c) 2019, The Linux Foundation. All rights reserved.
 #
@@ -26,53 +26,22 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# Changes from Qualcomm Innovation Center are provided under the following license:
-
-# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+# Changes from Qualcomm Technologies, Inc. are provided under the following license:
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted (subject to the limitations in the
-# disclaimer below) provided that the following conditions are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#
-#    * Redistributions in binary form must reproduce the above
-#      copyright notice, this list of conditions and the following
-#      disclaimer in the documentation and/or other materials provided
-#      with the distribution.
-#
-#    * Neither the name of Qualcomm Innovation Center, Inc. nor the names of its
-#      contributors may be used to endorse or promote products derived
-#      from this software without specific prior written permission.
-#
-# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
-# GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
-# HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-# GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
 
 CMDLINE_PATH=/proc/cmdline
-AGL1_IFACE_ARRAY=(eth0)
-AGL2_IFACE_ARRAY=(eth0)
+AGL1_IFACE_ARRAY="eth0"
+AGL2_IFACE_ARRAY="eth0"
 
-AGL1_IFACE_ARRAY1=(eth1)
-AGL1_IFACE_ARRAY2=(eth2)
-
-function get_gvm_version()
+get_gvm_version()
 {
     local cmdline_value
     local system_name_value
     echo "Setup Network"
     cmdline_value=$(cat $CMDLINE_PATH)
+    ## echo "[DBG] cmdline_value  ${cmdline_value}"
     system_name_value=${cmdline_value#*system_name=}
     system_name_value=${system_name_value%% *}
     echo "system_name_value=${system_name_value}!"
@@ -86,20 +55,20 @@ function get_gvm_version()
     esac
 }
 
-
-
-function check_all_interfaces_up()
+check_all_interfaces_up()
 {
     local iface_name
     local iface_cnt
     local iface_arr
 
     iface_arr=$1
+    ## echo "[DBG] iface_arr : $iface_arr"
 
-    for iface_name in ${iface_arr[*]}
+    for iface_name in ${iface_arr}
     do
         iface_cnt=$(ifconfig -a | grep $iface_name | wc -l)
-        if [[ ${iface_cnt} -ne 1 ]]
+
+        if [ ${iface_cnt} -lt 1 ]
         then
             echo " WARN : $iface_name is not Ready"
             return 0;
@@ -109,12 +78,11 @@ function check_all_interfaces_up()
     return 1;
 }
 
-function check_dns_conf()
+check_dns_conf()
 {
     echo "DNS resolv.conf file is present. "
-    for i in {1..10}
-    do
-        if [[ -e /etc/resolv.conf ]];then
+    for i in `seq 1 10` ; do
+        if [ -e /etc/resolv.conf ];then
             echo "DNS resolv.conf file is present. "
             return 0;
         fi
@@ -125,15 +93,36 @@ function check_dns_conf()
     return 1;
 }
 
-function setup_network_agl_vm_1()
+perf_net_config()
 {
-    if [[ -e /vendor/persist/enable_dhcp ]];then
+    echo "Enable network perf configuration"
+    sysctl -w net.core.rmem_max=33554432
+    sysctl -w net.core.wmem_max=33554432
+    sysctl -w net.ipv4.udp_mem="786432 1048576 16777216"
+    sysctl -w net.ipv4.tcp_mem="786432 1048576 16777216"
+    sysctl -w net.core.rmem_default=16777216
+    sysctl -w net.core.wmem_default=16777216
+    sysctl -w net.core.optmem_max=25165824
+    sysctl -w net.ipv4.tcp_rmem="8192 87380 16777216"
+    sysctl -w net.ipv4.tcp_wmem="8192 87380 16777216"
+    sysctl -w net.core.somaxconn=10000
+    sysctl -w net.core.netdev_max_backlog=10000
+    sysctl -w net.ipv4.ipfrag_high_thresh=50000000
+    sysctl -w net.ipv6.ip6frag_high_thresh=50000000
+    sysctl -w net.ipv4.ipfrag_time=2
+    sysctl -w net.ipv6.ip6frag_time=2
+}
+
+
+setup_network_agl_vm_1()
+{
+    if [ -e /vendor/persist/enable_dhcp ];then
         echo "Start DHCP."
         check_dns_conf
         udhcpc -i eth0 -b
         echo "Start DHCP complete."
     else
-        echo "Assign Static IP Address for eth0"
+        echo "Assign IP address"
         ifconfig eth0 192.168.1.2 up
 
         echo "Setup route"
@@ -151,9 +140,10 @@ function setup_network_agl_vm_1()
     sysctl -w net.ipv4.tcp_rmem="4096 87380 33554432"
     sysctl -w net.ipv4.tcp_wmem="4096 65536 33554432"
     sysctl -p
+    perf_net_config
 }
 
-function setup_network_agl_vm_2()
+setup_network_agl_vm_2()
 {
     echo "Assign IP address"
     ifconfig eth0 192.168.1.3 up
@@ -168,24 +158,21 @@ function setup_network_agl_vm_2()
     echo "Enable forwarding"
     sysctl -w net.ipv4.conf.all.forwarding=1
     sysctl -p
+    perf_net_config
 }
 
 get_gvm_version
 gvm_version=$?
-
-ietf1_configured=false
-ietf2_configured=false
-ietf3_configured=false
+echo "GVM version is ${gvm_version}"
 
 # try 10 times
-for i in {1..10}
-do
-    if [[ ${gvm_version} -eq 2 ]]
+for i in `seq 1 10` ; do
+    if [ ${gvm_version} -eq 2 ]
     then
-        check_all_interfaces_up "${AGL2_IFACE_ARRAY[*]}"
+        check_all_interfaces_up "${AGL2_IFACE_ARRAY}"
         iface_is_up=$?
         echo "current interface status is ${iface_is_up}"
-        if [[ "${iface_is_up}" -eq 1 ]]
+        if [ "${iface_is_up}" -eq 1 ]
         then
             setup_network_agl_vm_2
             break
@@ -193,44 +180,18 @@ do
             echo " ERR : Ethernet Interfaces are not Ready !!!"
         fi
     else
-
-        if [ $ietf1_configured = true ] && [ $ietf2_configured = true ] && [ $ietf3_configured = true ]; then
-            echo " eth0, eth1, and eth2 are all configured."
-            break;
-        fi
-
-        check_all_interfaces_up "${AGL1_IFACE_ARRAY[*]}"
-        iface1_is_up=$?
-        echo "current interface status is ${iface1_is_up}"
-        if [ $iface1_is_up -eq 1 ] && [ $ietf1_configured = false ]; then
+        check_all_interfaces_up "${AGL1_IFACE_ARRAY}"
+        iface_is_up=$?
+        echo "current interface status is ${iface_is_up}"
+        if [ "${iface_is_up}" -eq 1 ]
+        then
             setup_network_agl_vm_1
-            ietf1_configured=true
+            break
         else
-            echo " ERR : Ethernet Interfaces(eth0) are not Ready or already configured !!!"
-        fi
-
-        check_all_interfaces_up "${AGL1_IFACE_ARRAY1[*]}"
-        iface2_is_up=$?
-        echo "current interface status is ${iface2_is_up}"
-        if [ $iface2_is_up -eq 1 ] && [ $ietf2_configured = false ]; then
-            echo "Qti-base:Assign Static IP Address for eth1"
-            ifconfig eth1 192.168.6.2 up
-            ietf2_configured=true
-        else
-            echo " ERR : Ethernet Interfaces(eth1) are not Ready or already configured !!!"
-        fi
-
-        check_all_interfaces_up "${AGL1_IFACE_ARRAY2[*]}"
-        iface3_is_up=$?
-        echo "current interface status is ${iface3_is_up}"
-        if [ $iface3_is_up -eq 1 ] && [ $ietf3_configured = false ]; then
-            echo "Qti-base:Assign Static IP Address for eth2"
-            ifconfig eth2 192.168.7.2 up
-            ietf3_configured=true
-        else
-            echo " ERR : Ethernet Interfaces(eth2) are not Ready or already configured !!!"
+            echo " ERR : Ethernet Interfaces are not Ready !!!"
         fi
     fi
 
     sleep 2
 done
+

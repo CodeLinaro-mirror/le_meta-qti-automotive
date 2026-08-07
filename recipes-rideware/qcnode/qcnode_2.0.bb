@@ -14,24 +14,29 @@ QNN_SDK_ROOT = ""
 QCNODE_ENABLE_C2D = "OFF"
 QCNODE_ENABLE_EVA = "ON"
 QCNODE_ENABLE_EVA_AUTO = "OFF"
-QCNODE_ENABLE_DEMUXER = "OFF"
+QCNODE_ENABLE_DEMUXER = "ON"
 QCNODE_ENABLE_FADAS = "ON"
 QCNODE_ENABLE_RSM_V2 = "OFF"
 QCNODE_ENABLE_C2C = "OFF"
 QCNODE_ENABLE_TRACE = "OFF"
 QCNODE_ENABLE_GENIE = "OFF"
-QCNODE_ENABLE_RADAR = "OFF"
+QCNODE_ENABLE_RADAR = "ON"
 QCNODE_ENABLE_RESMON = "OFF"
 QCNODE_QC_TARGET_SOC = "8797"
 
 DEPENDS += "aosal apdf fastrpc libkiumd libstd rpcmem camera-qcx fadas adreno virtual/kernel-headers mm-osal video-driver gbm gbm-headers drm gtest libbsd \
-            nlohmann-json sv-auto sv-auto-noship safetylibs"
+            nlohmann-json sv-auto sv-auto-noship safetylibs vidc-test-app"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/qcnode/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/qcnode;usehead=1"
 SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/qcnode"
 
 inherit cmake
+
+# Force a clean build directory before every configure step.
+# This ensures CMake always performs a full recompilation from scratch,
+# preventing incremental build artifacts from hiding errors during gate compilation.
+do_configure[cleandirs] = "${B}"
 
 CFLAGS += "\
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} \
@@ -98,5 +103,5 @@ FILES:${PN}-dev += "\
     ${bindir}/*gtest* \
     ${includedir}/* \
     ${libdir}/cmake \
+    ${libdir}/*Mock* \
 "
-

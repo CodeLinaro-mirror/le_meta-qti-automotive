@@ -21,7 +21,9 @@ inherit autotools pkgconfig systemd useradd
 COMPOSITION = "901D"
 
 SYSTEMD_PACKAGES = "${PN}-dlkm"
+SYSTEMD_PACKAGES += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', '${PN}-mount-ab', '', d)}"
 SYSTEMD_SERVICE:${PN}-dlkm = "dlkm.service"
+SYSTEMD_SERVICE:${PN}-mount-ab = "mount_ab.service"
 
 USERADD_PACKAGES = "${PN}-leprop"
 
@@ -97,6 +99,11 @@ do_install:append() {
                 ${D}${systemd_unitdir}/system/multi-user.target.wants/disksymlink.service
         fi
 
+        if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'true', 'false', d)}; then
+            install -m 0750 ${S}/rootdir/etc/mount_ab.sh -D ${D}${sysconfdir}/initscripts/mount_ab
+            install -m 0644 ${S}/rootdir/etc/mount_ab.service -D ${D}${systemd_unitdir}/system/mount_ab.service
+        fi
+
         # update usb.service to depend on var-volatile.mount
         sed -i -e '/^After/d' ${D}${systemd_unitdir}/system/usb.service
         sed -i -e '/^Requires/d' ${D}${systemd_unitdir}/system/usb.service
@@ -120,6 +127,7 @@ do_install:append() {
 
 PACKAGES =+ "${PN}-usb ${PN}-dlkm ${PN}-post-boot ${PN}-leprop"
 PACKAGES =+ "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', '${PN}-disksymlink', d)}"
+PACKAGES =+ "${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', '${PN}-mount-ab', '', d)}"
 
 FILES:${PN}-usb += "\
     ${base_sbindir}/usb_composition \
@@ -145,6 +153,11 @@ FILES:${PN}-post-boot += "\
     ${systemd_unitdir}/system/multi-user.target.wants/init_post_boot.service \
     ${sysconfdir}/initscripts/init_post_boot \
     ${sysconfdir}/initscripts/init.qcom.post_boot.common.sh \
+"
+
+FILES:${PN}-mount-ab += "\
+    ${systemd_unitdir}/system/mount_ab.service \
+    ${sysconfdir}/initscripts/mount_ab \
 "
 
 FILES:${PN}-leprop += "\

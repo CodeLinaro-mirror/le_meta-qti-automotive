@@ -27,6 +27,15 @@ SRC_URI += "file://0001-Weston-support-SDM-backend-on-weston-13.0.1.patch \
             file://0011-gl-renderer-disable-partial-update.patch \
 "
 
+SRC_URI:gvm-gen5 = "${PATH_TO_REPO}/${TARGET_DIR}graphics/weston/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}graphics/weston;usehead=1 \
+           file://weston.png \
+           file://weston.desktop \
+           file://xwayland.weston-start \
+           file://systemd-notify.weston-start \
+"
+SRCREV:gvm-gen5 = "${AUTOREV}"
+S:gvm-gen5 = "${WORKDIR}/${TARGET_DIR}graphics/weston"
+
 UPSTREAM_CHECK_URI:remove = "https://wayland.freedesktop.org/releases.html"
 
 RRECOMMENDS_${PN}:remove = "weston-init"

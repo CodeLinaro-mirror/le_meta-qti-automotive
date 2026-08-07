@@ -2,8 +2,15 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}-${PV}:"
 
 DEPENDS += "base-passwd"
 
-SRC_URI:append = " file://fstab"
-SRC_URI:append = " file://sh_login"
+SRC_URI:append = " \
+    file://fstab \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', ' file://sh_login', '', d)} \
+"
+
+SRC_URI:append:gvm-gen4-5 = " \
+    file://hgy/fstab \
+    file://hqx/fstab \
+"
 
 dirs755:append = " \
     /media/cf /media/net /media/ram \
@@ -36,6 +43,27 @@ do_install:append(){
     fi
 
     # Install login wrapper to enable user login for busybox sh
-    install -m 0755 ${WORKDIR}/sh_login ${D}${base_bindir}/sh_login
-    echo '/bin/sh_login' >> ${D}${sysconfdir}/shells
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
+        install -m 0755 ${WORKDIR}/sh_login ${D}${base_bindir}/sh_login
+        echo '/bin/sh_login' >> ${D}${sysconfdir}/shells
+    fi
+}
+
+do_install:append:gvm-gen4-5() {
+    install -d ${D}/uni/hqx/etc
+    install -d ${D}/uni/hgy/etc
+    install -m 0644 ${WORKDIR}/hqx/fstab ${D}/uni/hqx/etc/fstab
+    install -m 0644 ${WORKDIR}/hgy/fstab ${D}/uni/hgy/etc/fstab
+
+    # Replace persist/home bind if read-only is not enabled
+    if ${@bb.utils.contains('IMAGE_FEATURES', 'read-only-rootfs', 'false', 'true', d)}; then
+        sed -i "/^\PARTLABEL=persist.*var/d" ${D}/uni/hqx/etc/fstab
+        sed -i "/^\PARTLABEL=persist.*var/d" ${D}/uni/hgy/etc/fstab
+        sed -i "/^\#.*Bind/d" ${D}/uni/hqx/etc/fstab
+        sed -i "/^\#.*Bind/d" ${D}/uni/hgy/etc/fstab
+        sed -i "/^\/data/d" ${D}/uni/hqx/etc/fstab
+        sed -i "/^\/data/d" ${D}/uni/hgy/etc/fstab
+        sed -i "/^\${localstatedir}/d" ${D}/uni/hqx/etc/fstab
+        sed -i "/^\${localstatedir}/d" ${D}/uni/hgy/etc/fstab
+    fi
 }

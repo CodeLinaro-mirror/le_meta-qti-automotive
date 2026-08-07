@@ -1,0 +1,28 @@
+From 2f228e1384255992e6f94ea2f3ef4e3e7f85be79 Mon Sep 17 00:00:00 2001
+From: Yimin Peng <yiminp@qti.qualcomm.com>
+Date: Thu, 21 May 2026 15:53:49 +0530
+Subject: [PATCH] scripts: Makefile.lib: add dts to dtbo rule
+
+Change-Id: Ib4acbe0ac7299edba74041154e035adb3cfac939
+Signed-off-by: Yimin Peng <yiminp@qti.qualcomm.com>
+---
+ scripts/Makefile.lib | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 9b264f2fd433..29008c2ae673 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -513,3 +513,9 @@ define filechk_offsets
+ 	 echo ""; \
+ 	 echo "#endif"
+ endef
++
++# compile .dts -> .dtbo
++# ACK common/scripts/Makefile.lib only has %.dtso -> %.dtbo rule.
++# Add %.dts -> %.dtbo so techpack DTB recipes can compile .dts sources.
++$(obj)/%.dtbo: $(src)/%.dts $(DTC) FORCE
++	$(call if_changed_dep,dtc)
+-- 
+2.34.1
+

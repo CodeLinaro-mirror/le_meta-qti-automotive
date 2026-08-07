@@ -15,18 +15,20 @@ DEPENDS += "display-commonsys-intf-linux \
             libhardware \
             virtual/kernel-headers \
             system-core \
-            ${@bb.utils.contains_any("PREFERRED_VERSION_linux-msm", '5.15 6.1', 'displaydlkm', '', d)} \
+            ${@bb.utils.contains_any("PREFERRED_VERSION_linux-msm", '5.15 6.1 6.12', 'displaydlkm', '', d)} \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'display-kernel-headers', '', d)} \
             ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'compute-resmgr', '', d)} \
 "
 
 DEPENDS:append:gen5 = " display-kernel-headers display-intf-headers"
+DEPENDS:append:gvm-gen5 = " display-intf-headers"
 
 PR = "r8"
 
-DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "display/display-hal", d)}"
+DISPLAY_DIR = "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt',"vendor/qcom/opensource/display-core", "${TARGET_DIR}display/display-hal", d)}"
 DISPLAY_DIR:sa8775 = "${TARGET_DIR}display/display-hal"
 DISPLAY_DIR:sa7255 = "${TARGET_DIR}display/display-hal"
+DISPLAY_DIR:gvm-gen5 = "vendor/qcom/opensource/display-core"
 
 SRC_URI = "${PATH_TO_REPO}/${DISPLAY_DIR}/.git;protocol=${PROTO};destsuffix=${DISPLAY_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
@@ -52,6 +54,7 @@ CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqdutils"
 CPPFLAGS += "-I${WORKDIR}/${DISPLAY_DIR}/libqservice"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 
+CPPFLAGS:append:gvm-gen5 = " -DTRUSTED_VM"
 CPPFLAGS:append:gen5 = " -DDEMURA_STAND_ALONE"
 CPPFLAGS:append:sa8775 = " -DTARGET_HEADLESS"
 CPPFLAGS:append:sa7255 = " -DTARGET_HEADLESS"

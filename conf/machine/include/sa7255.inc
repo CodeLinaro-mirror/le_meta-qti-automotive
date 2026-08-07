@@ -65,16 +65,11 @@ MACHINE_FEATURES += "\
     qti-audio-aw \
     qti-compute-platform \
     qti-safety \
+    qti-bluetooth \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
-
-MACHINE_FEATURES:append = "\
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-bluetooth', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hsp', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hmt', '', d)} \
-"
-
-BBMASK:remove:auto-slt = "meta-qti-bsp/meta-qti-base/recipes-wlan"
 
 MACHINE_FEATURES:remove = "\
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)} \
@@ -125,4 +120,10 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-gh-rm-drv-${KERNEL_VERSION} \
     kernel-module-gunyah-${KERNEL_VERSION} \
     kernel-module-hvc-gunyah-${KERNEL_VERSION} \
+    kernel-module-phylink-${KERNEL_VERSION} \
+    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
+    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
+    kernel-module-stmmac-${KERNEL_VERSION} \
+    kernel-module-stmmac-platform-${KERNEL_VERSION} \
+    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
 "

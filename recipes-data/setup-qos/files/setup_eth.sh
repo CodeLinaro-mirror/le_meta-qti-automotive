@@ -212,20 +212,26 @@ add_tc_eth0() {
 	fi
 	if [ $l4_port0 -ne 0 ] && [ -n "$protocol0" ];
 	then
-		if [ $is_src0 -eq 1 ];
+		if [ "$l4_action0" = "drop" ] || [ "$l4_action0" = "pass" ]
 		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 src_port $l4_port0 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 dst_port $l4_port0 action drop
+			if [ $is_src0 -eq 1 ];
+			then
+				tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 src_port $l4_port0 action $l4_action0
+			else
+				tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol0 dst_port $l4_port0 action $l4_action0
+			fi
 		fi
 	fi
 	if [ -n "$l3_ip_address0" ];
 	then
-		if [ $is_src0 -eq 1 ];
+		if [ "$l3_action0" = "drop" ] || [ "$l3_action0" = "pass" ]
 		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address0 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address0 action drop
+			if [ $is_src0 -eq 1 ];
+			then
+				tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address0 action $l3_action0
+			else
+				tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address0 action $l3_action0
+			fi
 		fi
 	fi
 }
@@ -277,20 +283,26 @@ add_tc_eth1() {
 	fi
 	if [ $l4_port1 -ne 0 ] && [ -n "$protocol1" ];
 	then
-		if [ $is_src1 -eq 1 ];
+		if [ "$l4_action1" = "drop" ] || [ "$l4_action1" = "pass" ]
 		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 src_port $l4_port1 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 dst_port $l4_port1 action drop
+			if [ $is_src1 -eq 1 ];
+			then
+				tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 src_port $l4_port1 action $l4_action1
+			else
+				tc filter add dev $interface ingress protocol ip flower skip_sw ip_proto $protocol1 dst_port $l4_port1 action $l4_action1
+			fi
 		fi
 	fi
 	if [ -n "$l3_ip_address1" ];
 	then
-		if [ $is_src1 -eq 1 ];
+		if [ "$l3_action1" = "drop" ] || [ "$l3_action1" = "pass" ]
 		then
-			tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address1 action drop
-		else
-			tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address1 action drop
+			if [ $is_src1 -eq 1 ];
+			then
+				tc filter add dev $interface ingress protocol ip flower skip_sw  src_ip $l3_ip_address1 action $l3_action1
+			else
+				tc filter add dev $interface ingress protocol ip flower skip_sw  dst_ip $l3_ip_address1 action $l3_action1
+			fi
 		fi
 	fi
 }

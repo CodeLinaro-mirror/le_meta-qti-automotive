@@ -3,6 +3,8 @@ LICENSE = "BSD-3-Clause-Clear"
 
 DEPENDS += "mkbootimg-native virtual/kernel"
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'audiolite-dlkm safelinux-system-cfg safelinux-sec-modules safelinux-cfg-modules msmhab hyp-udmabuf gunyah-drivers ', '', d)}"
+DEPENDS:qclinux-gvm-gen5:append = " soc-repo"
+DEPENDS:append = " ${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'soc-modules', '', d)}"
 
 IMAGE_CLASSES:remove = "qimage qimage-boot"
 
@@ -22,8 +24,10 @@ EARLY_RAMDISK_KERNEL_MODULES ?= ""
 IMAGE_INSTALL = "\
     early-ramdisk-init libgcc kmod util-linux-libblkid \
     ${EARLY_RAMDISK_KERNEL_MODULES} \
+    ${@bb.utils.contains('PACKAGE_CLASSES', 'package_rpm', 'busybox', '', d)} \
 "
 do_rootfs[depends] += "virtual/kernel:do_shared_workdir"
+do_rootfs[depends] += "${@'platformdlkm:do_packagedata' if d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-ack' else ''}"
 
 python do_rootfs:prepend() {
     import re

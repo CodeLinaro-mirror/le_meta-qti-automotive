@@ -4,7 +4,7 @@ Date: Fri, 21 Oct 2016 14:03:48 +0800
 Subject: [PATCH 3/4] default.pa: Load agl-audio-plugin module
 
 Automatically load agl-audio-plugin module for audio policy manager.
-
+Upstream-Status: Inappropriate [oe specific]
 Signed-off-by: Hugh Guan <hhguan@codeaurora.org>
 ---
  src/daemon/default.pa.in | 5 +++++

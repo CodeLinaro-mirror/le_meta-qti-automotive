@@ -31,10 +31,8 @@ CARGO_BUILD_FLAGS += "${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', '-
 CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
-SYSTEMD_SERVICE:${PN}:append:sa7255-ivi = " qcrosvm_lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8255-ivi = " qcrosvm_lv.service"
-SYSTEMD_SERVICE:${PN}:append:sa8775-flex = " qcrosvm_lv.service"
-SYSTEMD_SERVICE:${PN}:append:gen5 = " qcrosvm_qclinux_lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm = "qcrosvm_lv.service"
+SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
 
 EXTRA_OECMAKE += "\
     -DENABLE_TARGET=${BASEMACHINE} \
@@ -44,6 +42,7 @@ VM_CONFIG_XML ?= "vm_config_la.xml"
 VM_CONFIG_XML:sa8255-ivi = "vm_config_lalv.xml"
 VM_CONFIG_XML:sa7255-ivi = "vm_config_lalv.xml"
 VM_CONFIG_XML:sa8775-flex = "vm_config_lalv.xml"
+VM_CONFIG_XML:gen5 = "vm_config_lalv.xml"
 
 do_install:append() {
     install -d ${D}${sysconfdir}
@@ -53,7 +52,7 @@ do_install:append() {
 do_install:append:gen5() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
-    install -m 0644 ${S}/qcrosvm_qclinux_lv_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm_qclinux_lv.service
+    install -m 0644 ${S}/qcrosvm_lv_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
 }
 
 do_install:append:sa8775() {
@@ -75,6 +74,10 @@ do_install:append:sa8255-ivi() {
     install -d ${D}${systemd_unitdir}/system/
     if ${@bb.utils.contains('DISTRO_FEATURES', 'qti-qcvirtio', 'true', 'false', d)}; then
         install -m 0644 ${S}/qcrosvm_lv_qcvirtio.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+        install -m 0644 ${S}/qcrosvm-trout.service ${D}/${systemd_unitdir}/system/qcrosvm.service
+
+        install -d ${D}${bindir}
+        install -m 0755 ${S}/qcrosvm_lv_qcvirtio.sh ${D}/${bindir}
     else
         install -m 0644 ${S}/qcrosvm_lv.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
     fi
@@ -87,3 +90,9 @@ do_install:append:sa8775-flex() {
     install -m 0644 ${S}/vm_config_xml/vm_config_lalv.xml ${D}${sysconfdir}/vm_config_lalv.xml
 }
 
+PACKAGES =+ "${PN}-lvgvm"
+
+FILES:${PN}-lvgvm += "\
+    ${systemd_system_unitdir}/qcrosvm_lv.service \
+    ${sysconfdir}/vm_config_lalv.xml \
+"

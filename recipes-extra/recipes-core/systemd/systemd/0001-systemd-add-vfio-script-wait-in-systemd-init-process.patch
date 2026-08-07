@@ -1,0 +1,54 @@
+From 15fa6b5428266c0d96191752aaff67dbd0b83dd2 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Tue, 12 May 2026 15:09:13 +0800
+Subject: [PATCH] systemd:add vfio script wait in systemd init process
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ src/core/main.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 364dc895d1..71718c3a7a 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -153,6 +153,10 @@ static size_t arg_random_seed_size;
+ static usec_t arg_reload_limit_interval_sec;
+ static unsigned arg_reload_limit_burst;
+ 
++#define VFIO_COMPLETE_PATH  "/dev/vfio-complete"
++#define VFIO_POLL_INTERVAL_MS  10
++#define VFIO_POLL_MAX_RETRIES  500
++
+ /* A copy of the original environment block */
+ static char **saved_env = NULL;
+ 
+@@ -3129,6 +3133,23 @@ int main(int argc, char *argv[]) {
+                  "Loaded units and determined initial transaction in %s.",
+                  FORMAT_TIMESPAN(after_startup - before_startup, 100 * USEC_PER_MSEC));
+ 
++        struct timespec ts = {
++                .tv_sec  = 0,
++                .tv_nsec = VFIO_POLL_INTERVAL_MS * 1000000L,  /* 10ms in nanoseconds */
++        };
++
++        for (int i = 0; i < VFIO_POLL_MAX_RETRIES; i++) {
++                if (access(VFIO_COMPLETE_PATH, F_OK) == 0) {
++                        log_error("vfio script completes, flag found at '%s'", VFIO_COMPLETE_PATH);
++                        break;  /* Path exists, continue execution */
++                }
++
++                log_error("vfio complete flag not found (attempt %d/%d), waiting %dms...",
++                        i + 1, VFIO_POLL_MAX_RETRIES, VFIO_POLL_INTERVAL_MS);
++
++                (void) nanosleep(&ts, NULL);
++        }
++
+         if (arg_action == ACTION_TEST) {
+                 manager_test_summary(m);
+                 retval = EXIT_SUCCESS;
+-- 
+2.34.1
+

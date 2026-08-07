@@ -66,6 +66,31 @@ install_module() {
 	echo 1 > /sys/kernel/cnss_0/fs_ready
 }
 
+# Function to trigger PCIe initialization via sysfs.
+# Only runs on gen5 machines whose device tree model contains "SA8x97P"/"SA8x97p".
+qcom_pcie_init_trigger() {
+	local machine
+	machine=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0')
+	case "$machine" in
+		*"SA8x97"*)
+			if [ -f /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger ]; then
+				echo "qcom_pcie_init_trigger for $machine"
+				echo 1 > /sys/devices/platform/4000000000.pci/qcom_pcie/qcom_pcie_init_trigger
+			fi
+			;;
+		*)
+			echo "Skipping qcom_pcie_init_trigger: not required for machine: $machine"
+			;;
+	esac
+}
+
+# Load pcie_qcom_ecam module if not already loaded
+if [ -z "$(lsmod | grep pcie_qcom_ecam)" ]; then
+	modprobe pcie_qcom_ecam
+fi
+
+qcom_pcie_init_trigger
+
 echo "##########Trying to load wlanhost driver ##########"
 n=0
 while [ $n -le 5 ]

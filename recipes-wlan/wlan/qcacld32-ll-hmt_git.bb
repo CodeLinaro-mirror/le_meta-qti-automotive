@@ -10,9 +10,9 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=f3b90e78ea0cffb20bf5cca7947a896d"
 
-SRC_URI = "${PATH_TO_REPO}/wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=wlan/qcacld-3.0;usehead=1 \
-           ${PATH_TO_REPO}/wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=wlan/qca-wifi-host-cmn;usehead=1 \
-           ${PATH_TO_REPO}/wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=wlan/fw-api/;usehead=1 \
+SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}wlan/qcacld-3.0/.git;protocol=${PROTO};name=qcacld;destsuffix=${TARGET_DIR}wlan/qcacld-3.0;usehead=1 \
+           ${PATH_TO_REPO}/${TARGET_DIR}wlan/qca-wifi-host-cmn/.git;protocol=${PROTO};name=qca-wifi-host-cmn;destsuffix=${TARGET_DIR}wlan/qca-wifi-host-cmn;usehead=1 \
+           ${PATH_TO_REPO}/${TARGET_DIR}wlan/fw-api/.git;protocol=${PROTO};name=fw-api;destsuffix=${TARGET_DIR}wlan/fw-api/;usehead=1 \
            ${PATH_TO_REPO}/device/qcom/wlan/.git;protocol=${PROTO};name=wlan;destsuffix=device/qcom/wlan;usehead=1 \
            "
 SRCREV_qcacld = "${AUTOREV}"
@@ -23,10 +23,11 @@ SRCREV_FORMAT = "qcacld_cmn_fw_msm"
 
 _MODNAME = "qca6797"
 _WLAN_CTRL_NAME = "wlan"
+FW_PATH_NAME = "kiwi"
 FIRMWARE_PATH = "${D}${nonarch_base_libdir}/firmware/wlan/qca_cld/${_MODNAME}"
 
-S1 = "${WORKDIR}/wlan/qca-wifi-host-cmn"
-S = "${WORKDIR}/wlan/qcacld-3.0"
+S1 = "${WORKDIR}/${TARGET_DIR}wlan/qca-wifi-host-cmn"
+S = "${WORKDIR}/${TARGET_DIR}wlan/qcacld-3.0"
 
 # Explicitly disable HL to enable LL as current WLAN driver is not having
 # simultaneous support of HL and LL.
@@ -53,8 +54,10 @@ _WLAN_CFG_OVERRIDE = "\
                         CONFIG_DBR_HOLD_LARGE_MEM=n \
                         CONFIG_DP_MULTIPASS_SUPPORT=n \
                         CONFIG_FEATURE_DELAYED_PEER_OBJ_DESTROY=n \
+                        CONFIG_WLAN_FEATURE_MULTI_LINK_SAP=y \
                         "
 EXTRA_OEMAKE:append = " WLAN_CFG_OVERRIDE=${_WLAN_CFG_OVERRIDE}"
+EXTRA_OEMAKE:append:gen5 = " CONFIG_WLAN_MAX_CPUS=18"
 
 do_install() {
     module_do_install
@@ -66,4 +69,12 @@ do_install() {
     install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/WCNSS_qcom_cfg_qca6797.ini ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
     install -D -m 0644 ${WORKDIR}/device/qcom/wlan/msm_auto/wlan_mac.bin ${FIRMWARE_PATH}/wlan_mac.bin
 
+    ln -sf /firmware/image/${FW_PATH_NAME} ${D}${nonarch_base_libdir}/firmware/${FW_PATH_NAME}
+
+}
+
+# Disable idle shutdown for HGY
+do_install:append() {
+    sed -i "s/gInterfaceChangeWait=500/gInterfaceChangeWait=0/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
+    sed -i "s/gSuspendMode=3/gSuspendMode=2/g" ${FIRMWARE_PATH}/WCNSS_qcom_cfg.ini
 }

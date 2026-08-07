@@ -10,4 +10,8 @@ do_install:append () {
     install -m 644 ${S}/libdrm_macros.h ${D}${includedir}
 }
 
+do_install:append:gvm-gen5() {
+    install -m 644 ${S}/libdrm_macros.h ${D}${includedir}/libdrm/
+}
+
 PACKAGE_ARCH = "${MACHINE_ARCH}"

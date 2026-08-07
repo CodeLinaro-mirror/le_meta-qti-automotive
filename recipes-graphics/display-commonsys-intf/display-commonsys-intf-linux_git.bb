@@ -42,5 +42,9 @@ do_install:append:gen5() {
     rm -f ${D}${includedir}/color_extensions.h
 }
 
+do_install:append:gvm-gen5() {
+    rm -f ${D}${includedir}/color_extensions.h
+}
+
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
