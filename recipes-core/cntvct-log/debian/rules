@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	@echo "Nothing to configure"
+
+override_dh_auto_build:
+	gcc -o cntvct cntvct.c
+
+override_dh_auto_install:
+	install -D -m 0755 cntvct $(CURDIR)/debian/cntvct-log/usr/bin/cntvct
+	install -D -m 0644 cntvct@.service $(CURDIR)/debian/cntvct-log/lib/systemd/system/cntvct@.service
+	install -d $(CURDIR)/debian/cntvct-log/lib/systemd/system/local-fs.target.wants
+	ln -sf ../cntvct@.service $(CURDIR)/debian/cntvct-log/lib/systemd/system/local-fs.target.wants/cntvct@local-fs.service
+
+override_dh_installsystemd:
+	dh_installsystemd -pcntvct-log --no-start cntvct@.service

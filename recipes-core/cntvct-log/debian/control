@@ -1,0 +1,14 @@
+Source: cntvct-log
+Section: misc
+Priority: optional
+Maintainer: Qualcomm Technologies, Inc.
+Build-Depends: debhelper-compat (= 13), gcc
+Standards-Version: 4.6.0
+Rules-Requires-Root: no
+
+Package: cntvct-log
+Architecture: arm64
+Depends: ${misc:Depends}
+Description: Log ARM cntvct counter value for boot timing
+ Reads the ARM counter-timer virtual count (CNTVCT) at boot to calculate
+ the offset between power-on time and systemd monotonic time.
