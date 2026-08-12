@@ -86,6 +86,12 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-kernel/linux-msm/soc-modules_6.12.bb \
     meta-qti-automotive/recipes-multimedia/dsp-kernel/dsp-kernel_git.bb \
     meta-qti-automotive/recipes-multimedia/videodlkm/videodlkm_git.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver.bb \
+    meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video_git.bb \
     meta-qti-automotive/recipes-products/images/qti-image-boot.bb \
     meta-qti-automotive/recipes-qcvirtio/ \
     meta-qti-automotive/recipes-security/enable-fde/enable-fde_1.0.bb \
@@ -172,6 +178,12 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver_1.0.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-vdec-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-venc-omx-test-lite_0.1.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver.bb \
+    meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video_git.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/secure-video-app_1.0.0.bb \
     meta-qti-automotive/recipes-multimedia/videodlkm/videodlkm_git.bb \
     meta-qti-automotive/recipes-products/images/qti-image-boot.bb \
@@ -215,6 +227,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-data/aurix-can/aurix-can_git.bb \
     meta-qti-automotive/recipes-data/data-eth/data-eth_git.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
+    meta-qti-automotive/recipes-extra/recipes-core/scm-user-intf-test/scm-user-intf-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/auto-gfx-app/auto-gfx-app.bb \
     meta-qti-automotive/recipes-graphics/mm-auto-ksync/ksyncdlkm_git.bb \
     meta-qti-automotive/recipes-graphics/graphics-driver/graphicsdlkm_git.bb \
@@ -285,6 +298,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-display/displaydlkm/msm-ext-display_git.bb \
     meta-qti-automotive/recipes-display/display-devicetree/display-devicetree_1.0.bb \
     meta-qti-automotive/recipes-extra/recipes-core/scmi-test/scmi-test_1.0.bb \
+    meta-qti-automotive/recipes-extra/recipes-core/scm-user-intf-test/scm-user-intf-test_1.0.bb \
     meta-qti-automotive/recipes-graphics/ \
     meta-qti-automotive/recipes-kernel/edk2/edk2_git.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
@@ -314,4 +328,10 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver.bb \
+    meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video_git.bb \
 "
