@@ -12,6 +12,11 @@ SRC_URI:append:gvm-gen4-5 = " \
     file://hqx/fstab \
 "
 
+SRC_URI:append:gvm-gen5 = " \
+    file://hgy/fstab \
+    file://hqx/fstab \
+"
+
 dirs755:append = " \
     /media/cf /media/net /media/ram \
     /media/union /media/realroot /media/hdd /media/mmc1 \
@@ -49,7 +54,7 @@ do_install:append(){
     fi
 }
 
-do_install:append:gvm-gen4-5() {
+install_uni_fstab() {
     install -d ${D}/uni/hqx/etc
     install -d ${D}/uni/hgy/etc
     install -m 0644 ${WORKDIR}/hqx/fstab ${D}/uni/hqx/etc/fstab
@@ -66,4 +71,12 @@ do_install:append:gvm-gen4-5() {
         sed -i "/^\${localstatedir}/d" ${D}/uni/hqx/etc/fstab
         sed -i "/^\${localstatedir}/d" ${D}/uni/hgy/etc/fstab
     fi
+}
+
+do_install:append:gvm-gen4() {
+    install_uni_fstab
+}
+
+do_install:append:gvm-gen5() {
+    install_uni_fstab
 }
