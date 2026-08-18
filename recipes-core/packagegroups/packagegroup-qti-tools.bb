@@ -24,7 +24,7 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd-analyze systemd-bootchart', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'asan', 'gcc-sanitizers', '', d)}  \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'devmem2', d)} \
-    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd qti-gvm', 'cntvct-log', '', d)} \
+    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd qti-hypervisor', 'cntvct-log', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'rtla', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-qcom-custom linux-qcom-custom-rt', 'evtest lsof', '', d), d)} \
     "
