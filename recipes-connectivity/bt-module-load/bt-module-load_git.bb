@@ -9,7 +9,8 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause-C
 
 SRC_URI = "file://load_bt_modules.sh \
            file://bt_module_load.service \
-           file://bt_module_load_legacy.service"
+           file://bt_module_load_legacy.service \
+           file://99-bt-ssr-recovery.rules"
 
 inherit systemd
 
@@ -25,6 +26,8 @@ do_install() {
     install -D -m 0755 ${WORKDIR}/load_bt_modules.sh ${D}${bindir}/
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/bt_module_load.service -D ${D}${systemd_unitdir}/system/
+    install -d ${D}${sysconfdir}/udev/rules.d/
+    install -m 0644 ${WORKDIR}/99-bt-ssr-recovery.rules -D ${D}${sysconfdir}/udev/rules.d/
 }
 
 do_install:append:sa8255-ivi() {
@@ -38,6 +41,7 @@ do_install:append:sa7255-ivi() {
 FILES:${PN} += "${bindir}/load_bt_modules.sh \
                 ${nonarch_base_libdir}/firmware/qca \
                 ${systemd_unitdir}/system/* \
+                ${sysconfdir}/udev/rules.d/ \
 "
 
 RDEPENDS:${PN} += "rfkill"

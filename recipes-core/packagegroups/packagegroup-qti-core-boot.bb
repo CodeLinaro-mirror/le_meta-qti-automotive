@@ -14,3 +14,10 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'ab-boot-support', 'abctl ab-status-updater', '', d)} \
     packagegroup-core-boot \
     "
+
+RDEPENDS:${PN}:append:gvm-gen5 = " \
+    kernel-module-boot-marker \
+    kernel-module-hfastrpc \
+    kernel-module-subsystem-notif-virt \
+    kernel-module-virtio-ssr \
+"
