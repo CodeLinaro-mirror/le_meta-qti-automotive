@@ -2,10 +2,10 @@
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 
 DEPENDS += "dtc-native virtual/kernel rsync-native"
-# When using linux-ack, depend on kernel-module-soc-modules so
+# When using linux-ack or linux-ack-rt, depend on kernel-module-soc-modules so
 # module.bbclass automatically adds soc-modules/Module.symvers to
 # KBUILD_EXTRA_SYMBOLS for resolving cross-module symbols (e.g. habmm_*)
-DEPENDS:append = " ${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'kernel-module-soc-modules', '', d)}"
+DEPENDS:append = " ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack linux-ack-rt', 'kernel-module-soc-modules', '', d)}"
 
 TECHPACK_MODULE_OUT ?= ""
 TECHPACK_HEADERS ?= ""
@@ -15,7 +15,7 @@ TECHPACK_DTBS ?= ""
 TECHPACK_DTBOS ?= ""
 TECHPACK_MAKE_ARGS ?= ""
 
-inherit deploy kernel-arch linux-kernel-base module ${@oe.utils.ifelse(d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-ack',"qti-kernel-arch-clang", "")}  ${@oe.utils.ifelse(d.getVar('TECHPACK_MODULES') != "","qperf", "")}
+inherit deploy kernel-arch linux-kernel-base module ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack linux-ack-rt', 'qti-kernel-arch-clang', '', d)}  ${@oe.utils.ifelse(d.getVar('TECHPACK_MODULES') != "","qperf", "")}
 
 KERNEL_VERSION = "${@oe.utils.read_file('${STAGING_KERNEL_BUILDDIR}/kernel-abiversion')}"
 
@@ -46,8 +46,9 @@ do_compile(){
         KERNEL_KIT=${BSPDIR}/kernel/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig \
         OUT_DIR=${BSPDIR}/kernel/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig \
         ./build/build_module.sh ${DTB_BUILD}
-    elif [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack" ]; then
-        # linux-ack: Yocto native OOT build path (modules / DTBs / DTBOs)
+    elif [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack" ] || \
+         [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack-rt" ]; then
+        # linux-ack/linux-ack-rt: Yocto native OOT build path (modules / DTBs / DTBOs)
         qti_techpack_restore_autoconf
 
         if [ -n "${TECHPACK_MODULES}" ] && { [ -n "${TECHPACK_DTBS}" ] || [ -n "${TECHPACK_DTBOS}" ]; }; then
@@ -84,7 +85,8 @@ do_compile(){
 # copies. cp -f sets mtime to now (newer than .config), preventing syncconfig.
 # auto.conf.cmd has no .soc counterpart so it needs an explicit touch.
 qti_techpack_restore_autoconf() {
-    [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack" ] || return 0
+    [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack" ] || \
+    [ "${PREFERRED_PROVIDER_virtual/kernel}" = "linux-ack-rt" ] || return 0
     KBA="${STAGING_KERNEL_BUILDDIR}"
     # cp -f sets mtime to now, newer than .config, preventing syncconfig.
     [ -f "${KBA}/include/config/auto.conf.soc" ] && \
