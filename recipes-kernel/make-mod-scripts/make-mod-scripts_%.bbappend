@@ -1,4 +1,4 @@
-inherit ${@oe.utils.ifelse(d.getVar('PREFERRED_PROVIDER_virtual/kernel') == 'linux-ack',"qti-kernel-arch-clang", "")}
+inherit ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack linux-ack-rt', 'qti-kernel-arch-clang', '', d)}
 
 # It will remove the dynamic library related kernel moduel signing before build done and
 #cause compile error if enable rm_workm hence the exclusion below.
