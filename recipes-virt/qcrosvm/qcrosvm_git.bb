@@ -32,6 +32,7 @@ CFLAGS:append = " -Wno-error=stringop-overflow="
 
 SYSTEMD_SERVICE:${PN} = "qcrosvm.service"
 SYSTEMD_SERVICE:${PN}-lvgvm = "qcrosvm_lv.service"
+SYSTEMD_SERVICE:${PN}-lvgvm:append:gen5 = " qcrosvm_qclinux_lv.service"
 SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
 
 EXTRA_OECMAKE += "\
@@ -42,7 +43,6 @@ VM_CONFIG_XML ?= "vm_config_la.xml"
 VM_CONFIG_XML:sa8255-ivi = "vm_config_lalv.xml"
 VM_CONFIG_XML:sa7255-ivi = "vm_config_lalv.xml"
 VM_CONFIG_XML:sa8775-flex = "vm_config_lalv.xml"
-VM_CONFIG_XML:gen5 = "vm_config_lalv.xml"
 
 do_install:append() {
     install -d ${D}${sysconfdir}
@@ -53,6 +53,19 @@ do_install:append:gen5() {
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${S}/qcrosvm_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm.service
     install -m 0644 ${S}/qcrosvm_lv_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm_lv.service
+    install -m 0644 ${S}/qcrosvm_qclinux_lv_sa8797.service ${D}/${systemd_unitdir}/system/qcrosvm_qclinux_lv.service
+
+    # lagvm: single LA GVM config
+    install -d ${D}${sysconfdir}/lagvm
+    install -m 0644 ${S}/vm_config_xml/vm_config_la.xml ${D}${sysconfdir}/lagvm/vm_config.xml
+
+    # mgvm: dual LA+LV GVM config
+    install -d ${D}${sysconfdir}/mgvm
+    install -m 0644 ${S}/vm_config_xml/vm_config_lalv.xml ${D}${sysconfdir}/mgvm/vm_config.xml
+
+    # qclgvm: single qclinux LVGVM config
+    install -d ${D}${sysconfdir}/qclgvm
+    install -m 0644 ${S}/vm_config_xml/vm_config_qclinux_lv.xml ${D}${sysconfdir}/qclgvm/vm_config.xml
 }
 
 do_install:append:sa8775() {
@@ -93,6 +106,13 @@ do_install:append:sa8775-flex() {
 }
 
 PACKAGES =+ "${PN}-lvgvm"
+
+FILES:${PN}:append:gen5 = " \
+    ${sysconfdir}/lagvm/vm_config.xml \
+    ${sysconfdir}/mgvm/vm_config.xml \
+    ${sysconfdir}/qclgvm/vm_config.xml \
+    ${systemd_system_unitdir}/qcrosvm_qclinux_lv.service \
+"
 
 FILES:${PN}-lvgvm += "\
     ${systemd_system_unitdir}/qcrosvm_lv.service \

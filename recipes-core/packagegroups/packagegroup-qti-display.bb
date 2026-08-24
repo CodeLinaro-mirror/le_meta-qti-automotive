@@ -14,7 +14,7 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains_any("PREFERRED_VERSION_linux-msm", "5.15 6.1 6.12", "displaydlkm", "", d)} \
     libdrm \
     wayland \
-    ${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "wayland-utils", "", d)} \
+    ${@bb.utils.contains("MACHINE_FEATURES", "qti-hypervisor", "wayland-utils", "", d)} \
     wayland-ivi-extension \
     weston \
     weston-init \

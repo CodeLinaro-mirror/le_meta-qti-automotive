@@ -16,8 +16,8 @@ RDEPENDS:${PN} += "\
     libcap-bin \
     attr \
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-fde', 'enable-fde', '', d)} \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gvm', 'securemsmdlkm', '', d)}  \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'qti-gvm', 'securemsm-devicetree', '', d)}  \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'securemsmdlkm', '', d)}  \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'securemsm-devicetree', '', d)}  \
 "
 
 RDEPENDS:${PN}:append:gen5 = " optee-libckteec"
