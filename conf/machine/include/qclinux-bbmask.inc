@@ -89,6 +89,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-graphics/graphics-hgsl/graphics-hgsldlkm_git.bb \
     meta-qti-automotive/recipes-kernel/dtc/dtc-aosp.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_5.0.bb \
+    meta-qti-automotive/recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack-headers_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
