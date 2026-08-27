@@ -9,6 +9,8 @@ ${LICENSE};md5=7a434440b651f4a472ca93716d01033a"
 SRC_URI = "\
     file://gvm-net-config.sh \
     file://gvm-net-config.service \
+    file://gvm-net-config-lvgvm.sh \
+    file://gvm-net-config-lvgvm.service \
 "
 
 inherit systemd
@@ -22,6 +24,17 @@ do_install() {
   install -m 0755 ${WORKDIR}/gvm-net-config.sh ${D}${bindir}/gvm-net-config.sh
   install -m 0644 ${WORKDIR}/gvm-net-config.service ${D}${systemd_unitdir}/system/gvm-net-config.service
 
+  install -m 0755 ${WORKDIR}/gvm-net-config-lvgvm.sh ${D}${bindir}/gvm-net-config-lvgvm.sh
+  install -m 0644 ${WORKDIR}/gvm-net-config-lvgvm.service ${D}${systemd_unitdir}/system/gvm-net-config-lvgvm.service
 }
 
 SYSTEMD_SERVICE:${PN} = "gvm-net-config.service"
+SYSTEMD_SERVICE:${PN}-lvgvm = "gvm-net-config-lvgvm.service"
+SYSTEMD_PACKAGES = "${PN} ${PN}-lvgvm"
+
+PACKAGES += "${PN}-lvgvm"
+
+FILES:${PN}-lvgvm += "\
+{systemd_unitdir}/system/gvm-net-config-lvgvm.service \
+${bindir}/gvm-net-config-lvgvm.sh \
+"
