@@ -1,0 +1,58 @@
+This patch file is from Qualcomm Technologies, Inc. and is  provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 32d10d21d54974146b22e26387ac1d0de501fa70 Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Thu, 6 Aug 2026 10:50:57 +0800
+Subject: [PATCH] systemd: add i2c module wait in systemd init process
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ src/core/main.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index a91944d1f8..12ee310437 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -158,6 +158,10 @@ static unsigned arg_reload_limit_burst;
+ #define VFIO_POLL_INTERVAL_MS  10
+ #define VFIO_POLL_MAX_RETRIES  500
+ 
++#define I2C_QCOM_GENI_MODULE_PATH  "/sys/module/i2c_qcom_geni"
++#define I2C_POLL_INTERVAL_MS       10
++#define I2C_POLL_MAX_RETRIES       500
++
+ /* A copy of the original environment block */
+ static char **saved_env = NULL;
+ 
+@@ -3151,6 +3155,23 @@ int main(int argc, char *argv[]) {
+                 (void) nanosleep(&ts, NULL);
+         }
+ 
++        struct timespec ts_i2c = {
++                .tv_sec  = 0,
++                .tv_nsec = I2C_POLL_INTERVAL_MS * 1000000L,
++        };
++
++        for (int i = 0; i < I2C_POLL_MAX_RETRIES; i++) {
++                if (access(I2C_QCOM_GENI_MODULE_PATH, F_OK) == 0) {
++                        log_error("i2c_qcom_geni module loaded, found '%s'", I2C_QCOM_GENI_MODULE_PATH);
++                        break;
++                }
++
++                log_error("i2c_qcom_geni module not loaded (attempt %d/%d), waiting %dms...",
++                        i + 1, I2C_POLL_MAX_RETRIES, I2C_POLL_INTERVAL_MS);
++
++                (void) nanosleep(&ts_i2c, NULL);
++        }
++
+         if (arg_action == ACTION_TEST) {
+                 manager_test_summary(m);
+                 retval = EXIT_SUCCESS;
+-- 
+2.34.1
+

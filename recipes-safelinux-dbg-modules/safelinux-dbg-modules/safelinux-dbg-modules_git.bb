@@ -16,6 +16,7 @@ TECHPACK_MODULES = "minidump/minidump.ko \
                     kaslr_store/kaslr_store.ko \
                     memory_dump_v2/memory_dump_v2.ko \
                     nhlos_log/dump_boot_log.ko \
+                    cpuss_log/qcom_cpuss_log.ko \
                     firmware_vm_mini_dump/firmware_vm_mini_dump.ko \
 "
 TECHPACK_MODULES:append:gen5 = " memory_dump_v21/memory_dump_v21.ko"
@@ -47,6 +48,7 @@ RPROVIDES:${PN} += "${@'kernel-module-kaslr_store-${KERNEL_VERSION}'.replace('_'
 RPROVIDES:${PN} += "${@'kernel-module-memory_dump_v21-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-memory_dump_v2-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-dump_boot_log-${KERNEL_VERSION}'.replace('_', '-')}"
+RPROVIDES:${PN} += "${@'kernel-module-qcom_cpuss_log-${KERNEL_VERSION}'.replace('_', '-')}"
 RPROVIDES:${PN} += "${@'kernel-module-firmware_vm_mini_dump-${KERNEL_VERSION}'.replace('_', '-')}"
 
 FILES:${PN} += "${bindir}/*"

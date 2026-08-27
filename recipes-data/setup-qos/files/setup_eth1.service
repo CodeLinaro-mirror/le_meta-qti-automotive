@@ -5,7 +5,8 @@
 # Flexibility is provided for the customers to modify QoS using TC.
 [Unit]
 Description=eth1 QOS installer
-After=early_eth1.service
+After=early_eth1.service eth_module_load.service
+Requires=eth_module_load.service
 
 [Service]
 User=setup-qos
