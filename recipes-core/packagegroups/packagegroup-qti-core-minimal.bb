@@ -46,4 +46,7 @@ RDEPENDS:${PN}:append:qclinux-gvm-gen5 = " \
     kernel-module-debug-symbol \
     kernel-module-qcom-wdt-core \
     kernel-module-qcom-soc-wdt \
+    kernel-module-qcom-ipc-logging \
+    kernel-module-qcom-glink \
+    kernel-module-qcom-glink-cma \
 "
