@@ -30,6 +30,7 @@ TECHPACK_HEADERS = "${S}/include/uapi"
 inherit qti-techpack
 
 RDEPENDS:${PN}:gvm-gen5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
+RDEPENDS:${PN}:gvm-gen4-5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
 
 RPROVIDES:${PN} += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'kernel-module-msm-vidc-${KERNEL_VERSION}', d)}"
 RPROVIDES:${PN}:gvm-gen5 += "kernel-module-msm-video-${KERNEL_VERSION}"

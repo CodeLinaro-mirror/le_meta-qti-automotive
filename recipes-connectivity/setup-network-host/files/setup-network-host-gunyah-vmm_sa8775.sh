@@ -83,8 +83,6 @@ setup_network()
   add_vlan_to_if $2 $5 $6
 }
 
-soc_num=`gpioget 0 29`
-
 echo " setup-network-host start "
 
 # make sure 8021q module loaded
@@ -92,15 +90,9 @@ modprobe 8021q
 
 # setup the bridge br0, interface eth0 and vlan br0.4
 # setup the bridge br1, interface eth1 and vlan br0.10
-if [ ${soc_num} -eq 0 ];
-then
-    setup_network $soc_num br0 192.168.1.1 eth0 4  192.168.4.1/24
-    setup_network $soc_num br1 192.168.6.1 eth1 10 192.168.10.1/24
-else
-    setup_network $soc_num br0 192.168.1.2 eth0 4  192.168.4.2/24
-    setup_network $soc_num br1 192.168.6.2 eth1 10 192.168.10.2/24
-fi
 
+setup_network 0 br0 192.168.1.1 eth0 4  192.168.4.1/24
+setup_network 0 br1 192.168.6.1 eth1 10 192.168.10.1/24
 
 #perf setting
 echo " setup-network-host perf setting "

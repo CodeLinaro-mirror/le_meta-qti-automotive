@@ -28,7 +28,6 @@ CFLAGS:append:gvm-gen4-5 = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/ke
 CFLAGS:append:gvm-gen5 = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
 
 EXTRA_OEMESON:append = " \
-    -Dmmmcolorfmt=true \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-Duseumd=true', '', d)} \
 "
 SOLIBS = ".so"

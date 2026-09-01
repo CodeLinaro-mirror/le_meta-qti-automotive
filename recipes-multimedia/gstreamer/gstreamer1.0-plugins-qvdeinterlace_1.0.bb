@@ -30,7 +30,6 @@ CFLAGS += "\
 "
 
 EXTRA_OEMESON += "\
-    -Dmmmcolorfmt=true \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-Duseumd=true', '', d)} \
 "
 
