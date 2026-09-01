@@ -19,6 +19,8 @@ DTB_OFFSET:qclinux-gvm-gen5 = "0x9700000"
 DTB_FILE_LIST:gvm-gen5 = "\
     ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-gunyah-vm-lv-qam.dtb \
     ${DEPLOY_DIR_IMAGE}/dtbs/sa8797p-v2-gunyah-vm-lv-qam.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/seca-gh-vm-lv-qam.dtb \
+    ${DEPLOY_DIR_IMAGE}/dtbs/seca-gh-vm-lv-qam-star.dtb \
 "
 DTB_FILE_LIST:gvm-gen4-5 = "\
     ${DEPLOY_DIR_IMAGE}/dtbs/monaco-gh-vm-lv-qam-ridesx.dtb \
