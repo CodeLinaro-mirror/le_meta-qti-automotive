@@ -29,6 +29,16 @@ TECHPACK_HEADERS = "${S}/include/uapi"
 
 inherit qti-techpack
 
+# Copy vidc_hw_virt.h from the sysroot into the kernel source tree before
+# compiling. do_configure:prepend in virtio-video wrote it there at build time,
+# but that path is a side-effect not tracked by sstate. Reading it here from
+# the sysroot (installed by virtio-video:do_install) is sstate-safe.
+do_compile:prepend:gvm-gen5() {
+    install -D -m 0644 \
+        "${STAGING_INCDIR}/kernel-module-msm-virtio-video/vidc_hw_virt.h" \
+        "${STAGING_KERNEL_DIR}/include/vidc_hw_virt.h"
+}
+
 RDEPENDS:${PN}:gvm-gen5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
 RDEPENDS:${PN}:gvm-gen4-5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
 
