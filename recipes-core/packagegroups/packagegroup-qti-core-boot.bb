@@ -21,3 +21,8 @@ RDEPENDS:${PN}:append:gvm-gen5 = " \
     kernel-module-subsystem-notif-virt \
     kernel-module-virtio-ssr \
 "
+
+RDEPENDS:${PN}:append:qclinux-gvm-gen5 = " \
+    kernel-module-hfastrpc \
+    kernel-module-virtio-ssr \
+"

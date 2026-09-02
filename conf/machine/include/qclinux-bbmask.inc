@@ -129,6 +129,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiodlkm/audiodlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
     meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
@@ -210,6 +211,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
@@ -280,6 +282,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
