@@ -19,6 +19,8 @@ SRC_URI:append = " file://multi-gvm.target"
 SRC_URI:append = " file://dual-la-gvm.target"
 SRC_URI:append = " file://dual-lv-gvm.target"
 SRC_URI:append = " file://single-lv-gvm.target"
+SRC_URI:append = " file://modules-blacklist.sh"
+SRC_URI:append = " file://module-blacklist-single-lv-gvm.conf"
 
 S = "${WORKDIR}"
 
@@ -46,6 +48,8 @@ SYSTEMD_AUTO_ENABLE:${PN} = "disable"
 
 FILES:${PN} += "${systemd_unitdir}/system-generators/targets-generator"
 FILES:${PN} += "${systemd_unitdir}/system-generators/services-enabler"
+FILES:${PN} += "${systemd_unitdir}/system-generators/modules-blacklist"
+FILES:${PN} += "${sysconfdir}/unified-build/module-blacklist-single-lv-gvm.conf"
 
 do_install:append() {
     install -d ${D}/${systemd_unitdir}/system
@@ -62,4 +66,7 @@ do_install:append() {
     install -d ${D}/${systemd_unitdir}/system-generators
     install -m 0755 ${S}/targets-generator.sh ${D}/${systemd_unitdir}/system-generators/targets-generator
     install -m 0755 ${S}/services-enabler.sh ${D}/${systemd_unitdir}/system-generators/services-enabler
+    install -m 0755 ${S}/modules-blacklist.sh ${D}/${systemd_unitdir}/system-generators/modules-blacklist
+    install -d ${D}${sysconfdir}/unified-build
+    install -m 0644 ${S}/module-blacklist-single-lv-gvm.conf ${D}${sysconfdir}/unified-build/module-blacklist-single-lv-gvm.conf
 }

@@ -14,7 +14,7 @@ RDEPENDS:${PN} += "\
     ${@bb.utils.contains_any("PREFERRED_VERSION_linux-msm", "5.15 6.1 6.12", "displaydlkm", "", d)} \
     libdrm \
     wayland \
-    ${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "wayland-utils", "", d)} \
+    ${@bb.utils.contains("MACHINE_FEATURES", "qti-hypervisor", "wayland-utils", "", d)} \
     wayland-ivi-extension \
     weston \
     weston-init \
@@ -26,6 +26,7 @@ RDEPENDS:${PN} += "\
     "
 
 RDEPENDS:${PN}:remove:gen5 = "display-commonsys-intf-linux"
+RDEPENDS:${PN}:append:gen5 = " gvm-touch-proxy"
 RDEPENDS:${PN}:remove:qti-dpk = "wayland-ivi-extension"
 RDEPENDS:${PN}:append:qti-dpk = " weston-udev"
 RDEPENDS:${PN}:remove:qti-dpk = "weston-sdm-extension"

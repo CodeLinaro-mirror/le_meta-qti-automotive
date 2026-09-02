@@ -76,7 +76,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-graphics/graphics-hgsl/graphics-hgsldlkm_git.bb \
     meta-qti-automotive/recipes-kernel/dtc/dtc-aosp.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_5.0.bb \
-    meta-qti-automotive/recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack-headers_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
@@ -130,6 +129,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiodlkm/audiodlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
     meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
@@ -192,6 +192,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-security/securemsm-devicetree/securemsm-devicetree.bb \
     meta-qti-automotive/recipes-security/securemsmdlkm/securemsmdlkm_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
+    meta-qti-automotive/recipes-graphics/wayland/gvm-touch-proxy_1.0.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.2 (used by gvm-gen4-5/gvm-gen5)
@@ -210,6 +211,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
@@ -254,8 +256,11 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-virt/vhost-user-q/vhost-user-q_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
+    meta-qti-automotive/recipes-virt/vm-gvminfo/vm-gvminfo_git.bb \
+    meta-qti-automotive/recipes-virt/vm-powerctl/vm-powerctl_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
+    meta-qti-automotive/recipes-graphics/wayland/gvm-touch-proxy_1.0.bb \
 "
 
 # Missing recipes in baseline LV.AU.0.5.3 (used by qclinux-gvm-gen5)
@@ -277,6 +282,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
@@ -326,6 +332,8 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-virt/vhost-user-q/vhost-user-q_git.bb \
     meta-qti-automotive/recipes-virt/vhost-user-scmi/vhost-user-scmi_git.bb \
     meta-qti-automotive/recipes-virt/vmm-boot-lcm/vmm-boot-lcm_git.bb \
+    meta-qti-automotive/recipes-virt/vm-gvminfo/vm-gvminfo_git.bb \
+    meta-qti-automotive/recipes-virt/vm-powerctl/vm-powerctl_git.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video-header_git.bb \
     meta-qti-automotive/recipes-kernel/linux/vms-devicetree.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \

@@ -1,0 +1,67 @@
+From 8ebb39e484498cf8038f487f998eea91ba4bdad5 Mon Sep 17 00:00:00 2001
+From: Guofeng Xu <guofxu@qti.qualcomm.com>
+Date: Tue, 11 Aug 2026 15:45:23 +0800
+Subject: [PATCH] sd-bus: drop half-registered vtable members on failure
+
+add_object_vtable_internal() inserts BusVTableMember entries into the
+global vtable_methods/vtable_properties sets as it walks the vtable,
+but only sets node_vtable.node (which gates the disconnect-time cleanup)
+after the loop. A failure mid-loop thus left the already-inserted
+members behind, dangling once the slot's interface string and the node's
+path were freed, so a later registration reading those keys hit a
+use-after-free. Remove this slot's members on the fail path.
+
+Signed-off-by: Luca Boccassi <luca.boccassi@gmail.com>
+Git-commit: b7b13032092c93a0ee5457beeabf65808c8a1433
+
+Upstream-Status: Backport [https://github.com/systemd/systemd/commit/b7b13032092c93a0ee5457beeabf65808c8a1433]
+---
+ src/libsystemd/sd-bus/bus-objects.c | 32 +++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/src/libsystemd/sd-bus/bus-objects.c b/src/libsystemd/sd-bus/bus-objects.c
+index c25c40ff37..4ca28e4016 100644
+--- a/src/libsystemd/sd-bus/bus-objects.c
++++ b/src/libsystemd/sd-bus/bus-objects.c
+@@ -1981,6 +1981,38 @@ static int add_object_vtable_internal(
+         return 0;
+ 
+ fail:
++        /* Remove members we already inserted into the global tables before
++         * failing, so they don't dangle once the slot and node are freed. */
++        if (s && s->node_vtable.interface)
++                for (v = bus_vtable_next(vtable, vtable); v->type != _SD_BUS_VTABLE_END; v = bus_vtable_next(vtable, v)) {
++                        struct vtable_member key = {}, *x;
++                        Hashmap *map;
++
++                        if (v->type == _SD_BUS_VTABLE_METHOD) {
++                                map = bus->vtable_methods;
++                                key.member = v->x.method.member;
++                        } else if (IN_SET(v->type, _SD_BUS_VTABLE_PROPERTY, _SD_BUS_VTABLE_WRITABLE_PROPERTY)) {
++                                map = bus->vtable_properties;
++                                key.member = v->x.property.member;
++                        } else
++                                continue;
++
++                        /* The entry that failed validation may carry a NULL
++                         * member, which was never inserted and would crash
++                         * the hashmap lookup below. Skip it. */
++                        if (isempty(key.member))
++                                continue;
++
++                        key.path = n->path;
++                        key.interface = s->node_vtable.interface;
++
++                        x = hashmap_get(map, &key);
++                        if (x && x->parent == &s->node_vtable) {
++                                assert_se(hashmap_remove(map, &key) == x);
++                                free(x);
++                        }
++                }
++
+         sd_bus_slot_unref(s);
+         bus_node_gc(bus, n);
+ 
+-- 
+2.43.0
+

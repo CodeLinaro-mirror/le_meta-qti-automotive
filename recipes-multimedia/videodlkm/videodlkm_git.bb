@@ -5,7 +5,7 @@ LICENSE = "GPLv2.0-with-linux-syscall-note"
 LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=8afb6abdac9a14cb18a0d6c9c151e9b4"
 
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'video-devicetree', d)}"
-DEPENDS:gvm-gen5 += "video-devicetree virtio-video"
+DEPENDS:gvm-gen5 += "video-devicetree virtio-video kernel-module-msm-virtio-video"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/video-driver/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/video-driver;usehead=1"
 
@@ -20,11 +20,17 @@ TECHPACK_MODULE_OUT:gvm-gen5 = "${S}"
 TECHPACK_MODULES = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'msm-vidc.ko', d)}"
 TECHPACK_MODULES:gvm-gen5 = "msm_video.ko"
 
+TECHPACK_MAKE_ARGS:gvm-gen5 = "\
+    BOARD_PLATFORM=gen5 \
+    ENABLE_HYP=true \
+"
+
 TECHPACK_HEADERS = "${S}/include/uapi"
 
 inherit qti-techpack
 
 RDEPENDS:${PN}:gvm-gen5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
+RDEPENDS:${PN}:gvm-gen4-5 += "kernel-module-msm-virtio-video-${KERNEL_VERSION}"
 
 RPROVIDES:${PN} += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'kernel-module-msm-vidc-${KERNEL_VERSION}', d)}"
 RPROVIDES:${PN}:gvm-gen5 += "kernel-module-msm-video-${KERNEL_VERSION}"
