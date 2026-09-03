@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lan Zou <lanz@qti.qualcomm.com>
+Date: Thu, 28 May 2026 17:04:53 +0800
+Subject: [PATCH] libweston: add touch_only surface label
+
+Upstream-Status: Inappropriate [qti specific]
+
+Change-Id: Ie2458995516cae06df9166b6e6166cd2050ef771
+Signed-off-by: Lan Zou <lanz@qti.qualcomm.com>
+---
+--- a/include/libweston/libweston.h
++++ b/include/libweston/libweston.h
+@@ -1931,6 +1931,8 @@
+ 
+ 	bool is_mapped, is_unmapping, is_mapping;
+ 	bool is_opaque;
++	/* Indicate the surface receives touch events but is not rendered. */
++	bool is_touch_only;
+ 
+ 	/* An list of per seat pointer constraints. */
+ 	struct wl_list pointer_constraints;
+--- a/libweston/pixman-renderer.c
++++ b/libweston/pixman-renderer.c
+@@ -486,10 +486,15 @@
+ draw_paint_node(struct weston_paint_node *pnode,
+ 		pixman_region32_t *damage /* in global coordinates */)
+ {
+-	struct pixman_surface_state *ps = get_surface_state(pnode->surface);
++	struct weston_surface *surface = pnode->surface;
++	struct pixman_surface_state *ps = get_surface_state(surface);
+ 	/* repaint bounding region in global coordinates: */
+ 	pixman_region32_t repaint;
+ 
++	/* touch-only surface: participates in input hit only, skip pixman compositing */
++	if (surface && surface->is_touch_only)
++		return;
++
+ 	if (!pnode->surf_xform_valid)
+ 		return;
+ 
+--- a/libweston/renderer-gl/gl-renderer.c
++++ b/libweston/renderer-gl/gl-renderer.c
+@@ -1285,6 +1285,10 @@
+ 	GLint filter;
+ 	struct gl_shader_config sconf;
+ 
++	/* touch-only surface: participates in input hit only, skip GL compositing */
++	if (pnode->surface && pnode->surface->is_touch_only)
++		return;
++
+ 	if (gb->shader_variant == SHADER_VARIANT_NONE &&
+ 	    !buffer->direct_display)
+ 		return;

@@ -17,7 +17,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/platform-kernel"
 METAL_MODULES_BUILD = "drivers/aop-set-ddr.ko drivers/silent_boot.ko drivers/wallpower_charger.ko drivers/dump_boot_log.ko drivers/silent-mode-hw-monitoring.ko"
 
 VIRT_MODULES_BUILD = "${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'socinfo_dt.ko subsystem_notif_virt.ko boot_marker.ko virtio_ssr.ko', '', d)}"
-VIRT_MODULES_BUILD:append:qclinux-gvm-gen5 = " drivers/socinfo_dt.ko drivers/subsystem_notif_virt.ko"
+VIRT_MODULES_BUILD:append:qclinux-gvm-gen5 = " drivers/socinfo_dt.ko drivers/subsystem_notif_virt.ko drivers/virtio_ssr.ko"
 
 VIRT_MODULES_BUILD:append:gvm-gen4-5 = "${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', ' hfastrpc.ko', ' drivers/virtual_fastrpc/hfastrpc.ko', d)}"
 VIRT_MODULES_BUILD:append:gvm-gen5 = " hfastrpc.ko"
@@ -47,15 +47,13 @@ VIRT_PROVIDES_MODULES = "\
 VIRT_PROVIDES_MODULES:append:gvm-gen4-5 = " kernel-module-hfastrpc-${KERNEL_VERSION}"
 VIRT_PROVIDES_MODULES:append:gvm-gen5 = " kernel-module-hfastrpc-${KERNEL_VERSION}"
 VIRT_PROVIDES_MODULES:append:qclinux-gvm-gen5 = " kernel-module-hfastrpc-${KERNEL_VERSION}"
-VIRT_PROVIDES_MODULES:remove:qclinux-gvm-gen5 = "kernel-module-virtio-ssr-${KERNEL_VERSION}"
 
 EXT_MODULE = "vendor/qcom/opensource/platform-kernel"
 
 # Override do_compile for qclinux-gvm-gen5: pass CONFIG vars directly to make so that
 # platform-kernel/drivers/Kbuild conditions (CONFIG_ARCH_QTI_VM etc.) are satisfied.
 # CONFIG_ARCH_QTI_VM is not defined in the 6.6 kernel tree, so it must be passed
-# explicitly. CONFIG_VIRTIO_SSR=n prevents virtio_ssr.ko from being built (its symbols
-# are not exported by this kernel).
+# explicitly.
 do_compile:qclinux-gvm-gen5() {
     unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
     oe_runmake KERNEL_PATH=${STAGING_KERNEL_DIR} \
@@ -69,7 +67,7 @@ do_compile:qclinux-gvm-gen5() {
                CONFIG_HYBRID_FASTRPC=m \
                CONFIG_QCOM_SOCINFO_DT=m \
                CONFIG_VIRTIO_FASTRPC=m \
-               CONFIG_VIRTIO_SSR=n \
+               CONFIG_VIRTIO_SSR=m \
                ${MAKE_TARGETS}
 }
 
