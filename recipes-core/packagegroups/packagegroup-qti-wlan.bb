@@ -11,6 +11,7 @@ PACKAGES = "\
 ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'qcom-subsystem-ramdump', '', d)} \
     rfkill \
     hostap-daemon-qcacld \
     wireless-tools \

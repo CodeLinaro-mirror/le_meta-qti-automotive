@@ -16,4 +16,4 @@ ExecStart=/usr/bin/setup-network-host-vmm.sh
 [Install]
 WantedBy=single-gvm.target
 WantedBy=multi-gvm.target
-
+WantedBy=single-lv-gvm.target

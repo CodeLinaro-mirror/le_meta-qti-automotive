@@ -20,7 +20,6 @@ CLEANBROKEN = "1"
 # Source location
 SRC_URI = "\
     ${PATH_TO_REPO}/vendor/qcom/opensource/soc-modules/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/soc-modules;usehead=1 \
-    file://soc-repo/0001-soc-repo-modules-adapt-qclinux-6.6.patch \
     file://configs/soc-repo_defconfig \
 "
 
@@ -62,15 +61,23 @@ do_configure:append() {
 }
 
 # Compile: Build modules using standard OOT approach
+# CONFIG_VARS and DEFCONFIG_CFLAGS are passed explicitly to override any conflicting
+# values that may already exist in auto.conf from the kernel's own Kconfig.
+# For example, kernel may have CONFIG_ARM_SMMU=y (built-in) while soc-repo needs =m.
 do_compile() {
     DEFCONFIG_CFLAGS=""
     CONFIG_VARS=""
 
     if [ -f ${DEFCONFIG_FILE} ]; then
-        DEFCONFIG_CFLAGS=$(grep -E '^CONFIG_.*=[ym]$' ${DEFCONFIG_FILE} | \
-                          sed 's/=.*//' | \
-                          sed 's/^/-D/' | \
-                          tr '\n' ' ')
+        # Match kernel autoconf.h: =y -> -DCONFIG_FOO=1, =m -> -DCONFIG_FOO_MODULE=1
+        # A bare -DCONFIG_FOO (no value) makes IS_ENABLED/IS_BUILTIN/IS_MODULE false.
+        Y_CFLAGS=$(grep -E '^CONFIG_.*=y$' ${DEFCONFIG_FILE} | \
+                   sed -E 's/^(CONFIG_[^=]*)=y$/-D\1=1/' | \
+                   tr '\n' ' ')
+        M_CFLAGS=$(grep -E '^CONFIG_.*=m$' ${DEFCONFIG_FILE} | \
+                   sed -E 's/^(CONFIG_[^=]*)=m$/-D\1_MODULE=1/' | \
+                   tr '\n' ' ')
+        DEFCONFIG_CFLAGS="${Y_CFLAGS} ${M_CFLAGS}"
 
         # Append int/hex type CONFIG values as -DCONFIG_FOO=value
         INT_CFLAGS=$(grep -E '^CONFIG_.*=[0-9]+$' ${DEFCONFIG_FILE} | \
@@ -82,14 +89,9 @@ do_compile() {
                      sed 's/=y/=m/' | \
                      tr '\n' ' ')
     else
-        bbwarn "autogvmlv_defconfig not found at ${DEFCONFIG_FILE}"
+        bbwarn "soc-repo_defconfig not found at ${DEFCONFIG_FILE}"
     fi
 
-    # Standard out-of-tree module build with defconfig flags
-    # soc-repo headers have been overlaid to kernel source in do_configure
-    # CONFIG_VARS: Pass CONFIG options as make variables for Makefile conditionals
-    # EXTRA_CFLAGS: Add kernel source dir and CONFIG definitions for C compilation
-    # V=1 shows full compiler command for debugging
     oe_runmake -C ${STAGING_KERNEL_BUILDDIR} \
         M=${S} \
         ARCH=${ARCH} \

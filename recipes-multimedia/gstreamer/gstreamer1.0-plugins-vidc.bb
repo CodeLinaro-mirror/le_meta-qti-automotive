@@ -10,7 +10,6 @@ DEPENDS += "\
     aosal \
     glib-2.0 \
     gstreamer1.0 \
-    gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-base \
     gbm \
     gbm-headers \
@@ -42,7 +41,7 @@ CXXFLAGS += "\
     -I${STAGING_INCDIR}/mm-osal/include \
 "
 
-EXTRA_OEMESON = " \
+EXTRA_OEMESON = "\
     -Dav1-dec=enabled \
     -Dusedmaheap=true \
 "

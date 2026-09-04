@@ -16,14 +16,22 @@ SRC_URI:append:qclinux-gvm-gen5 = " \
     file://configs/kernel_defconfig \
     file://kernel-gvm/0001-QcLinux-kernel-adapt-LVGVM.patch \
     file://kernel-gvm/0002-QcLinux-Gunyah-RM-Driver-Adaption.patch \
+    file://kernel-gvm/0003-PENDING-remoteproc-qcom-Export-SSR-subsystem-APIs-fo.patch \
 "
 
 S = "${WORKDIR}/kernel/kernel_platform/kernel"
 
 do_generate_base_defconfig:qclinux-gvm-gen5() {
-    # GVM uses a pre-built full defconfig instead of the merge_config.sh approach
-    # used by other machines. Copy it directly as the defconfig.
+    # GVM uses a pre-built full defconfig as the base, then applies
+    # KERNEL_CONFIG_FRAGMENTS (e.g. qcom_rt.cfg from meta-qti-realtime)
+    # on top via merge_config.sh so that RT and other fragments take effect.
     cp ${WORKDIR}/configs/kernel_defconfig ${WORKDIR}/defconfig
+    if [ -n "${KERNEL_CONFIG_FRAGMENTS}" ]; then
+        ${S}/scripts/kconfig/merge_config.sh -m -r -O ${WORKDIR} \
+            ${WORKDIR}/defconfig \
+            ${KERNEL_CONFIG_FRAGMENTS}
+        cp ${WORKDIR}/.config ${WORKDIR}/defconfig
+    fi
 }
 
 # Additional compiler flags required for GVM kernel build

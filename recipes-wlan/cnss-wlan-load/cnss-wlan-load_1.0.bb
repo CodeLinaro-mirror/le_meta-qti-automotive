@@ -13,7 +13,6 @@ SRC_URI = "\
            file://init_qti_wlan_auto_legacy.service \
            file://init.qti.wlan_on.sh \
            file://init.qti.wlan_off.sh \
-           file://blacklist-pcie-qcom-ecam.conf \
            "
 
 inherit systemd useradd
@@ -29,8 +28,6 @@ do_compile[noexec] = "1"
 
 do_install() {
     install -d ${D}${bindir}
-    install -d ${D}${sysconfdir}/modprobe.d
-    install -m 0644 ${WORKDIR}/blacklist-pcie-qcom-ecam.conf -D ${D}${sysconfdir}/modprobe.d/
     install -D -m 0755 ${WORKDIR}/init.qti.wlan_on.sh ${D}${bindir}/init.qti.wlan_on.sh
     install -D -m 0755 ${WORKDIR}/init.qti.wlan_off.sh ${D}${bindir}/init.qti.wlan_off.sh
     install -d ${D}${systemd_unitdir}/system/
@@ -54,7 +51,6 @@ do_install:append() {
 
 FILES:${PN} += "\
                 ${systemd_unitdir}/system/* \
-                ${sysconfdir}/modprobe.d/* \
                 ${bindir}/init.qti.wlan_on.sh \
                 ${bindir}/init.qti.wlan_off.sh \
 "

@@ -7,6 +7,7 @@ ${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
 DEPENDS += "display-devicetree securemsmdlkm"
 DEPENDS:remove:gvm-gen5 = "display-devicetree"
+DEPENDS:remove:gvm-gen4-5 = "display-devicetree"
 DEPENDS:append:gvm-gen5 = " msm-ext-display"
 
 SRC_URI = "${PATH_TO_REPO}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}vendor/qcom/opensource/display-drivers;;usehead=1"
@@ -35,6 +36,7 @@ TECHPACK_MAKE_ARGS = "KBUILD_EXTRA_SYMBOLS=${HDCP_QSEECOM_PATCH}/Module.symvers"
 # module_do_compile passes to make.
 TECHPACK_MAKE_ARGS:gvm-gen5 = ""
 KBUILD_EXTRA_SYMBOLS:append:gvm-gen5 = " ${HDCP_QSEECOM_PATCH}/Module.symvers"
+TECHPACK_MAKE_ARGS:gvm-gen4-5 = "DISPLAY_ROOT=${S}"
 
 inherit qti-techpack
 

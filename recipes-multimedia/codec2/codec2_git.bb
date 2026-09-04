@@ -38,8 +38,8 @@ EXTRA_OECMAKE += "\
     -DAGL_LINUX:BOOL=ON \
     ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', '-DSUPPORT_DMABUF_HEAP:BOOL=ON', d)} \
 "
-EXTRA_OECMAKE:append:quin-gvm-lemans = " -DLOAD_CORE_LIB:BOOL=ON"
-EXTRA_OECMAKE:append:quin-gvm-monaco = " -DLOAD_CORE_LIB:BOOL=ON"
+EXTRA_OECMAKE:append:quin-gvm-gen4-5 = " -DLOAD_CORE_LIB:BOOL=ON"
+EXTRA_OECMAKE:append:gvm-gen4-5 = " -DLOAD_CORE_LIB:BOOL=ON"
 
 # default enable C2 service on all build targets
 EXTRA_OECMAKE:append = " -DUSE_AGL_C2SERVICE:BOOL=ON"

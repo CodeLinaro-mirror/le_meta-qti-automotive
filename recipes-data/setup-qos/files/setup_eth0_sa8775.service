@@ -5,6 +5,8 @@
 # Flexibility is provided for the customers to modify QoS using TC.
 [Unit]
 Description=eth0 QOS installer
+After=eth_module_load.service
+Requires=eth_module_load.service
 
 [Service]
 Type=oneshot
