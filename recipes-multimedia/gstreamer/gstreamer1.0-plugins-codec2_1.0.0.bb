@@ -16,23 +16,9 @@ DEPENDS += "\
     media-external \
     videodlkm \
     virtual/kernel-headers \
+    binder \
+    codec2-service \
 "
-
-# default enable C2 service on all targets
-DEPENDS:append = " binder codec2-service"
-EXTRA_OEMESON:append = " -Dagl-c2service=true"
-
-DEPENDS:remove:quin-gvm-lemans = "binder codec2-service"
-EXTRA_OEMESON:remove:quin-gvm-lemans = "-Dagl-c2service=true"
-
-DEPENDS:remove:quin-gvm-lemans-dpk = "binder codec2-service"
-EXTRA_OEMESON:remove:quin-gvm-lemans-dpk = "-Dagl-c2service=true"
-
-DEPENDS:remove:quin-gvm-monaco = "binder codec2-service"
-EXTRA_OEMESON:remove:quin-gvm-monaco = "-Dagl-c2service=true"
-
-DEPENDS:remove:quin-gvm-monaco-dpk = "binder codec2-service"
-EXTRA_OEMESON:remove:quin-gvm-monaco-dpk = "-Dagl-c2service=true"
 
 DEPENDS:append:quin-gvm-lemans = " displaydlkm"
 DEPENDS:append:quin-gvm-monaco = " displaydlkm"
@@ -69,10 +55,6 @@ EXTRA_OEMESON:append:quin-gvm-monaco = " \
     -Dav1-dec=enabled \
     -Dqprange_option=op1 \
     -Dreport_frame_qp_option=op1 \
-"
-
-EXTRA_OEMESON += "\
-    ${@oe.utils.version_less_or_equal('${preferred-kernel}', '5.5', '', '-Dusedmaheap=true', d)} \
 "
 
 PACKAGE_ARCH ?= "${MACHINE_ARCH}"
