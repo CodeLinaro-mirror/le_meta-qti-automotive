@@ -30,10 +30,6 @@ CFLAGS += "\
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display \
 "
 
-EXTRA_OEMESON:append = " \
-    -Dmmmcolorfmt=true \
-"
-
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
 

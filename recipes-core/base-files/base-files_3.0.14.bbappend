@@ -73,7 +73,7 @@ install_uni_fstab() {
     fi
 }
 
-do_install:append:gvm-gen4() {
+do_install:append:gvm-gen4-5() {
     install_uni_fstab
 }
 

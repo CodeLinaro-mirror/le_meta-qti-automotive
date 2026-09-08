@@ -8,6 +8,7 @@ SRC_URI:append = " \
     file://0001-systemd-avoid-active-seat-change-to-NULL.patch \
     file://60-misc.rules \
     file://0001-systemd-config-linger-for-root-user.patch \
+    file://0001-sd-bus-drop-half-registered-vtable-members-on-failur.patch \
 "
 
 SRC_URI:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'file://0033-systemd-Make-root-s-home-directory-configurable-2.patch', '', d)}"
