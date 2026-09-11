@@ -48,14 +48,6 @@ do_install:append() {
     fi
 }
 
-do_install:append:sa8775() {
-    install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/07-gvm.conf.in -D ${D}/etc/modules-load.f/07-gvm.conf
-}
-
-do_install:append:sa7255-ivi() {
-    install -m 0644 ${S}/conf/${TARGET_PATH_NAME}/07-gvm.conf.in -D ${D}/etc/modules-load.f/07-gvm.conf
-}
-
 FILES:${PN} += "\
          init \
          dev/ \
