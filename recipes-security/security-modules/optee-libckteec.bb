@@ -4,7 +4,7 @@ HOMEPAGE = "https://github.com/OP-TEE/optee_client"
 LICENSE = "BSD-2-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;beginline=7;endline=27;md5=f6c51da2169a596879f7e3714c4e47b3"
 
-DEPENDS = "securemsm-noship"
+DEPENDS = "securemsm-noship securemsm"
 
 SRC_URI = "git://github.com/OP-TEE/optee_client.git;protocol=https;branch=master"
 SRC_URI:append = " \

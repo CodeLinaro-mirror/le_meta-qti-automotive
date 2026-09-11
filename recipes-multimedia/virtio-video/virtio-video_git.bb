@@ -28,15 +28,6 @@ TECHPACK_MAKE_ARGS:gvm-gen5 = "\
 
 inherit qti-techpack
 
-do_configure[depends] += "virtual/kernel:do_shared_workdir"
-
-# copy vidc_hw_virt.h into the kernel source tree for this and downstream videodlkm build
-do_configure:prepend() {
-    install -D -m 0644 \
-        "${S}/include/vidc_hw_virt.h" \
-        "${STAGING_KERNEL_DIR}/include/vidc_hw_virt.h"
-}
-
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/msm_virtio_video.ko"
 FILES:${PN} += "${includedir}/kernel-module-msm-virtio-video/*"
 
@@ -49,5 +40,12 @@ do_install:append() {
     if [ -f ${S}/Module.symvers ]; then
         install -Dm0644 ${S}/Module.symvers \
             ${D}${includedir}/kernel-module-msm-virtio-video/Module.symvers
+    fi
+    # Stage vidc_hw_virt.h as a sysroot artifact so downstream builds (e.g. videodlkm)
+    # can find it even when virtio-video is restored from sstate and do_configure:prepend
+    # does not re-run.
+    if [ -f "${S}/include/vidc_hw_virt.h" ]; then
+        install -Dm0644 "${S}/include/vidc_hw_virt.h" \
+            "${D}${includedir}/kernel-module-msm-virtio-video/vidc_hw_virt.h"
     fi
 }
