@@ -16,6 +16,9 @@ DEPENDS = "\
 "
 
 CODE_DIR = "vendor/qcom/opensource/display/weston-sdm-extension"
+CODE_DIR:sa8775 = "${TARGET_DIR}graphics/weston-sdm-extension"
+CODE_DIR:sa7255 = "${TARGET_DIR}graphics/weston-sdm-extension"
+
 SRC_URI = "${PATH_TO_REPO}/${CODE_DIR}/.git;protocol=${PROTO};destsuffix=${CODE_DIR};usehead=1"
 SRCREV = "${AUTOREV}"
 
