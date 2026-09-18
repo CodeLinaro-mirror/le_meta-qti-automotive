@@ -1,4 +1,4 @@
-hostap-daemon (2.12) unstable; urgency=medium
+hostap-daemon (2:2.12) unstable; urgency=medium
 
   * Source: external/wpa_supplicant_8/hostapd (v2.12-devel, AUTOREV).
   * Build config: defconfig-qcacld with QCA-specific features:
