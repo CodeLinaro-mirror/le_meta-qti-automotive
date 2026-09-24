@@ -22,6 +22,7 @@ export whitelist_files = "sfs_config \
                    ebtables.common \
                    dhcpcd-run-hooks \
                    sandboxX.sh \
+                   dmabuf_heap_memory_prof.sh \
 "
 
 do_traverse_bashisms(){

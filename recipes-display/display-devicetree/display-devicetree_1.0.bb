@@ -20,6 +20,9 @@ inherit qti-techpack
 do_compile:prepend:gvm-gen5(){
     export GEN5_LVGVM=y
 }
+do_compile:prepend:gvm-gen4-5(){
+    export GEN45_LVGVM=y
+}
 do_configure[noexec] = "1"
 
 TECHPACK_MODULE_OUT = "${WORKDIR}/display-devicetree"
