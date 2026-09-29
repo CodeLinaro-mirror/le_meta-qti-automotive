@@ -21,6 +21,7 @@ RDEPENDS:${PN} += "\
     atrace \
     sos \
     libmeminfo \
+    pvm-userdata-init \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'systemd-analyze systemd-bootchart', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'asan', 'gcc-sanitizers', '', d)}  \
     ${@bb.utils.contains_any('VARIANT', 'perf user', '', 'devmem2', d)} \

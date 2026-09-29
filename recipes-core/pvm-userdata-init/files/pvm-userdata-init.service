@@ -1,0 +1,18 @@
+#Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+[Unit]
+Description=Initialize PVM userdata directories
+DefaultDependencies=no
+Requires=data.mount
+After=data.mount
+Before=var.mount
+
+ConditionPathExists=|!/data/var_upper
+ConditionPathExists=|!/data/var_work
+
+[Service]
+Type=oneshot
+ExecStart=/bin/mkdir -p /data/var_upper /data/var_work
+ExecStart=/bin/chmod 0755 /data/var_upper /data/var_work
+ExecStart=-/sbin/restorecon -F /data/var_upper /data/var_work
+RemainAfterExit=yes
