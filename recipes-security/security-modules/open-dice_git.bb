@@ -7,7 +7,9 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 DEPENDS = "openssl"
 
 SRC_URI = "git://github.com/google/open-dice.git;protocol=https;branch=main"
-SRC_URI:append = " file://0001-Port-open-dice-project-to-Linux-environment.patch"
+SRC_URI:append = " file://0001-Port-open-dice-project-to-Linux-environment.patch \
+                   file://0002-Add-component-instance-name-to-config-descriptor.patch \
+                   file://0003-Add-SDV-boot-mode-to-config-descriptor.patch"
 
 SRCREV = "49a4204a6596363b9c35bde51c2ba048252b4772"
 

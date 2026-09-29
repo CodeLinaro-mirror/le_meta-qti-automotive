@@ -1,0 +1,60 @@
+From e90bcadd199b03d241daad07a2d725672d895d36 Mon Sep 17 00:00:00 2001
+From: Amit Blay <ablay@qti.qualcomm.com>
+Date: Tue, 29 Sep 2026 16:13:03 -0700
+Subject: [PATCH] Support component instance names in Android config
+ descriptors
+
+Encode the optional -70007 text field so the PVM service can include the
+configured VM identity in its ABL-GVM certificate.
+
+Reject a selected field without a name.
+
+Upstream-Status: Pending
+
+Change-Id: I6f5a0ef3e7d24e2c8b9d1a40c53f7e82d6a91b04
+Signed-off-by: Amit Blay <ablay@qti.qualcomm.com>
+---
+ include/dice/android.h |  4 ++++
+ src/android.c          | 20 ++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
+
+diff --git a/include/dice/android.h b/include/dice/android.h
+index 7ca1df8..50bcd0e 100644
+--- a/include/dice/android.h
++++ b/include/dice/android.h
+@@ -2,0 +3,5 @@
++// Changes from Qualcomm Technologies, Inc. are provided under the following license:
++//
++// Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++//
+@@ -30,0 +36 @@ extern "C" {
++#define DICE_ANDROID_CONFIG_COMPONENT_INSTANCE_NAME (1 << 5)
+@@ -40,0 +47 @@ extern "C" {
++//    component_instance_name: Name of the component instance.
+@@ -45,0 +53 @@ typedef struct DiceAndroidConfigValues_ {
++  const char* component_instance_name;
+diff --git a/src/android.c b/src/android.c
+index 2a77e57..d252a24 100644
+--- a/src/android.c
++++ b/src/android.c
+@@ -2,0 +3,5 @@
++// Changes from Qualcomm Technologies, Inc. are provided under the following license:
++//
++// Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++//
+@@ -41,0 +47,6 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  static const int64_t kComponentInstanceNameLabel = -70007;
++
++  if ((config_values->configs & DICE_ANDROID_CONFIG_COMPONENT_INSTANCE_NAME) &&
++      !config_values->component_instance_name) {
++    return kDiceResultInvalidInput;
++  }
+@@ -46,0 +58 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  //   ? -70007 : tstr,     ; Component instance name
+@@ -71,0 +84,4 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  if (config_values->configs & DICE_ANDROID_CONFIG_COMPONENT_INSTANCE_NAME) {
++    CborWriteInt(kComponentInstanceNameLabel, &out);
++    CborWriteTstr(config_values->component_instance_name, &out);
++  }
