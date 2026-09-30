@@ -28,6 +28,13 @@ do_install() {
         sed -i '/Environment/a\ExecStartPre=\/bin\/chmod 700 \/run\/user' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\ExecStartPre=\/bin\/mkdir -p \/run\/user\/0' ${D}${systemd_system_unitdir}/weston.service
         sed -i '/Environment/a\Slice=pvm.slice' ${D}${systemd_system_unitdir}/weston.service
+        # Remove systemd-user-sessions dependency for umd (unnecessary, no login/pam session)
+        sed -i 's/ systemd-user-sessions.service//g' ${D}${systemd_system_unitdir}/weston.service
+        sed -i '/PAMName/d' ${D}${systemd_system_unitdir}/weston.service
+        sed -i '/TTYPath/d' ${D}${systemd_system_unitdir}/weston.service
+        # Ensure /run/user/0 is a tmpfs before weston starts
+        sed -i "/ExecStartPre=\/bin\/chmod 700 \/run\/early/a ExecStartPre=/bin/sh -c 'mountpoint -q /run/user/0 || mount -t tmpfs -o mode=700,uid=0,gid=0 tmpfs /run/user/0'" ${D}${systemd_system_unitdir}/weston.service
+        sed -i '/^StartLimitBurst/a Environment="SEATD_VTBOUND=0"' ${D}${systemd_system_unitdir}/weston.service
     fi
     if [ "${@bb.utils.filter('DISTRO_FEATURES', 'pam', d)}" ]; then
         install -D -p -m0644 ${WORKDIR}/weston-autologin ${D}${sysconfdir}/pam.d/weston-autologin

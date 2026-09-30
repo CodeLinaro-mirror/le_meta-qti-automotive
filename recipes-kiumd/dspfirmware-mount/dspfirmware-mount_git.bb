@@ -90,6 +90,7 @@ do_install:append:gen5() {
     install -m 0755 ${S}/sa8797_hpass2_compute_cfg ${D}${sysconfdir}/sysconfig/sa8797_hpass2_compute_cfg
 
     install -m 0777 ${S}/sa8797_firmware-vm-boot-autoghgvm-mount.service ${D}${systemd_unitdir}/system/sa8797_firmware-vm-boot-autoghgvm-mount.service
+    sed -i 's|^WantedBy=multi-user.target|WantedBy=multi-gvm.target\nWantedBy=single-gvm.target|' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvm-mount.service
     sed -i 's|^WantedBy=multi-user.target|WantedBy=multi-gvm.target\nWantedBy=single-lv-gvm.target|' ${D}${systemd_unitdir}/system/firmware-vm-boot-autoghgvmlv-mount.service
 }
 
