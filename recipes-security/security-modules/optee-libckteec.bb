@@ -15,6 +15,7 @@ SRC_URI:append = " \
     file://0002-fix-memory-leak-in-serialize_indirect_attribute.patch \
     file://0001-serializer-null_data_check.patch \
     file://0001-securemsm-ship-Add-support-for-SP800_108_KDF.patch \
+    file://0001-libckteec-Add-GVM-specific-PKCS11-UUID-support.patch \
 "
 
 SRCREV = "3eac340a781c00ccd61b151b0e9c22a8c6e9f9f0"
@@ -22,6 +23,9 @@ SRCREV = "3eac340a781c00ccd61b151b0e9c22a8c6e9f9f0"
 S = "${WORKDIR}/git"
 
 inherit pkgconfig
+
+TARGET_CPPFLAGS:append:gvm-gen5 = " -DQC_ADD_ONS -DPKCS11_TA_UUID_LSB=0xF0"
+TARGET_CPPFLAGS:append:gvm-gen4-5 = " -DQC_ADD_ONS -DPKCS11_TA_UUID_LSB=0xF0"
 
 do_compile() {
     oe_runmake -C ${S}/libckteec
