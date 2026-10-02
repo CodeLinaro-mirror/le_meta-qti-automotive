@@ -127,6 +127,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/ar2-audio-service/ar2-audio-service_git.bb \
     meta-qti-automotive/recipes-audio/ats/ats_git.bb \
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
+    meta-qti-automotive/recipes-audio/audio-log-util/audio-log-util_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
     meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
@@ -205,6 +206,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-audio/ar2-audio-service/ar2-audio-service_git.bb \
     meta-qti-automotive/recipes-audio/ats/ats_git.bb \
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
+    meta-qti-automotive/recipes-audio/audio-log-util/audio-log-util_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
     meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
@@ -276,6 +278,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-audio/ar2-audio-service/ar2-audio-service_git.bb \
     meta-qti-automotive/recipes-audio/ats/ats_git.bb \
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
+    meta-qti-automotive/recipes-audio/audio-log-util/audio-log-util_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
     meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
