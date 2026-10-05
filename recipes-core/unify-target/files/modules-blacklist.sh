@@ -8,7 +8,7 @@ get_cmdline_value() {
     echo "$CMDLINE" | tr ' ' '\n' | awk -F= -v key="$1" '$1==key && NF>1{print $2}'
 }
 
-GVMCONFIG=$(get_cmdline_value gvmconfig)
+OSCONFIG=$(get_cmdline_value osconfig)
 
 MODPROBE_DIR="/run/modprobe.d"
 UNIFIED_BUILD_CONF_DIR="/etc/unified-build"
@@ -35,8 +35,8 @@ write_blacklist() {
     done < "$source_conf"
 }
 
-case "$GVMCONFIG" in
-    single-lv-gvm)
+case "$OSCONFIG" in
+    PVM+QCLGVM)
 	write_blacklist "module-blacklist-single-lv-gvm.conf"
         ;;
 esac
