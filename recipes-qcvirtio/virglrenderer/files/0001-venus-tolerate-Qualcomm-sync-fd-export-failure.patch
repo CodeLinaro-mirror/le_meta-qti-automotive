@@ -1,0 +1,51 @@
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From 0b2025aa818bf216e8a40f6262ddf4585fe71ba4 Mon Sep 17 00:00:00 2001
+From: Maciej Szymanski <mszymans@qti.qualcomm.com>
+Date: Mon, 14 Sep 2026 16:31:24 +0200
+Subject: [PATCH] venus: tolerate Qualcomm sync-fd export failure
+
+Qualcomm's vkGetSemaphoreFdKHR() can return
+VK_ERROR_OUT_OF_HOST_MEMORY when the host semaphore has no exportable
+GSL sync object. Treat this failure as non-fatal in
+vkWaitSemaphoreResourceMESA, since Venus already provides synchronization
+through the virtio ring sequence fd.
+
+Keep other semaphore export errors fatal to preserve command-stream error
+handling.
+
+Issue: EUVLINUX-695
+Change-Id: I7389113e347861fe5cedcd1a878fee6af9703d4d
+Signed-off-by: Maciej Szymanski <mszymans@qti.qualcomm.com>
+---
+ src/venus/vkr_queue.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/venus/vkr_queue.c b/src/venus/vkr_queue.c
+index 61b94bef..bf25974a 100644
+--- a/src/venus/vkr_queue.c
++++ b/src/venus/vkr_queue.c
+@@ -562,6 +562,18 @@ vkr_dispatch_vkWaitSemaphoreResourceMESA(
+    };
+    VkResult result = vk->GetSemaphoreFdKHR(args->device, &info, &fd);
+    if (result != VK_SUCCESS) {
++      /*
++      * Qualcomm's vkGetSemaphoreFdKHR returns VK_ERROR_OUT_OF_HOST_MEMORY
++      * when the semaphore has no exportable GSL sync object. Venus already
++      * provides synchronization through the virtio ring sequence number.
++      */
++      if (result == VK_ERROR_OUT_OF_HOST_MEMORY)
++         return;
++
++      vkr_log("vkGetSemaphoreFdKHR failed for resource wait: "
++              "result=%d (0x%x) fd=%d",
++              result, (uint32_t)result, fd);
++
+       vkr_context_set_fatal(ctx);
+       return;
+    }
+-- 
+2.49.0
+
