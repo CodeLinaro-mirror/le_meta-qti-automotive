@@ -3,7 +3,7 @@
 
 [Unit]
 Description=Load kernel modules late
-After=systemd-modules-load.service
+After=systemd-modules-load.service early-services.target
 DefaultDependencies=no
 Conflicts=shutdown.target
 Before=shutdown.target
@@ -15,7 +15,7 @@ CapabilityBoundingSet=CAP_SYS_MODULE
 AmbientCapabilities=CAP_SYS_MODULE
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=modprobe -a tz_log aquantia marvell qcom_geni_serial
+ExecStart=modprobe -a tz_log qcom_tsens
 
 [Install]
 WantedBy=multi-user.target

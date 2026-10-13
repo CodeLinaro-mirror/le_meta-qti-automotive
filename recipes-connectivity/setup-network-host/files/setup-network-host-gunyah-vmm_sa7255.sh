@@ -2,6 +2,24 @@
 # Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
+perf_set_if()
+{
+  sysctl -w net.core.rmem_max=33554432
+  sysctl -w net.core.wmem_max=33554432
+  sysctl -w net.ipv4.tcp_timestamps=0
+  sysctl -w net.core.rmem_default="16777216"
+  sysctl -w net.core.wmem_default="16777216"
+  sysctl -w net.core.optmem_max="25165824"
+  sysctl -w net.ipv4.tcp_mem="786432 1048576 16777216"
+  sysctl -w net.ipv4.udp_mem="786432 1048576 16777216"
+  sysctl -w net.ipv4.tcp_rmem="2796200 5592400 16777216"
+  sysctl -w net.ipv4.tcp_wmem="2796200 5592400 16777216"
+  sysctl -w net.core.somaxconn=10000
+  sysctl -w net.core.netdev_max_backlog=10000
+  echo ff > /sys/class/net/eth0/queues/rx-0/rps_cpus
+  echo ff > /sys/class/net/eth0/queues/tx-0/xps_cpus
+}
+
 # parameters: 
 # $1: bridge name
 # $2: ip address
@@ -67,5 +85,9 @@ echo " modprobe complete "
 
 # setup the bridge br0, interface eth0 and vlan br0.4
 setup_network 0 br0 192.168.1.1 eth0 4  192.168.4.1/24
+
+#perf setting
+echo " setup-network-host perf setting "
+perf_set_if
 
 echo " setup-network-host end "

@@ -41,6 +41,7 @@ EXTRA_OEMAKE:remove:qclinux-gvm-gen5 = "AVB_FEATURE_GVM_MODE=1"
 EXTRA_OEMAKE:append:qclinux-gvm-gen5 = "ENABLE_GPTP_SERVICE=1"
 EXTRA_OEMAKE:append:sa8775 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'GPTP_VFIO=1', '', d)}"
 EXTRA_OEMAKE:append:sa7255 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'GPTP_VFIO=1', '', d)}"
+EXTRA_OEMAKE:append:gen5 = " ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'TSC_FEATURE=1', '', d)}"
 EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'GPTP_DSQB_ENABLED=1', 'GPTP_DSQB_ENABLED=0', d)}"
 SYSTEMD_SERVICE:${PN} = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'gptp.service sleep-notify@gptp.service', d)}"
 

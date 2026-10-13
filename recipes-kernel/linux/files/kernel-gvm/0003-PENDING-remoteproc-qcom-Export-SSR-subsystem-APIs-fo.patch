@@ -1,0 +1,98 @@
+From 98fdce800aeec5e2565b432eaf60746167efe289 Mon Sep 17 00:00:00 2001
+From: Wei Liu <wliu8@qti.qualcomm.com>
+Date: Wed, 22 Jul 2026 15:52:02 +0530
+Subject: [PATCH] PENDING: remoteproc: qcom: Export SSR subsystem APIs for
+ virtio_ssr module
+
+virtio_ssr.ko requires qcom_ssr_get_subsys() and
+qcom_notify_ssr_clients() to dispatch SSR events received over the
+virtio transport to in-kernel SSR notifier clients.
+
+In kernel 6.6 qcom_ssr_get_subsys() is a file-local static helper and
+qcom_notify_ssr_clients() does not exist.  Promote
+qcom_ssr_get_subsys() to a non-static exported symbol and add
+qcom_notify_ssr_clients() as a thin wrapper around
+srcu_notifier_call_chain() so that out-of-tree modules can use both
+APIs.
+
+Also add the two declarations to qcom_common.h so that any in-tree or
+out-of-tree consumer can include the header instead of re-declaring
+them.
+
+Signed-off-by: Wei Liu <wliu8@qti.qualcomm.com>
+---
+ drivers/remoteproc/qcom_common.c | 21 ++++++++++++++++++++-
+ drivers/remoteproc/qcom_common.h |  5 +++++
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/remoteproc/qcom_common.c b/drivers/remoteproc/qcom_common.c
+index c0345baaa16e..fbbe14a85bf8 100644
+--- a/drivers/remoteproc/qcom_common.c
++++ b/drivers/remoteproc/qcom_common.c
+@@ -201,7 +201,7 @@ void qcom_remove_smd_subdev(struct rproc *rproc, struct qcom_rproc_subdev *smd)
+ }
+ EXPORT_SYMBOL_GPL(qcom_remove_smd_subdev);
+ 
+-static struct qcom_ssr_subsystem *qcom_ssr_get_subsys(const char *name)
++struct qcom_ssr_subsystem *qcom_ssr_get_subsys(const char *name)
+ {
+ 	struct qcom_ssr_subsystem *info;
+ 
+@@ -226,6 +226,7 @@ static struct qcom_ssr_subsystem *qcom_ssr_get_subsys(const char *name)
+ 	mutex_unlock(&qcom_ssr_subsys_lock);
+ 	return info;
+ }
++EXPORT_SYMBOL_GPL(qcom_ssr_get_subsys);
+ 
+ /**
+  * qcom_register_ssr_notifier() - register SSR notification handler
+@@ -362,5 +363,23 @@ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr)
+ }
+ EXPORT_SYMBOL_GPL(qcom_remove_ssr_subdev);
+ 
++/**
++ * qcom_notify_ssr_clients() - notify all SSR clients of a subsystem state change
++ * @info:	subsystem handle returned by qcom_ssr_get_subsys()
++ * @state:	one of the QCOM_SSR_* notify types
++ * @data:	optional per-notification data (may be NULL)
++ *
++ * Calls the SRCU notifier chain associated with @info, delivering @state and
++ * @data to every registered listener.
++ *
++ * Return: return value of srcu_notifier_call_chain().
++ */
++int qcom_notify_ssr_clients(struct qcom_ssr_subsystem *info, int state,
++			    struct qcom_ssr_notify_data *data)
++{
++	return srcu_notifier_call_chain(&info->notifier_list, state, data);
++}
++EXPORT_SYMBOL_GPL(qcom_notify_ssr_clients);
++
+ MODULE_DESCRIPTION("Qualcomm Remoteproc helper driver");
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/remoteproc/qcom_common.h b/drivers/remoteproc/qcom_common.h
+index 9ef4449052a9..d620b1d4cc4c 100644
+--- a/drivers/remoteproc/qcom_common.h
++++ b/drivers/remoteproc/qcom_common.h
+@@ -5,6 +5,7 @@
+ #include <linux/remoteproc.h>
+ #include "remoteproc_internal.h"
+ #include <linux/soc/qcom/qmi.h>
++#include <linux/remoteproc/qcom_rproc.h>
+ 
+ struct qcom_glink_smem;
+ struct qcom_sysmon;
+@@ -52,6 +53,10 @@ void qcom_add_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr,
+ 			 const char *ssr_name);
+ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr);
+ 
++struct qcom_ssr_subsystem *qcom_ssr_get_subsys(const char *name);
++int qcom_notify_ssr_clients(struct qcom_ssr_subsystem *info, int state,
++			    struct qcom_ssr_notify_data *data);
++
+ #if IS_ENABLED(CONFIG_QCOM_SYSMON)
+ struct qcom_sysmon *qcom_add_sysmon_subdev(struct rproc *rproc,
+ 					   const char *name,
+-- 
+2.34.1
+

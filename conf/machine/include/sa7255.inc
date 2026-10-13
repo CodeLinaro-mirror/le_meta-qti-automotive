@@ -65,16 +65,11 @@ MACHINE_FEATURES += "\
     qti-audio-aw \
     qti-compute-platform \
     qti-safety \
+    qti-bluetooth \
+    qti-wlan \
+    qti-wlan-hsp \
+    qti-wlan-hmt \
 "
-
-MACHINE_FEATURES:append = "\
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-bluetooth', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hsp', '', d)} \
-    ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-wlan-hmt', '', d)} \
-"
-
-BBMASK:remove:auto-slt = "meta-qti-bsp/meta-qti-base/recipes-wlan"
 
 MACHINE_FEATURES:remove = "\
     ${@bb.utils.contains('FACTORY_TEST', '1', 'qti-vmm', '', d)} \
@@ -85,18 +80,13 @@ SECTOOLS_SECURITY_PROFILE = "monaco_tz_security_profile.xml"
 
 EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-pinctrl-msm-${KERNEL_VERSION} \
-    kernel-module-qcom-geni-se-${KERNEL_VERSION} \
-    kernel-module-qcom-geni-serial-${KERNEL_VERSION} \
     kernel-module-qcom-ipcc-${KERNEL_VERSION} \
     kernel-module-phy-qcom-qmp-ufs-${KERNEL_VERSION} \
     kernel-module-ufs-qcom-${KERNEL_VERSION} \
     kernel-module-ufshcd-core-${KERNEL_VERSION} \
     kernel-module-ufshcd-pltfrm-${KERNEL_VERSION} \
     kernel-module-pinctrl-sa7255p-${KERNEL_VERSION} \
-    kernel-module-aquantia-${KERNEL_VERSION}  \
-    kernel-module-marvell-${KERNEL_VERSION} \
     kernel-module-virtio-mmio-${KERNEL_VERSION} \
-    kernel-module-ipv6-${KERNEL_VERSION} \
     kernel-module-kiumd-${KERNEL_VERSION} \
     kernel-module-iommu-iova-map-${KERNEL_VERSION} \
     kernel-module-tz-ffi-${KERNEL_VERSION} \
@@ -107,7 +97,6 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-kiumd-kgsl-${KERNEL_VERSION} \
     kernel-module-vfio-iommu-qcom-${KERNEL_VERSION} \
     kernel-module-ipcc-shmem-test-module-${KERNEL_VERSION} \
-    kernel-module-i2c-qcom-geni-${KERNEL_VERSION} \
     kernel-module-qcom-scm-oot-${KERNEL_VERSION} \
     kernel-module-qtee-shmbridge-${KERNEL_VERSION} \
     kernel-module-qcom-smcinvoke-${KERNEL_VERSION} \
@@ -117,18 +106,4 @@ EARLY_RAMDISK_KERNEL_MODULES = "\
     kernel-module-mhi-ep-net-${KERNEL_VERSION} \
     kernel-module-kryo-arm64-edac-${KERNEL_VERSION} \
     kernel-module-socinfo-${KERNEL_VERSION} \
-    kernel-module-msm-hab-${KERNEL_VERSION} \
-    kernel-module-hyp-udmabuf-${KERNEL_VERSION} \
-    kernel-module-mdt-loader-${KERNEL_VERSION} \
-    kernel-module-gh-msgq-${KERNEL_VERSION} \
-    kernel-module-gh-arm-drv-${KERNEL_VERSION} \
-    kernel-module-gh-rm-drv-${KERNEL_VERSION} \
-    kernel-module-gunyah-${KERNEL_VERSION} \
-    kernel-module-hvc-gunyah-${KERNEL_VERSION} \
-    kernel-module-phylink-${KERNEL_VERSION} \
-    kernel-module-pcs-xpcs-${KERNEL_VERSION} \
-    kernel-module-phy-qcom-sgmii-eth-${KERNEL_VERSION} \
-    kernel-module-stmmac-${KERNEL_VERSION} \
-    kernel-module-stmmac-platform-${KERNEL_VERSION} \
-    kernel-module-dwmac-qcom-ethqos-${KERNEL_VERSION} \
 "

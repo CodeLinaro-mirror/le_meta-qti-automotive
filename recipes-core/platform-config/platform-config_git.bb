@@ -36,6 +36,7 @@ do_install:append:gen5() {
     install -m 0444 ${S}/plat-config-generator/nord/safe_ivi.ini -D ${D}/etc/nord/safe_ivi.ini
     install -m 0444 ${S}/plat-config-generator/nord/nonsafe_ivi.ini -D ${D}/etc/nord/nonsafe_ivi.ini
     install -m 0444 ${S}/plat-config-generator/nord/flex.ini -D ${D}/etc/nord/flex.ini
+    install -m 0444 ${S}/plat-config-generator/nord/qclgvm.ini -D ${D}/etc/nord/qclgvm.ini
     install -m 0444 ${S}/plat-config-generator/nord/adas.ini -D ${D}/etc/nord/adas.ini
 
     install -m 0444 ${S}/plat-config-generator/seca/safe_ivi.ini -D ${D}/etc/seca/safe_ivi.ini

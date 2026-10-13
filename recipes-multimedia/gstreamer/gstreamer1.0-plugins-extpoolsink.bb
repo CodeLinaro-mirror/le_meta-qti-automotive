@@ -12,12 +12,9 @@ DEPENDS += "\
     glib-2.0 \
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'videodlkm', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'videodlkm displaydlkm', d)} \
     virtual/kernel-headers \
 "
-
-DEPENDS:append:quin-gvm-lemans = " displaydlkm"
-DEPENDS:append:quin-gvm-monaco = " displaydlkm"
 
 SRC_URI = "${PATH_TO_REPO}/gstreamer/gst-plugins-qti-oss/.git;protocol=${PROTO};destsuffix=gstreamer/gst-plugins-qti-oss;usehead=1"
 SRCREV = "${AUTOREV}"
@@ -27,17 +24,11 @@ inherit meson pkgconfig
 
 CFLAGS += "-I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}"
 
-CFLAGS:append:quin-gvm-lemans = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
-EXTRA_OEMESON:append:quin-gvm-lemans = " \
-    -Dmmmcolorfmt=true \
-"
+CFLAGS:append:gvm-gen4-5 = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
+CFLAGS:append:gvm-gen5 = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
 
-CFLAGS:append:quin-gvm-monaco = " -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display"
-EXTRA_OEMESON:append:quin-gvm-monaco = " \
-     -Dmmmcolorfmt=true \
-"
 EXTRA_OEMESON:append = " \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-Dmmmcolorfmt=true -Duseumd=true', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-Duseumd=true', '', d)} \
 "
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""

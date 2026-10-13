@@ -8,6 +8,8 @@ Description=eth0 installer
 DefaultDependencies=no
 Conflicts=shutdown.target
 Before=shutdown.target
+After=eth_module_load.service
+Requires=eth_module_load.service
 
 [Service]
 User=early-eth

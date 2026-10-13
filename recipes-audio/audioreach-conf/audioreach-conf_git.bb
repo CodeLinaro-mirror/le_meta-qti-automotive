@@ -20,3 +20,7 @@ inherit autotools pkgconfig
 do_compile[noexec] = "1"
 
 FILES_${PN} += "${sysconfdir}/card-defs.xml"
+
+# Include ALSA plugin specific files and libs in main package
+FILES:${PN} += "${datadir}/alsa/ucm2/conf.virt.d/*"
+CONFFILES:${PN} += "${sysconfdir}/alsa/conf.d/agm.conf"

@@ -24,7 +24,6 @@ RDEPENDS:${PN} += "\
     tcpdump \
     phytool \
     vlan \
-    strongswan \
     tcp-wrappers \
     ${@bb.utils.contains('LAYERSERIES_CORENAMES', 'scarthgap', '', 'netkit-telnet', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', '', 'proftpd', d)} \
@@ -35,6 +34,7 @@ RDEPENDS:${PN} += "\
 RDEPENDS:${PN}:append:gen5 = " \
     gvm-net-configure \
     ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'setup-network-param', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'data-eth', '', d)} \
 "
 
 RDEPENDS:${PN}:append:sa8775 = " ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'netlink-service-infra', '', d)}"

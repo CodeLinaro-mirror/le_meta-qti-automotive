@@ -4,25 +4,25 @@ Date: Wed, 22 Jun 2022 19:03:40 +0530
 Subject: [PATCH] Avoid pulseaudio daemon shutdown after lpm
 
 Avoid pulseaudio daemon shutdown after lpm
-
+Upstream-Status: Inappropriate [oe specific]
 Signed-off-by: Jing Wang <quic_jingwa@quicinc.com>
 ---
  src/daemon/daemon.conf.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/daemon/daemon.conf.in b/src/daemon/daemon.conf.in
-index 94f3605..39ef8f0 100644
+index 7409976..11db866 100644
 --- a/src/daemon/daemon.conf.in
 +++ b/src/daemon/daemon.conf.in
 @@ -39,7 +39,7 @@ ifelse(@HAVE_DBUS@, 1, [dnl
- realtime-scheduling = no
+ ; realtime-scheduling = yes
  ; realtime-priority = 5
-
+ 
 -; exit-idle-time = 20
 +exit-idle-time = -1
  ; scache-idle-time = 20
-
+ 
  ; dl-search-path = (depends on architecture)
---
-2.7.4
+-- 
+2.17.1
 

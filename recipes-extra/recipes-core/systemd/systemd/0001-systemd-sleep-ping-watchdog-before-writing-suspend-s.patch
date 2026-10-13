@@ -1,0 +1,47 @@
+From 2eeb5a3d2d0bc2f5288d41858287fafcbc5c4792 Mon Sep 17 00:00:00 2001
+From: Futao He <fhe@qti.qualcomm.com>
+Date: Tue, 14 Jul 2026 03:57:05 -0700
+Subject: [PATCH] systemd-sleep: ping watchdog before writing suspend state
+
+Upstream-Status: Pending
+
+Before writing to /sys/power/state to trigger suspend, systemd-sleep
+does not pet the watchdog. If the pre-suspend work (e.g. dpm_suspend
+with offline CPUs) takes more than the watchdog timeout (~10 s), the
+watchdog fires before the kernel even enters the sleep state.
+
+Add a watchdog_ping() call immediately before write_state() so the
+watchdog timer is reset right before the potentially long kernel
+suspend path begins.
+
+Signed-off-by: Futao He <fhe@qti.qualcomm.com>
+---
+ src/sleep/sleep.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
+index 21062b24e0..09aba6baf4 100644
+--- a/src/sleep/sleep.c
++++ b/src/sleep/sleep.c
+@@ -20,6 +20,7 @@
+ 
+ #include "battery-capacity.h"
+ #include "battery-util.h"
++#include "watchdog.h"
+ #include "build.h"
+ #include "bus-error.h"
+ #include "bus-locator.h"
+@@ -280,6 +281,10 @@ static int execute(
+                    LOG_MESSAGE("Performing sleep operation '%s'...", sleep_operation_to_string(operation)),
+                    "SLEEP=%s", sleep_operation_to_string(arg_operation));
+ 
++        /* Pet the watchdog right before entering the kernel suspend path.
++         * dpm_suspend() can take >10 s when CPUs are hotplugged offline. */
++        (void) watchdog_ping();
++
+         r = write_state(state_fd, sleep_config->states[operation]);
+         if (r < 0)
+                 log_struct_errno(LOG_ERR, r,
+-- 
+2.34.1
+

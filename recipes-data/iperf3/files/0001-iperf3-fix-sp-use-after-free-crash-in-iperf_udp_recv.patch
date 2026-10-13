@@ -1,0 +1,42 @@
+From e0b4313332730bd0d5327d857dec04ecd787e10e Mon Sep 17 00:00:00 2001
+From: DavidBar-On <david.cdb004@gmail.com>
+Date: Thu, 25 Jun 2026 18:17:00 +0800
+Subject: [PATCH] iperf3: fix sp use-after-free crash in iperf_udp_recv
+
+Backport from upstream, and rebased.
+
+Upstream-Status: Backport [https://github.com/esnet/iperf/pull/1990]
+Change-Id: 983d7c61b8aa57a66006f24897f1163f91effa40
+Signed-off-by: DavidBar-On <david.cdb004@gmail.com>
+---
+ src/iperf_server_api.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/src/iperf_server_api.c b/src/iperf_server_api.c
+index aa601c3e..42c98cc2 100644
+--- a/src/iperf_server_api.c
++++ b/src/iperf_server_api.c
+@@ -313,19 +313,12 @@ static void
+ server_timer_proc(TimerClientData client_data, struct iperf_time *nowP)
+ {
+     struct iperf_test *test = client_data.p;
+-    struct iperf_stream *sp;
+ 
+     test->timer = NULL;
+     if (test->done)
+         return;
+     test->done = 1;
+-    /* Free streams */
+-    while (!SLIST_EMPTY(&test->streams)) {
+-        sp = SLIST_FIRST(&test->streams);
+-        SLIST_REMOVE_HEAD(&test->streams, streams);
+-        close(sp->socket);
+-        iperf_free_stream(sp);
+-    }
++
+     close(test->ctrl_sck);
+     test->ctrl_sck = -1;
+ }
+-- 
+2.43.0
+

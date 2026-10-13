@@ -9,9 +9,8 @@ DEPENDS += "\
     adreno \
     glib-2.0 \
     gstreamer1.0 \
-    gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-base \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'graphicsdlkm videodlkm displaydlkm', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'videodlkm displaydlkm', d)} \
     virtual/kernel-headers \
     virtual/libc \
 "

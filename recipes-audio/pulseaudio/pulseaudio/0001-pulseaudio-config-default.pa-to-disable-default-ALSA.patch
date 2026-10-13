@@ -4,7 +4,7 @@ Date: Tue, 21 May 2019 16:38:47 +0800
 Subject: [PATCH] pulseaudio: config default.pa to disable default ALSA ucm.
 
 ucm cases are configured in alsaucm-conf manually.
-
+Upstream-Status: Inappropriate [oe specific]
 Signed-off-by: Guodong Hu <guodhu@codeaurora.org>
 ---
  src/daemon/default.pa.in | 2 +-

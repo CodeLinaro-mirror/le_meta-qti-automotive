@@ -4,6 +4,17 @@
 
 enable_log="${ENABLE_LOG:-0}"
 log_path="${LOG_PATH:-/data}"
+
+# Parse optional flags
+while getopts "l:p:" opt; do
+    case "$opt" in
+        l) enable_log="$OPTARG" ;;
+        p) log_path="$OPTARG" ;;
+        *) echo "Usage: $0 [-l enable_log] [-p log_path] {start|stop}"; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
 hcilog="$log_path/hcilog.cfa"
 
 case "$1" in
@@ -15,11 +26,12 @@ case "$1" in
         rfkill unblock bluetooth
 
         # Load module + optional logging
-        if [ "$enable_log" = "0" ]; then
-            modprobe hci_uart
-        else
-            modprobe hci_uart && hcidump -w "$hcilog" &
+        if [ "$enable_log" = "1" ]; then
+            echo "########## start btmon ##########"
+            btmon -w "$hcilog" > /dev/null 2>&1 &
         fi
+
+        modprobe hci_uart
 
         echo "########## done ##########"
         ;;
@@ -28,7 +40,7 @@ case "$1" in
         echo "########## Unload bt modules ##########"
 
         # Stop hcidump if running
-        pkill -f "hcidump -w" 2>/dev/null || true
+        pkill -f "btmon -w" 2>/dev/null || true
 
         # Unload HCI UART module
         modprobe -r hci_uart 2>/dev/null || true
@@ -40,7 +52,7 @@ case "$1" in
         ;;
 
     *)
-        echo "Usage: $0 {start|stop}"
+        echo "Usage: $0 [-l enable_log] [-p log_path] {start|stop}"
         exit 1
         ;;
 esac

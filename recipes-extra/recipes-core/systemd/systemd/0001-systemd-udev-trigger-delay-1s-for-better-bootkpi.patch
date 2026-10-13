@@ -1,0 +1,31 @@
+From b843a5da565f1d114b103a848e4d213d54af657f Mon Sep 17 00:00:00 2001
+From: ziqic <ziqic@qti.qualcomm.com>
+Date: Tue, 11 Aug 2026 12:59:06 +0800
+Subject: [PATCH] systemd-udev-trigger:delay 1s for better bootkpi
+
+1.Make block&input rules be triggered earlier in systemd-v255.
+Legacy from former patch.
+
+2.Delay 1s for better bootkpi.
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: ziqic <ziqic@qti.qualcomm.com>
+---
+ units/systemd-udev-trigger.service | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/units/systemd-udev-trigger.service b/units/systemd-udev-trigger.service
+index cb1e4f9fea..c1e53c4ca6 100644
+--- a/units/systemd-udev-trigger.service
++++ b/units/systemd-udev-trigger.service
+@@ -19,4 +19,5 @@ ConditionPathIsReadWrite=/sys
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=-udevadm trigger --type=all --action=add --prioritized-subsystem=module,block,tpmrm,net,tty,input
++ExecStartPre=/usr/bin/sleep 1
++ExecStart=-udevadm trigger --type=all --action=add --prioritized-subsystem=input,block,module,tpmrm,net,tty
+-- 
+2.34.1
+

@@ -25,22 +25,54 @@ EXTRA_IMAGE_FEATURES = ""
 
 KERNEL_VERSION = "${@oe.utils.read_file('${STAGING_KERNEL_BUILDDIR}/kernel-abiversion')}"
 
+# Produce dtb.img with densely packed per-gvm segments from pvm dtbs.
+# Moves pvm dtbs into pvm/, merges with vms DDR overlays into dtbs_dir,
+# distributes results into per-gvm subdirs, then assembles dtb.img + manifest.
+# No-op if vms-ddrdtbos is absent.
+make_vms_dtb_img() {
+    local dtbs_dir="${DEPLOY_DIR_IMAGE}/dtbs"
+    local vms_ddrdtbos="${DEPLOY_DIR_IMAGE}/build-artifacts/vms-ddrdtbos"
+
+    [ -d "$vms_ddrdtbos" ] && [ -n "$(ls -A $vms_ddrdtbos 2>/dev/null)" ] || return 0
+
+    # Clean and recreate per-gvm dirs; move pvm dtbs into pvm/
+    for gvm in pvm ${VMS_GVM_TYPES}; do
+        rm -rf ${dtbs_dir}/${gvm}
+        install -d ${dtbs_dir}/${gvm}
+    done
+    mv ${dtbs_dir}/*.dtb ${dtbs_dir}/pvm/
+
+    # Merge pvm dtbs with vms DDR overlays into dtbs_dir; results named by gvm token
+    merge_vms_dtbos \
+        ${dtbs_dir}/pvm \
+        ${vms_ddrdtbos} \
+        ${dtbs_dir}
+
+    # Distribute merged results to per-gvm dirs by filename token
+    for gvm in ${VMS_GVM_TYPES}; do
+        [ -n "$(ls ${dtbs_dir}/*${gvm}*.dtb 2>/dev/null)" ] && \
+            mv ${dtbs_dir}/*${gvm}*.dtb ${dtbs_dir}/${gvm}/
+    done
+
+    # Assemble dtb.img with all per-gvm segments densely packed
+    build_dense_dtb_img \
+        ${dtbs_dir} \
+        ${dtbs_dir}/dtb.img \
+        ${dtbs_dir}/dtb.img.manifest
+}
+
 do_make_dtb() {
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/dtb
     install -d ${DEPLOY_DIR_IMAGE}/dtbs
     install -d ${DEPLOY_DIR_IMAGE}/interout
     install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
-    install -d ${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
-    install -d ${DEPLOY_DIR_IMAGE}/flexdtb
 
     dtb_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/dtb
     dtbo_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/techpack-dtbs
     out_directory=${DEPLOY_DIR_IMAGE}/dtbs
     inter_out_dir=${DEPLOY_DIR_IMAGE}/interout
     ddrdtbos_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbos
-    ddrdtbosflex_dir=${DEPLOY_DIR_IMAGE}/build-artifacts/ddrdtbosflex
-    flex_directory=${DEPLOY_DIR_IMAGE}/flexdtb
 
     if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
         if [ -d "${DEPLOY_DIR_IMAGE}/dtbs" ]; then
@@ -58,32 +90,25 @@ do_make_dtb() {
 
     merge_dtbos $dtb_dir $dtbo_dir $inter_out_dir
 
-    #Copy flex dtb from interout to separate directory
-
-    for file in "$inter_out_dir"/*flex*; do
-         if [ -f "$file" ]; then
-             mv "$file" "$flex_directory"
-         fi
-    done
-
     if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
         #Copy pvm only dtb from interout to separate directory
 
         for file in "$inter_out_dir"/*; do
-            case "$file" in
+            case "$(basename $file)" in
                 *vm*) ;;
                 *) mv "$file" "$pvm_only_directory" ;;
             esac
         done
     fi
 
-    merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
-
-    # Apply overlay for flex dtb
-    if ! [ -z "$(ls -A "$flex_directory")" ] && ! [ -z "$(ls -A "$ddrdtbosflex_dir")" ]; then
-        merge_ddr_dtbos_single $flex_directory $ddrdtbosflex_dir $out_directory
-    elif ! [ -z "$(ls -A "$flex_directory")" ]; then
-        cp -r "$flex_directory"/* "$out_directory"/
+    # Use legacy merge_ddr_dtbos_single() for SINGLE_GVM_SUPPORT machines whose
+    # DDR DTBOs encode the GVM role in the filename ("0gvm-"/"1gvm-"); use the
+    # new merge_dtbos_single() + update_dtb_ddr_id() for all other machines.
+    if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
+        merge_ddr_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
+    else
+        merge_dtbos_single $inter_out_dir $ddrdtbos_dir $out_directory
+        update_dtb_ddr_id $out_directory
     fi
 
     if [ "${SINGLE_GVM_SUPPORT}" = "1" ]; then
@@ -108,11 +133,17 @@ do_make_dtb() {
 
     cat ${DEPLOY_DIR_IMAGE}/dtbs/*.dtb* > ${DEPLOY_DIR_IMAGE}/dtbs/dtb.img
 }
+
+do_make_dtb:append:gen5() {
+    make_vms_dtb_img
+}
 do_make_dtb[depends] += "virtual/kernel:do_deploy"
 do_make_dtb[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', 'oot-dtbo:do_deploy', '', d)}"
 do_make_dtb[depends] += "${@bb.utils.contains_any('SOC_FAMILY', 'gen5', bb.utils.contains_any('MACHINE_FEATURES', 'qti-multimedia qti-display qti-audio qti-graphics qti-camera', 'mm-vfio-devicetree:do_deploy', '', d), '', d)}"
 do_make_dtb[depends] += "${@bb.utils.contains('COMBINED_FEATURES', 'qti-audio-aw', 'audiolite-devicetree:do_deploy', '', d)}"
 do_make_dtb[depends] += "${@bb.utils.contains_any('COMBINED_FEATURES', 'qti-audio qti-audio-ar', bb.utils.contains('MACHINE_FEATURES', 'qti-gunyah qti-umd', 'audiolite-devicetree:do_deploy', '', d), '', d)}"
+do_make_dtb[depends] += "${@bb.utils.contains_any('SOC_FAMILY', 'gen5', 'kernel-basedevicetree:do_deploy', '', d)}"
+do_make_dtb[depends] += "${@bb.utils.contains_any('SOC_FAMILY', 'gen5', 'vms-devicetree:do_deploy', '', d)}"
 
 addtask do_make_dtb after do_image before do_makeboot
 

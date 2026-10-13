@@ -7,7 +7,7 @@ HOMEPAGE = "https://git.codelinaro.org/"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-MEMORY_SERVICE = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'memory-hotplug_gvm.service', 'memory-hotplug.service', d)}"
+MEMORY_SERVICE = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'memory-hotplug_gvm.service', 'memory-hotplug.service', d)}"
 
 SRC_URI = "\
     file://memory-hotplug.sh \

@@ -9,7 +9,6 @@ SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/${TARGET_DIR}vendor/qcom/opensource/display-drivers/include/uapi"
 
-
 DRM_UAPI_HEADERS = "\
     drm/msm_drm_pp.h \
     drm/sde_drm.h \
@@ -26,7 +25,7 @@ MEDIA_UAPI_HEADERS = "\
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
-do_install[depends] += "virtual/kernel:do_shared_workdir"
+do_install[depends] += "virtual/kernel:do_shared_workdir make-mod-scripts:do_compile"
 
 do_install() {
    HEADER_INSTALL_TOOL=${STAGING_KERNEL_DIR}/scripts/headers_install.sh

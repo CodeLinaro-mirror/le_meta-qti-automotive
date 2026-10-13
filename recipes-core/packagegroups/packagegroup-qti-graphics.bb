@@ -12,8 +12,10 @@ PACKAGES = "\
 ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
-    ${@bb.utils.contains_any('PREFERRED_VERSION_linux-msm', '5.15 6.1', 'graphicsdlkm', '', d)} \
     ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'ksyncdlkm', '', d)} \
     vulkan-loader \
-    auto-gfx-app \
+    ${@bb.utils.contains_any('MACHINE_FEATURES', 'qti-umd', 'auto-gfx-app', '', d)} \
     "
+
+RDEPENDS:${PN}:gvm-gen4-5 += "graphics-hgsldlkm"
+RDEPENDS:${PN}:gvm-gen5 += "graphics-hgsldlkm"

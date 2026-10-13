@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-BLACKLIST_FILE = "${@bb.utils.contains("MACHINE_FEATURES", "qti-gvm", "blacklist_gvm.conf", "blacklist.conf", d)}"
+BLACKLIST_FILE = "${@bb.utils.contains("MACHINE_FEATURES", "qti-hypervisor", "blacklist_gvm.conf", "blacklist.conf", d)}"
 SRC_URI:append = " file://${BLACKLIST_FILE}"
 
 do_install:append () {

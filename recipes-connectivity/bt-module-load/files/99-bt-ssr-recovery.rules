@@ -1,0 +1,8 @@
+# Udev rule for BT SSR recovery
+# Place this file in /etc/udev/rules.d/
+#
+# When SSR is triggered, this rule restarts bt_module_load.service
+# which performs proper power cycling through rfkill/btpower.ko
+
+# Match bluetooth subsystem change events with SSR power cycle request
+SUBSYSTEM=="bluetooth", ACTION=="change", ENV{BT_EVENT}=="SSR_POWER_CYCLE_REQUEST", RUN+="/bin/systemctl restart bt_module_load.service"

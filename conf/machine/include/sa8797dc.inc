@@ -3,7 +3,7 @@ include conf/machine/include/qclinux-bbmask.inc
 include conf/distro/include/qclinux-bbmask-prop.inc
 include conf/machine/include/soc-family.inc
 
-SOC_FAMILY = "sa8797"
+SOC_FAMILY = "gen5"
 SOC_FAMILY ?= "sa-common"
 SOC_ARCH = "aarch64"
 

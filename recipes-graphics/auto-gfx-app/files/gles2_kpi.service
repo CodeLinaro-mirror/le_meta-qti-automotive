@@ -7,8 +7,8 @@
 [Unit]
 Description=[Graphics] gles early client
 
-Wants=openwfd_server_@0.service
-After=openwfd_server_@0.service
+Wants=openwfd_server_@0.service kgsl.service
+After=openwfd_server_@0.service kgsl.service
 
 Conflicts=shutdown.target
 Before=shutdown.target

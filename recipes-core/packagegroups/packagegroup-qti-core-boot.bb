@@ -9,7 +9,27 @@ PACKAGES = "\
 ALLOW_EMPTY:${PN} = "1"
 
 RDEPENDS:${PN} += "\
-    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-gvm', 'platformdlkm ', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-hypervisor', 'platformdlkm ', '', d)} \
+    ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'soc-modules', '', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'ab-boot-support', 'abctl ab-status-updater', '', d)} \
     packagegroup-core-boot \
     "
+
+RDEPENDS:${PN}:append:gvm-gen5 = " \
+    kernel-module-boot-marker \
+    kernel-module-hfastrpc \
+    kernel-module-subsystem-notif-virt \
+    kernel-module-virtio-ssr \
+"
+
+RDEPENDS:${PN}:append:qclinux-gvm-gen5 = " \
+    kernel-module-hfastrpc \
+    kernel-module-virtio-ssr \
+"
+
+RDEPENDS:${PN}:append:gvm-gen4-5 = " \
+    kernel-module-boot-marker \
+    kernel-module-hfastrpc \
+    kernel-module-subsystem-notif-virt \
+    kernel-module-virtio-ssr \
+"

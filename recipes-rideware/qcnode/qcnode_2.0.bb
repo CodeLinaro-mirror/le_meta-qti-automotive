@@ -20,7 +20,7 @@ QCNODE_ENABLE_RSM_V2 = "OFF"
 QCNODE_ENABLE_C2C = "OFF"
 QCNODE_ENABLE_TRACE = "OFF"
 QCNODE_ENABLE_GENIE = "OFF"
-QCNODE_ENABLE_RADAR = "OFF"
+QCNODE_ENABLE_RADAR = "ON"
 QCNODE_ENABLE_RESMON = "OFF"
 QCNODE_QC_TARGET_SOC = "8797"
 
@@ -103,4 +103,5 @@ FILES:${PN}-dev += "\
     ${bindir}/*gtest* \
     ${includedir}/* \
     ${libdir}/cmake \
+    ${libdir}/*Mock* \
 "

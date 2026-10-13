@@ -69,10 +69,15 @@ do_compile() {
     CONFIG_VARS=""
 
     if [ -f ${DEFCONFIG_FILE} ]; then
-        DEFCONFIG_CFLAGS=$(grep -E '^CONFIG_.*=[ym]$' ${DEFCONFIG_FILE} | \
-                          sed 's/=.*//' | \
-                          sed 's/^/-D/' | \
-                          tr '\n' ' ')
+        # Match kernel autoconf.h: =y -> -DCONFIG_FOO=1, =m -> -DCONFIG_FOO_MODULE=1
+        # A bare -DCONFIG_FOO (no value) makes IS_ENABLED/IS_BUILTIN/IS_MODULE false.
+        Y_CFLAGS=$(grep -E '^CONFIG_.*=y$' ${DEFCONFIG_FILE} | \
+                   sed -E 's/^(CONFIG_[^=]*)=y$/-D\1=1/' | \
+                   tr '\n' ' ')
+        M_CFLAGS=$(grep -E '^CONFIG_.*=m$' ${DEFCONFIG_FILE} | \
+                   sed -E 's/^(CONFIG_[^=]*)=m$/-D\1_MODULE=1/' | \
+                   tr '\n' ' ')
+        DEFCONFIG_CFLAGS="${Y_CFLAGS} ${M_CFLAGS}"
 
         # Append int/hex type CONFIG values as -DCONFIG_FOO=value
         INT_CFLAGS=$(grep -E '^CONFIG_.*=[0-9]+$' ${DEFCONFIG_FILE} | \
@@ -95,6 +100,13 @@ do_compile() {
         EXTRA_CFLAGS="-I${STAGING_KERNEL_DIR} ${DEFCONFIG_CFLAGS}" \
         KCFLAGS="-Wno-error=implicit-fallthrough -Wno-error=unused-variable -Wno-error=format -Wno-error=incompatible-pointer-types" \
         modules
+}
+
+# Stage Module.symvers to sysroot includedir so dependent OOT recipes can resolve cross-module
+do_install:append() {
+    if [ -f "${S}/Module.symvers" ]; then
+        install -Dm0644 "${S}/Module.symvers" "${D}${includedir}/${BPN}/Module.symvers"
+    fi
 }
 
 # Exclude KERNEL_VERSION from task hash calculation to avoid metadata instability

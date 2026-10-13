@@ -25,9 +25,24 @@ do_kernel_link_images[noexec] = "1"
 do_compile_kernelmodules[noexec] = "1"
 
 do_configure () {
-    cp -fpPR ${BZ_PREBUILT_ROOT}/bazel-cache/*/sandbox/sandbox_stash/ModulesPrepare/*/execroot/_main/out/common/. ${B}
+    # Try sandbox_stash path first (full Bazel build with sandbox enabled).
+    # Fall back to execroot path when sandbox_stash is absent (e.g. mainline
+    # builds where sandbox is disabled or stash was cleaned).
+    MODULES_PREPARE_SRC="${BZ_PREBUILT_ROOT}/bazel-cache/*/sandbox/sandbox_stash/ModulesPrepare/*/execroot/_main/out/common/."
+    KBUILD_MIXED_TREE_SRC="${BZ_PREBUILT_ROOT}/bazel-cache/*/sandbox/sandbox_stash/KernelBuild/*/execroot/_main/bazel-out/k8-fastbuild/bin/soc-repo/autogvm_${KERNEL_BUILD_VARIANT}defconfig_dtb_build_kbuild_mixed_tree/*"
 
-    cp ${BZ_PREBUILT_ROOT}/bazel-cache/*/sandbox/sandbox_stash/KernelBuild/*/execroot/_main/bazel-out/k8-fastbuild/bin/soc-repo/autogvm_${KERNEL_BUILD_VARIANT}defconfig_dtb_build_kbuild_mixed_tree/* ${B}
+    if ls ${MODULES_PREPARE_SRC} > /dev/null 2>&1; then
+        cp -fpPR ${MODULES_PREPARE_SRC} ${B}
+        cp ${KBUILD_MIXED_TREE_SRC} ${B}
+    else
+        # sandbox_stash not available: use execroot directly.
+        # autogvm_*defconfig_dtb_build/ has: .config, include/config/kernel.release
+        # autogvm_*defconfig_dtb_build_kbuild_mixed_tree/ has: gen_init_cpio, scripts/
+        # Copy both; kbuild_mixed_tree is copied last so its files take precedence.
+        EXECROOT="${BZ_PREBUILT_ROOT}/bazel-cache/*/execroot/_main/bazel-out/k8-fastbuild/bin/soc-repo"
+        cp -fpPR ${EXECROOT}/autogvm_${KERNEL_BUILD_VARIANT}defconfig_dtb_build/. ${B}
+        cp -fpPR ${EXECROOT}/autogvm_${KERNEL_BUILD_VARIANT}defconfig_dtb_build_kbuild_mixed_tree/. ${B}
+    fi
 
     install -d ${B}/arch/${ARCH}/boot/
     mv ${B}/Image ${B}/arch/${ARCH}/boot/
@@ -52,6 +67,14 @@ do_shared_workdir () {
     if [ -e "${B}/scripts/module.lds" ]; then
         install -m 0644 ${B}/scripts/module.lds ${STAGING_KERNEL_BUILDDIR}/scripts/module.lds
     fi
+
+    fdtoverlaymerge_bin=$(find ${BZ_PREBUILT_ROOT}/out -path "*/host/bin/fdtoverlaymerge" -type f | head -n 1)
+    if [ -n "${fdtoverlaymerge_bin}" ]; then
+        install -d $kerneldir/bin
+        install -m 0755 ${fdtoverlaymerge_bin} ${kerneldir}/bin/
+    else
+        bbwarn "fdtoverlaymerge not found under ${BZ_PREBUILT_ROOT}/out"
+    fi
 }
 
 do_install() {
@@ -70,8 +93,11 @@ do_install() {
     install -d ${D}${sysconfdir}/modules-load.d
     install -d ${D}${sysconfdir}/modprobe.d
 
-    install -d ${D}/${libdir}/modules/${KERNEL_VERSION}
-    install ${BZ_PREBUILT_ROOT}/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig/dist/*.ko ${D}/${libdir}/modules/${KERNEL_VERSION}
+    install -d ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    install ${BZ_PREBUILT_ROOT}/out/msm-kernel-autogvm-${KERNEL_OUT_VARIANT}defconfig/dist/*.ko ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+
+    install -m 0644 ${B}/modules.builtin ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    install -m 0644 ${B}/modules.builtin.modinfo ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
 
     find ${D} -name '*' -exec chown -h root:root {} \;
 }
