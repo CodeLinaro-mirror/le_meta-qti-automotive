@@ -37,4 +37,5 @@ TECHPACK_DTBS:gvm-gen4-5 = "\
 TECHPACK_DTBS:gvm-gen5 = "\
                  display/nordy-sde-hwvirt-lvgvm.dtbo \
                  display/nordy-sde-hwvirt-quin-lvgvm.dtbo \
+                 display/seca-sde-hwvirt-quin-lvgvm.dtbo \
 "
