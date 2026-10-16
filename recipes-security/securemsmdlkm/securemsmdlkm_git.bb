@@ -33,8 +33,10 @@ TECHPACK_MAKE_ARGS:append:gvm-gen5 = " CONFIG_ARCH_NORD=y"
 
 do_install:append() {
     install -d ${D}/uni/hgy/etc/modules-load.d
+    install -d ${D}/uni/hqx/etc/modules-load.d
     install -m 0755 ${WORKDIR}/security_load.conf -D ${D}${sysconfdir}/modules-load.d/security_load.conf
     install -m 0755 ${WORKDIR}/security_smci_load.conf -D ${D}/uni/hgy/etc/modules-load.d/security_load.conf
+    install -m 0755 ${WORKDIR}/security_smci_load.conf -D ${D}/uni/hqx/etc/modules-load.d/security_load.conf
     install -d ${D}${includedir}/linux
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/securemsm-kernel/include/linux/smcinvoke.h ${D}${includedir}/linux
     install -m 0644 ${WORKDIR}/vendor/qcom/opensource/securemsm-kernel/crypto-qti/fips_status.h ${D}${includedir}/linux
@@ -56,4 +58,5 @@ RPROVIDES:${PN}:append:gvm-gen4-5 = "${@bb.utils.contains('MACHINE_FEATURES', 'q
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/extra/*"
 FILES:${PN} += "/uni/hgy/etc/modules-load.d/*"
+FILES:${PN} += "/uni/hqx/etc/modules-load.d/*"
 
