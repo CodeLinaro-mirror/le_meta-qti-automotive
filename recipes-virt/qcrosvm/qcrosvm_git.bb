@@ -47,6 +47,12 @@ VM_CONFIG_XML:sa8775-flex = "vm_config_lalv.xml"
 do_install:append() {
     install -d ${D}${sysconfdir}
     install -m 0644 ${S}/vm_config_xml/${VM_CONFIG_XML} ${D}${sysconfdir}/vm_config.xml
+
+    # GVM console log backup
+    if [ -f ${S}/gvm-log-backup.sh ]; then
+        install -d ${D}${bindir}
+        install -m 0755 ${S}/gvm-log-backup.sh ${D}${bindir}/gvm-log-backup.sh
+    fi
 }
 
 do_install:append:gen5() {

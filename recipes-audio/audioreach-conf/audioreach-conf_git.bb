@@ -11,7 +11,7 @@ S = "${WORKDIR}/vendor/qcom/opensource/audioreach-conf"
 
 EXTRA_OECONF += "--with-qcom"
 
-EXTRA_OECONF:append:gen5 = " --with-automotive --with-sa8797"
+EXTRA_OECONF:append:gen5 = " --with-automotive --with-gen5"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
