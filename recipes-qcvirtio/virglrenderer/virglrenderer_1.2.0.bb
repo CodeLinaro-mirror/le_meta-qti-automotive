@@ -11,7 +11,9 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=c81c08eeefd9418fca8f88309a76db10"
 DEPENDS = "libdrm libepoxy python3-pyyaml-native virtual/egl virtual/libgbm"
 
 VIRGLRENDERER_PATH = "external/virglrenderer"
-SRC_URI = "${PATH_TO_REPO}/${VIRGLRENDERER_PATH}/.git;protocol=${PROTO};destsuffix=${VIRGLRENDERER_PATH}"
+SRC_URI = "${PATH_TO_REPO}/${VIRGLRENDERER_PATH}/.git;protocol=${PROTO};destsuffix=${VIRGLRENDERER_PATH} \
+           file://0001-venus-tolerate-Qualcomm-sync-fd-export-failure.patch \
+"
 
 SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/${VIRGLRENDERER_PATH}"
