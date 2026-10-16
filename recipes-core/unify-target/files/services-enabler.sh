@@ -31,7 +31,7 @@ SOC_ID="$(echo "$SOC_ID" | sed 's/^0\+//')"
 
 UNIT_LIST=""
 case "$SOC_ID" in
-    690) # 8797
+    690 | 798) # 8797 / IQ10
         UNIT_LIST="kgsl@0.service kgsl@1.service"
         ;;
     742) # 8787

@@ -26,3 +26,10 @@ RDEPENDS:${PN}:append:qclinux-gvm-gen5 = " \
     kernel-module-hfastrpc \
     kernel-module-virtio-ssr \
 "
+
+RDEPENDS:${PN}:append:gvm-gen4-5 = " \
+    kernel-module-boot-marker \
+    kernel-module-hfastrpc \
+    kernel-module-subsystem-notif-virt \
+    kernel-module-virtio-ssr \
+"

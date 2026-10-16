@@ -1,0 +1,70 @@
+From: Ajender Reddy Mallikarjuna <ajenderr@qti.qualcomm.com>
+Date: Mon, 19 May 2026 00:00:00 +0000
+Subject: [PATCH] libbpf: fix tracepoint perf_event_open failing with -ENODEV on offline CPUs
+
+perf_event_open_tracepoint() hardcodes cpu=0 when opening the perf event
+for a tracepoint attachment. When CPU 0 is offline the syscall returns
+-ENODEV and the entire BPF program attach fails.
+
+Pass the first online CPU instead, which creates a valid per-CPU perf
+event. For BPF tracepoint programs the kernel fires the program on all
+CPUs regardless of the cpu argument, so any online CPU index is correct.
+pid=-1 + cpu=-1 is rejected by the perf_event_open ABI with -EINVAL, so
+we must pass a valid CPU index rather than -1.
+
+Falls back to cpu=0 if the online mask cannot be read, preserving the
+original behaviour on systems where the sysfs file is unavailable.
+
+Signed-off-by: Ajender Reddy Mallikarjuna <ajenderr@qti.qualcomm.com>
+---
+ src/libbpf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libbpf.c b/src/libbpf.c
+index 42bdba4..c8a3ec1 100644
+--- a/src/libbpf.c
++++ b/src/libbpf.c
+@@ -13069,7 +13069,8 @@ static int perf_event_open_tracepoint(const char *tp_category,
+ {
+ 	const size_t attr_sz = sizeof(struct perf_event_attr);
+ 	struct perf_event_attr attr;
+-	int tp_id, pfd, err;
++	bool *online = NULL;
++	int tp_id, pfd, err, cpu, n, i;
+
+ 	tp_id = determine_tracepoint_id(tp_category, tp_name);
+ 	if (tp_id < 0) {
+@@ -13079,12 +13080,30 @@ static int perf_event_open_tracepoint(const char *tp_category,
+ 		return tp_id;
+ 	}
+
++	/*
++	 * Use the first online CPU. Hardcoding cpu=0 fails with -ENODEV
++	 * when CPU 0 is offline. pid=-1 + cpu=-1 is invalid per the
++	 * perf_event_open ABI, so we must pass a valid CPU index.
++	 * Fall back to cpu=0 if the online mask cannot be read.
++	 */
++	cpu = 0;
++	if (parse_cpu_mask_file("/sys/devices/system/cpu/online",
++				&online, &n) == 0) {
++		for (i = 0; i < n; i++) {
++			if (online[i]) {
++				cpu = i;
++				break;
++			}
++		}
++		free(online);
++	}
++
+ 	memset(&attr, 0, attr_sz);
+ 	attr.type = PERF_TYPE_TRACEPOINT;
+ 	attr.size = attr_sz;
+ 	attr.config = tp_id;
+
+-	pfd = syscall(__NR_perf_event_open, &attr, -1 /* pid */, 0 /* cpu */,
++	pfd = syscall(__NR_perf_event_open, &attr, -1 /* pid */, cpu,
+ 		      -1 /* group_fd */, PERF_FLAG_FD_CLOEXEC);
+ 	if (pfd < 0) {
+ 		err = -errno;
+--
+2.34.1
