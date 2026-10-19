@@ -88,7 +88,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video_git.bb \
     meta-qti-automotive/recipes-products/images/qti-image-boot.bb \
@@ -173,7 +172,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qscreencapsrc_1.0.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvblend_1.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvconv.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace_1.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvrate_git.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver_1.0.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/mm-vdec-omx-test-lite_0.1.bb \

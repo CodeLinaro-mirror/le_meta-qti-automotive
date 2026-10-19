@@ -1,7 +1,50 @@
-#Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
-#SPDX-License-Identifier: BSD-3-Clause-Clear
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
 
 DEPENDS += "dtc-native"
+
+# Build dtb.img with all GVM segments densely packed, plus a manifest file.
+#
+# Layout: [pvm dtbs][gvm dtbs][gvm dtbs]...
+# Segment order follows "pvm ${VMS_GVM_TYPES}".
+#
+# No header and no padding: dtb.img is a plain concatenation of FDTs, so the
+# ABL DTB scan loop walks every dtb in the image. Segment boundaries are not
+# encoded in the image itself - the manifest is the only record of which
+# segment each dtb came from.
+#
+# Usage: build_dense_dtb_img <dtbs_dir> <output_dtb_img> <manifest_file>
+build_dense_dtb_img () {
+    local dtbs_dir=$1
+    local out_img=$2
+    local manifest=$3
+
+    local sep="--------------------------------------------------------------------------------"
+    # Write manifest for debug
+    printf "%-72s %-16s %-12s %-10s %s\n" \
+        "NAME" "OFFSET(hex)" "SEGMENT" "INDEX" "SIZE(bytes)" > "$manifest"
+    printf "%s\n" "$sep" >> "$manifest"
+
+    # Initialize output image
+    cat /dev/null > "$out_img"
+
+    local cur=0 seg idx dtb sz
+    for seg in pvm ${VMS_GVM_TYPES}; do
+        idx=0
+        for dtb in $(find "${dtbs_dir}/${seg}" -name "*.dtb" 2>/dev/null | sort); do
+            sz=$(wc -c < "$dtb")
+            cat "$dtb" >> "$out_img"
+            printf "%-72s 0x%-14X %-12s %-10d %d\n" \
+                "$(basename $dtb)" "$cur" "$seg" "$idx" "$sz" >> "$manifest"
+            cur=$(expr $cur + $sz); idx=$(expr $idx + 1)
+        done
+    done
+
+    printf "%s\n" "$sep"                                              >> "$manifest"
+    printf "%-72s %-16s %-12s %-10s %d\n" "TOTAL" "" "" "" "$cur"    >> "$manifest"
+
+    echo "dtb.img assembled: $(wc -c < $out_img) bytes, manifest: $manifest"
+}
 
 # Extract symbol names from a named section (__fixups__ or __symbols__) of a DTB/DTBO
 _extract_dt_section () {
@@ -356,5 +399,77 @@ update_dtb_ddr_id () {
         if [ $? -ne 0 ]; then
             exit 1
         fi
+    done
+}
+
+# Match a pvm dtb to a vms DDR overlay dtbo.
+# Requires both compatible (board type) and <N>gb token (DDR size) to match.
+# Returns 0 on match, 1 otherwise.
+match_dtb_to_vms_dtbo () {
+    local dtb=$1
+    local ddr_dtbo=$2
+
+    local dtb_compat
+    dtb_compat=$(fdtget -t s "$dtb" / compatible 2>/dev/null | sed -e 's/\"//g' -e 's/[;,]//g')
+    [ -z "$dtb_compat" ] && return 1
+
+    local compat found
+    found=0
+    for compat in $(fdtget -t s "$ddr_dtbo" / compatible 2>/dev/null | sed -e 's/\"//g' -e 's/[;,]//g'); do
+        if echo "$dtb_compat" | grep -qw "$compat"; then
+            found=1
+            break
+        fi
+    done
+    [ "$found" -eq 0 ] && return 1
+
+    local dtbo_ddr_size dtb_ddr_size
+    dtbo_ddr_size=$(basename "$ddr_dtbo" | grep -oE '[0-9]+gb' | head -1)
+    [ -z "$dtbo_ddr_size" ] && return 1
+
+    dtb_ddr_size=$(basename "$dtb" | grep -oE '[0-9]+gb' | head -1)
+    [ -z "$dtb_ddr_size" ] && return 1
+
+    [ "$dtb_ddr_size" = "$dtbo_ddr_size" ] && return 0 || return 1
+}
+
+# Merge pvm dtbs with vms DDR overlays into the output directory.
+# Usage: merge_vms_dtbos <pvm_dir> <vms_ddr_dtbo_dir> <out_dir>
+merge_vms_dtbos () {
+    local pvm_dir=$1
+    local ddr_dtbo_dir=$2
+    local out_dir=$3
+
+    local dtb_files=$(find "$pvm_dir" -name "*.dtb")
+    local ddr_dtbo_files=$(find "$ddr_dtbo_dir" -name "*.dtbo")
+
+    if [ -z "$dtb_files" ]; then
+        echo "ERR : No pvm DTB files found in $pvm_dir"
+        exit 1
+    fi
+
+    if [ -z "$ddr_dtbo_files" ]; then
+        echo "WARN: No vms DDR DTBO files found in $ddr_dtbo_dir, skipping vms merge"
+        return 0
+    fi
+
+    install -d "$out_dir"
+
+    for dtb_file in $dtb_files; do
+        for ddr_dtbo_file in $ddr_dtbo_files; do
+            if match_dtb_to_vms_dtbo "$dtb_file" "$ddr_dtbo_file"; then
+                local gvm_type
+                gvm_type=$(basename "$ddr_dtbo_file" .dtbo | grep -oE "$(echo ${VMS_GVM_TYPES} | tr ' ' '|')")
+                local base_name
+                base_name=$(basename "$dtb_file" .dtb)
+                local out_dtb="${out_dir}/${base_name}-${gvm_type}.dtb"
+
+                fdtoverlay -i "$dtb_file" -o "$out_dtb" -v "$ddr_dtbo_file"
+                if [ $? -ne 0 ]; then
+                    echo "ERR: failed to apply vms DDR overlay to $(basename $dtb_file)"
+                    exit 1
+                fi
+            fi
+        done
     done
 }
