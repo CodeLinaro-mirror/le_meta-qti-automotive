@@ -2,8 +2,6 @@ SUMMARY = "QTI package group for test"
 
 inherit packagegroup
 
-DEPENDS:append:gen5 = " kernel-aosp-tools-native"
-
 PACKAGES = "\
     packagegroup-qti-tools \
     "

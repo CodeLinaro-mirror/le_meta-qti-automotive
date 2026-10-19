@@ -36,6 +36,7 @@ AUDIOLITE_RDEPENDS = "\
 AUDIOREACH_RDEPENDS = "\
     ar2-audio-service \
     agm \
+    pcm-logging-util \
     ar-dev-plugin \
     audioreach-conf \
     audio-device-manager \

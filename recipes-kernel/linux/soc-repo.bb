@@ -102,6 +102,13 @@ do_compile() {
         modules
 }
 
+# Stage Module.symvers to sysroot includedir so dependent OOT recipes can resolve cross-module
+do_install:append() {
+    if [ -f "${S}/Module.symvers" ]; then
+        install -Dm0644 "${S}/Module.symvers" "${D}${includedir}/${BPN}/Module.symvers"
+    fi
+}
+
 # Exclude KERNEL_VERSION from task hash calculation to avoid metadata instability
 # KERNEL_VERSION is read dynamically and may cause basehash changes during reparsing
 do_patch[vardepsexclude] += "KERNEL_VERSION"

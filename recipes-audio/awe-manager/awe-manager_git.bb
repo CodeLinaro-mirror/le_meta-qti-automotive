@@ -10,7 +10,7 @@ DEPENDS += "awe-packetclient glib-2.0 awe-audiolite-osal awe-alsa awe-utils git-
 PV = "1.0.1+qc1"
 # when you change PV also check do_configure:prepend!
 
-SRC_URI = "git://git.codelinaro.org/clo/yocto-mirrors/awe-manager.git;protocol=https;branch=dspconcepts/main;lfs=0 \
+SRC_URI = "git://git.codelinaro.org/clo/yocto-mirrors/awe-manager.git;protocol=https;nobranch=1;lfs=0 \
            file://0001-awemgr-map-rc_fail_comm-errors-to-comm_timeout.patch \
            "
 
@@ -36,7 +36,7 @@ EXTRA_OECMAKE += "\
 "
 
 CFLAGS += "-DLINUX"
-CFLAGS:append:gen5 = " -DPLATFORM_NORDAU -DENABLE_QLF"
+CFLAGS:append:gen5 = " -DPLATFORM_GEN5 -DENABLE_QLF"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""

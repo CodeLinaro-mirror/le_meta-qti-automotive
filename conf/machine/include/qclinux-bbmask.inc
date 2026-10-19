@@ -76,6 +76,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-graphics/graphics-hgsl/graphics-hgsldlkm_git.bb \
     meta-qti-automotive/recipes-kernel/dtc/dtc-aosp.bb \
     meta-qti-automotive/recipes-kernel/edk2/edk2_5.0.bb \
+    meta-qti-automotive/recipes-kernel/kernel-aosp-tools/kernel-aosp-tools-native.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack-headers_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-ack_6.12.bb \
     meta-qti-automotive/recipes-kernel/linux-msm/linux-msm-headers_6.12.bb \
@@ -88,7 +89,6 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY011 += "\
     meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver.bb \
     meta-qti-automotive/recipes-multimedia/virtio-video/virtio-video_git.bb \
     meta-qti-automotive/recipes-products/images/qti-image-boot.bb \
@@ -129,6 +129,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiodlkm/audiodlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
     meta-qti-automotive/recipes-audio/gpr/gpr_git.bb \
@@ -163,20 +164,12 @@ MISSING_RECIPE_SRCLIST_BASELINE_LY020 += "\
     meta-qti-automotive/recipes-kernel/linux-msm/soc-modules_6.12.bb \
     meta-qti-automotive/recipes-multimedia/codec2/codec2-app_git.bb \
     meta-qti-automotive/recipes-multimedia/dsp-kernel/dsp-kernel_git.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example_1.0.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugin-qvais_git.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2_1.0.0.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor_1.0.0.bb \
+    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-extpoolsink.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qcarcamsrc_git.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qscreencapsrc_1.0.0.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvblend_1.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvconv.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvdeinterlace_1.0.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-qvrate_git.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-vesdeliver_1.0.0.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/mm-vdec-omx-test-lite_0.1.bb \
-    meta-qti-automotive/recipes-multimedia/gstreamer/mm-venc-omx-test-lite_0.1.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/drm-player-example.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-codec2-gen5.bb \
     meta-qti-automotive/recipes-multimedia/gstreamer/gstreamer1.0-plugins-drmdecryptor.bb \
@@ -210,6 +203,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV052 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \
@@ -280,6 +274,7 @@ MISSING_RECIPE_SRCLIST_BASELINE_LV053 += "\
     meta-qti-automotive/recipes-audio/audio-device-manager/audio-device-manager_git.bb \
     meta-qti-automotive/recipes-audio/audio-plugin-intf/audio-plugin-intf_git.bb \
     meta-qti-automotive/recipes-audio/audio-utils/audio-utils_git.bb \
+    meta-qti-automotive/recipes-audio/pcm-logging-util/pcm-logging-util_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-devicetree_git.bb \
     meta-qti-automotive/recipes-audio/audiolite-dlkm/audiolite-dlkm_git.bb \
     meta-qti-automotive/recipes-audio/audioreach-conf/audioreach-conf_git.bb \

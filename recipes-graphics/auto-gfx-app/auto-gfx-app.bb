@@ -45,6 +45,11 @@ do_install() {
         install -m 0644 ${WORKDIR}/gles2_kpi.conf -D ${D}${systemd_system_unitdir}/sleep-notify@gles2_kpi.service.d/gles2_kpi.conf
     fi
 }
+do_install:append:gen5() {
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
+        sed -i 's/kgsl\.service/kgsl@0.service/g' ${D}${systemd_system_unitdir}/gles2_kpi.service
+    fi
+}
 
 FILES:${PN} += "\
     ${systemd_system_unitdir}/*.service \

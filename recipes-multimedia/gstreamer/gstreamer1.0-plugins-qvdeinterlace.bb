@@ -7,16 +7,15 @@ LIC_FILES_CHKSUM = "file://${QTI_LICENSE_DIR}/${LICENSE};md5=b796c0007db682166a1
 
 DEPENDS += "\
     adreno \
-    displaydlkm \
     display-commonsys-intf-linux \
     gbm \
     gbm-headers \
     glib-2.0 \
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '', 'videodlkm displaydlkm', d)} \
     virtual/kernel-headers \
     mm-gfx-auto-prop \
-    videodlkm \
 "
 
 SRC_URI = "${PATH_TO_REPO}/gstreamer/gst-plugins-qti-oss/.git;protocol=${PROTO};destsuffix=gstreamer/gst-plugins-qti-oss;usehead=1"
@@ -28,6 +27,10 @@ inherit meson pkgconfig
 CFLAGS += "\
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} \
     -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel}/display \
+"
+
+EXTRA_OEMESON += "\
+    ${@bb.utils.contains('MACHINE_FEATURES', 'qti-umd', '-Duseumd=true', '', d)} \
 "
 
 SOLIBS = ".so"

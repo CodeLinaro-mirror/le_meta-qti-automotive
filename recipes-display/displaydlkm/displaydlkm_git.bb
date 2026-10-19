@@ -46,6 +46,12 @@ do_compile:prepend:gvm-gen5(){
     export MM_DRIVERS_INC="${STAGING_INCDIR}"
 }
 
+do_compile:prepend:gvm-gen4-5(){
+    export GEN45_LVGVM=y
+    export ROOTDIR="${WORKDIR}"
+    export MM_DRIVERS_INC="${STAGING_INCDIR}"
+}
+
 do_install:append:sa81x5(){
     install -m 0644 ${S}/config/display_augen3_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }

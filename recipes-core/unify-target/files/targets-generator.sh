@@ -13,7 +13,6 @@ get_cmdline_value() {
 PRODCONFIG=$(get_cmdline_value prodconfig)
 SLTFLAVOR=$(get_cmdline_value sltflavor)
 OSCONFIG=$(get_cmdline_value osconfig)
-GVMCONFIG=$(get_cmdline_value gvmconfig)
 
 WANTS_DIR="$GENERATOR_DIR/default.target.wants"
 mkdir -p "$WANTS_DIR"
@@ -48,26 +47,13 @@ case "$OSCONFIG" in
     PVM+2GVM)
         ln -sf /usr/lib/systemd/system/multi-gvm.target "$WANTS_DIR/"
         ;;
+    PVM+QCLGVM)
+        ln -sf /usr/lib/systemd/system/single-lv-gvm.target "$WANTS_DIR/"
+        ;;
     PVMOnly)
         ;;
     "")
         ln -sf /usr/lib/systemd/system/single-gvm.target "$WANTS_DIR/"
-        ;;
-esac
-
-# gvm configs not specified in softsku
-case "$GVMCONFIG" in
-    single-lv-gvm)
-        # remove osconfig symlinks when gvmconfig is specified
-        case "$OSCONFIG" in
-            PVM+GVM|"")
-                rm -f "$WANTS_DIR/single-gvm.target"
-                ;;
-            PVM+2GVM)
-                rm -f "$WANTS_DIR/multi-gvm.target"
-                ;;
-        esac
-        ln -sf /usr/lib/systemd/system/single-lv-gvm.target "$WANTS_DIR/"
         ;;
 esac
 
