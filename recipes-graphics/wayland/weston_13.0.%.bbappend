@@ -26,6 +26,7 @@ SRC_URI += "file://0001-Weston-support-SDM-backend-on-weston-13.0.1.patch \
             file://0010-weston-enable-ASAN-and-fix-odr-violation-error.patch \
             file://0011-gl-renderer-disable-partial-update.patch \
             file://0012-libweston-add-touch_only-surface-label.patch \
+            file://0013-gl-renderer-clear-capture-FBO-and-redraw-full-output.patch \
 "
 
 SRC_URI:gvm-gen5 = "${PATH_TO_REPO}/${TARGET_DIR}graphics/weston/.git;protocol=${PROTO};destsuffix=${TARGET_DIR}graphics/weston;usehead=1 \
