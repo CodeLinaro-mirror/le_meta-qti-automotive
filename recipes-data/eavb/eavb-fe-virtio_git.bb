@@ -32,3 +32,6 @@ FILES:${PN} += "\
 "
 
 RPROVIDES:${PN} += "kernel-module-eavb-fe-${KERNEL_VERSION}"
+
+# lock to avoid parallel compiling with techpack
+do_compile[lockfiles] += "${TMPDIR}/qti-techpack.lock"
