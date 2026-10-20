@@ -47,9 +47,33 @@ setup_network()
 }
 
 
+# Fix Ethernet interface name order so that EMAC0 (0x23040000) -> eth0 and
+# EMAC1 (0x23000000) -> eth1. The kernel probes by ascending address, so
+# EMAC1 registers first and takes eth0 -- the reverse of the DT alias order.
+# Identity is keyed off EMAC0's physical sysfs path, not the name, since the
+# name is exactly what probe order gets wrong.
+fix_eth_ifnames()
+{
+  emac0_path=/sys/devices/platform/soc@0/23040000.ethernet
+
+  if [ -d "$emac0_path/net/eth0" ]; then
+      :  # EMAC0 already eth0, nothing to do
+  elif [ -d "$emac0_path/net/eth1" ]; then
+      echo " setup-network-host EMAC0 registered as eth1, swapping eth0<->eth1"
+      ip link set eth1 name eth_tmp
+      ip link set eth0 name eth1
+      ip link set eth_tmp name eth0
+  else
+      echo " setup-network-host EMAC0 under $emac0_path is neither eth0 nor eth1 -- names left unchanged"
+  fi
+}
+
 soc_num=`gpioget 0 29`
 
 echo " setup-network-host start "
+
+# rename interfaces before anything configures them by name
+fix_eth_ifnames
 
 # make sure 8021q module loaded
 modprobe 8021q
