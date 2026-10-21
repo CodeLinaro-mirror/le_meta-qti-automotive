@@ -39,6 +39,9 @@ TECHPACK_MODULES = "\
     drivers/soc/qcom/qcom_soc_wdt.ko \
     drivers/soc/qcom/minidump.ko \
     drivers/soc/qcom/debug_symbol.ko \
+    kernel/trace/qcom_ipc_logging.ko \
+    drivers/rpmsg/qcom_glink.ko \
+    drivers/rpmsg/qcom_glink_cma.ko \
 "
 
 # Ensure we build after linux-qcom-rt shared workdir is ready
