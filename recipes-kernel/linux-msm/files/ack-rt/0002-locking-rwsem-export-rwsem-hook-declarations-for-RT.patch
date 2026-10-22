@@ -1,0 +1,34 @@
+From: Yanqi Zhou <yanqzhou@qti.qualcomm.com>
+Date: Thu, 13 Aug 2026 00:00:00 +0000
+Subject: [PATCH] locking: rwsem: export rwsem hook declarations for RT
+
+The RT rwsem code still calls Android rwsem vendor hooks from the common
+up_write() and downgrade_write() paths, but the hook declarations are only
+included in the !PREEMPT_RT block. Move the rwsem hook include into the
+common include section so the RT build sees the declarations too.
+
+Signed-off-by: Yanqi Zhou <yanqzhou@qti.qualcomm.com>
+---
+ kernel/locking/rwsem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/locking/rwsem.c b/kernel/locking/rwsem.c
+index 60c80c0b4c57..10e47c44a3b2 100644
+--- a/kernel/locking/rwsem.c
++++ b/kernel/locking/rwsem.c
+@@ -27,11 +27,11 @@
+ #include <linux/export.h>
+ #include <linux/rwsem.h>
+ #include <linux/atomic.h>
+ #include <trace/events/lock.h>
++#include <trace/hooks/rwsem.h>
+ 
+ #ifndef CONFIG_PREEMPT_RT
+ #include "lock_events.h"
+ #include <trace/hooks/dtask.h>
+-#include <trace/hooks/rwsem.h>
+ 
+ /*
+  * The least significant 2 bits of the owner value has the following
+-- 
+2.43.0
