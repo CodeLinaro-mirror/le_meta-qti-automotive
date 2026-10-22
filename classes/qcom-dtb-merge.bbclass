@@ -473,3 +473,14 @@ merge_vms_dtbos () {
         done
     done
 }
+
+# Replace the OS Config (last hex digit, bits[3:0]) of every qcom,sku-id value, keep the
+# Product Config. A missing qcom,sku-id counts as 0.
+# Usage: set_sku_os_config <dtb> <os_config_hex_digit>
+set_sku_os_config () {
+    local dtb=$1 os=$2 v new_sku=""
+    for v in $(fdtget -t x "$dtb" / qcom,sku-id 2>/dev/null || echo 0); do
+        new_sku="${new_sku} 0x${v%?}${os}"
+    done
+    fdtput -t x "$dtb" / qcom,sku-id $new_sku || exit 1
+}
