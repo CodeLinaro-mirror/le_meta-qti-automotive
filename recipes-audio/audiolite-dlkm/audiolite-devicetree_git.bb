@@ -29,4 +29,6 @@ TECHPACK_DTBS = "\
     ${@bb.utils.contains('TARGET_USES_AUDIO_FRAMEWORK', 'audiolite', 'sa8797p_audiolite_overlay.dtbo', '', d)} \
     sa8787p_audiolite_common.dtbo \
     ${@bb.utils.contains('TARGET_USES_AUDIO_FRAMEWORK', 'audiolite', 'sa8787p_audiolite_overlay.dtbo', '', d)} \
+    sa8797p_audiolite_common-iqx.dtbo \
+    ${@bb.utils.contains('TARGET_USES_AUDIO_FRAMEWORK', 'audiolite', 'sa8797p_audiolite_overlay-iqx.dtbo', '', d)} \
 "
