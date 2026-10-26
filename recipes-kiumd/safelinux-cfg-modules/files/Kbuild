@@ -21,3 +21,6 @@ kiumd-objs := drivers/kiumd.o
 
 obj-m += qcom_io_mem.o
 qcom_io_mem-objs := drivers/qcom_io_mem.o
+
+obj-m += named_dmabuf.o
+named_dmabuf-objs := drivers/named_dmabuf.o

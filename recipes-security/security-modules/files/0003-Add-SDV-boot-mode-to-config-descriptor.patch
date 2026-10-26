@@ -1,0 +1,47 @@
+From 0ad2729b3fbf244a9751b42e6c62f5f19617691d Mon Sep 17 00:00:00 2001
+From: Amit Blay <ablay@qti.qualcomm.com>
+Date: Tue, 29 Sep 2026 16:13:03 -0700
+Subject: [PATCH] Support SDV boot mode in Android config descriptors
+
+Encode the optional -71006 text field for the per-VM SDV boot mode.
+
+Reject a selected field without a boot-mode value.
+
+Upstream-Status: Pending
+
+Change-Id: I7a2b6c9d0e1f3456789abcdeffedcba012345678
+Signed-off-by: Amit Blay <ablay@qti.qualcomm.com>
+---
+ include/dice/android.h |  3 +++
+ src/android.c          | 11 +++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/include/dice/android.h b/include/dice/android.h
+index 50bcd0e..be0403d 100644
+--- a/include/dice/android.h
++++ b/include/dice/android.h
+@@ -36,0 +37 @@ extern "C" {
++#define DICE_ANDROID_CONFIG_SDV_BOOT_MODE (1 << 6)
+@@ -47,0 +49 @@ extern "C" {
++//    sdv_boot_mode: SDV boot mode ("locked" or "unlocked").
+@@ -53,0 +56 @@ typedef struct DiceAndroidConfigValues_ {
++  const char* sdv_boot_mode;
+diff --git a/src/android.c b/src/android.c
+index d252a24..fbe129e 100644
+--- a/src/android.c
++++ b/src/android.c
+@@ -47,0 +48 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  static const int64_t kSdvBootModeLabel = -71006;
+@@ -53,0 +55,5 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  if ((config_values->configs & DICE_ANDROID_CONFIG_SDV_BOOT_MODE) &&
++      !config_values->sdv_boot_mode) {
++    return kDiceResultInvalidInput;
++  }
++
+@@ -58,0 +65 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  //   ? -71006 : tstr,     ; SDV boot mode
+@@ -87,0 +95,4 @@ DiceResult DiceAndroidFormatConfigDescriptor(
++  if (config_values->configs & DICE_ANDROID_CONFIG_SDV_BOOT_MODE) {
++    CborWriteInt(kSdvBootModeLabel, &out);
++    CborWriteTstr(config_values->sdv_boot_mode, &out);
++  }
