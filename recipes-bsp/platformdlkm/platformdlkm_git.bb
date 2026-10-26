@@ -104,10 +104,6 @@ do_configure:prepend:qclinux-gvm-gen5() {
     ln -sf ${WORKDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${WORKDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc.h
 }
 
-do_configure:prepend:qclinux-gvm-gen5() {
-    ln -sf ${BSPDIR}/vendor/qcom/opensource/dsp-kernel/include/uapi/misc/fastrpc.h ${WORKDIR}/vendor/qcom/opensource/platform-kernel/drivers/virtual_fastrpc/include/uapi/fastrpc.h
-}
-
 do_install:append:gvm-gen4-5() {
     if ${@bb.utils.contains('PREFERRED_VERSION_linux-msm', '6.12', 'false', 'true', d)}; then
         install -m 0755 ${S}/drivers/virtual_fastrpc/fastrpc_load.conf -D ${D}${sysconfdir}/modules-load.d/fastrpc_load.conf
