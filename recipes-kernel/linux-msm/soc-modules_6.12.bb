@@ -52,12 +52,17 @@ do_configure:prepend() {
 # Copy ACK common/ source files into the soc-repo WORKDIR so that the OOT
 # make build (make -C kernel-source O=KBA M=soc-repo/) can compile them.
 # The soc-repo Makefiles already contain the obj-$(CONFIG_xxx) rules;
-# only the .c sources are missing from soc-repo.
+# only the .c/.h sources are missing from soc-repo.
 #
 # Decision basis (diff common/ vs soc-repo/ per module):
 #
 #   virtio_console / virtio_input / i2c-virtio / net_failover / failover:
 #     Single .c file, absent in soc-repo entirely -> plain cp of one file.
+#
+#   pci-host-common.h:
+#     Header absent in soc-repo; #include'd by soc-repo's pcie-qcom-ecam.c
+#     (soc-repo commit 25ad619cd939, mirrored in Bazel via common_sources.bzl
+#     COPY_FILES) -> plain cp of the header.
 #
 #   virtio_net:
 #     Single .c file absent in soc-repo; soc-repo carries virtio_net_fix.diff
@@ -73,7 +78,7 @@ do_configure:prepend() {
 copy_common_sources() {
     COMMON="${WORKDIR}/kernel/kernel-${PV}/kernel_platform/common"
 
-    # --- 5 single-file copies ---
+    # --- 6 single-file copies ---
     cp -f "${COMMON}/drivers/char/virtio_console.c" \
           "${SOC_REPO}/drivers/char/"
 
@@ -82,6 +87,11 @@ copy_common_sources() {
 
     cp -f "${COMMON}/drivers/i2c/busses/i2c-virtio.c" \
           "${SOC_REPO}/drivers/i2c/busses/"
+
+    if [ -f "${COMMON}/drivers/pci/controller/pci-host-common.h" ]; then
+        cp -f "${COMMON}/drivers/pci/controller/pci-host-common.h" \
+              "${SOC_REPO}/drivers/pci/controller/"
+    fi
 
     # net/core/ does not exist in soc-repo; failover.c is referenced as
     # ../../net/core/failover.o from drivers/net/Makefile.
