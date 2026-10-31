@@ -49,10 +49,14 @@ SOC_DEBUG_FRAGMENT = "${@bb.utils.contains_any('VARIANT', 'perf user', '', '${SO
 do_configure:prepend() {
     mkdir -p ${B}
 
-    # ${B}/.config = generic_auto_defconfig + soc fragment + (debug fragment for debug builds)
+    # ${B}/.config = generic_auto_defconfig + soc fragment(s) + (debug fragment for debug builds)
+    # SOC_DEFCONFIG is a space-separated list so derived recipes can append
+    # extra fragments via SOC_DEFCONFIG:append.
     cp "${SOC_REPO_PATH}/arch/${ARCH}/configs/${KERNEL_CONFIG}" ${B}/.config \
         || bbfatal "Missing defconfig"
-    cat "${SOC_DEFCONFIG}" >> ${B}/.config
+    for f in ${SOC_DEFCONFIG}; do
+        cat "$f" >> ${B}/.config
+    done
     if [ -n "${SOC_DEBUG_FRAGMENT}" ]; then
         cat "${SOC_DEBUG_FRAGMENT}" >> ${B}/.config
     fi

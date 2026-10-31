@@ -5,7 +5,7 @@ DEPENDS += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'qti-avb', 'avbtool-native', '', d)} \
     dtc-native \
     kernel-aosp-tools-native \
-    ${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'qcom-dtc-native', '', d)} \
+    ${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack linux-ack-rt', 'qcom-dtc-native', '', d)} \
     mkdtimg-native \
     sectools-native \
     virtual/kernel \
@@ -99,7 +99,7 @@ python () {
 
 do_merge_dtbs[depends] += "virtual/kernel:do_deploy"
 do_merge_dtbs[depends] += "virtual/kernel:do_shared_workdir"
-do_merge_dtbs[depends] += "${@bb.utils.contains('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack', 'qcom-devicetree:do_deploy', '', d)}"
+do_merge_dtbs[depends] += "${@bb.utils.contains_any('PREFERRED_PROVIDER_virtual/kernel', 'linux-ack linux-ack-rt', 'qcom-devicetree:do_deploy', '', d)}"
 
 do_merge_dtbs() {
     export PATH="${STAGING_KERNEL_BUILDDIR}/bin:${PATH}"

@@ -13,7 +13,7 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/vendor/qcom/opensource/kiumd/dspfirmware-mount"
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom.automount usr-lib-firmware-qcom.mount"
+SYSTEMD_SERVICE:${PN} = "usr-lib-firmware-qcom-mount.service vendor-dsp-mount.service"
 SYSTEMD_SERVICE:${PN}-bt = "bluetooth-mount.service"
 SYSTEMD_SERVICE:${PN}-vmm:append = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', ' firmware-vm-boot-autoghgvm-mount.service', '', d)}"
 SYSTEMD_SERVICE:${PN}-lvgvm = "${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'firmware-vm-boot-autoghgvmlv-mount.service', '', d)}"
@@ -30,11 +30,8 @@ do_install:append() {
     install -m 0644 ${S}/vendor-dsp-mount.service -D ${D}${systemd_unitdir}/system/vendor-dsp-mount.service
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'true', 'false', d)}; then
-        sed -i '/^Options=/s/defaults/&,context=system_u:object_r:dsp_file_t:s0/' ${D}${systemd_unitdir}/system/vendor-dsp-mount.service
+        sed -i '/^ExecStart=/s/ro,defaults/&,context=system_u:object_r:dsp_file_t:s0/' ${D}${systemd_unitdir}/system/vendor-dsp-mount.service
     fi
-
-    ln -sf ${systemd_unitdir}/system/vendor-dsp-mount.service \
-        ${D}${systemd_unitdir}/system/multi-user.target.wants/vendor-dsp-mount.service
 
     if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vmm', 'true', 'false', d)}; then
         install -d -p ${D}/firmware/vm/boot/autoghgvm
@@ -53,8 +50,7 @@ do_install:append() {
 
     install -d -p ${D}${nonarch_base_libdir}/firmware/qcom
 
-    install -m 0644 ${S}/usr-lib-firmware-qcom.mount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.mount
-    install -m 0644 ${S}/usr-lib-firmware-qcom.automount -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom.automount
+    install -m 0644 ${S}/usr-lib-firmware-qcom-mount.service -D ${D}${systemd_unitdir}/system/usr-lib-firmware-qcom-mount.service
 
     if ${@bb.utils.contains_any('SOC_FAMILY', 'sa7255 sa8775', 'true', 'false', d)}; then
         install -d ${D}${sysconfdir}/sysconfig/

@@ -75,11 +75,9 @@ do_install () {
     find $kerneldir -name ..install.cmd | xargs rm -f
     find $kerneldir -name .install | xargs rm -f
 
-    # Create symlink ${PN%-headers} -> linux-msm so recipes using
-    # -I${STAGING_INCDIR}/${PREFERRED_PROVIDER_virtual/kernel} find headers.
-    pn="${PN}"
-    provider="${pn%-headers}"
-    ln -sfn linux-msm ${D}${includedir}/${provider}
+    # Mirror the active kernel provider so userspace recipes can include
+    # the right path (e.g. linux-ack or linux-ack-rt).
+    ln -sfn linux-msm ${D}${includedir}/${PREFERRED_PROVIDER_virtual/kernel}
 }
 
 # kernel headers are generally machine specific

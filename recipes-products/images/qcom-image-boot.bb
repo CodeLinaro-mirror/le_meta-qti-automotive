@@ -19,7 +19,7 @@ DEPLOY_NAME_BASE_PVM = "${PRODUCT}-pvm-automotive"
 DEPLOY_NAME_PVM = "${DEPLOY_NAME_BASE_PVM}${@['-' + d.getVar('VARIANT', True), ''][d.getVar('VARIANT', True) == ('' or 'debug')]}"
 DEPLOY_DIR_IMAGE_PVM = "${DEPLOY_DIR}/images/${DEPLOY_NAME_PVM}"
 
-inherit image qcom-dtb-merge
+inherit image qcom-dtb-merge qcom-dtb-check
 
 EXTRA_IMAGE_FEATURES = ""
 
@@ -146,6 +146,9 @@ do_make_dtb[depends] += "${@bb.utils.contains_any('SOC_FAMILY', 'gen5', 'kernel-
 do_make_dtb[depends] += "${@bb.utils.contains_any('SOC_FAMILY', 'gen5', 'vms-devicetree:do_deploy', '', d)}"
 
 addtask do_make_dtb after do_image before do_makeboot
+
+FW_MEM_CHECK_DTB_DIR = "${DEPLOY_DIR_IMAGE}/dtbs"
+addtask do_check_fw_mem after do_make_dtb before do_makeboot
 
 BOOT_RAMDISK_IMG ?= "${@bb.utils.contains('MACHINE_FEATURES', 'early-ramdisk-init', 'early-ramdisk-image-${PRODUCT}.cpio.lz4', '/dev/null', d)}"
 
