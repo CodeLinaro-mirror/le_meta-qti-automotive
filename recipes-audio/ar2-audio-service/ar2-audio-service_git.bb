@@ -32,7 +32,7 @@ FILES:${PN} += "\
     ${systemd_system_unitdir}/sleep-notify@*.service.d/* \
 "
 
-EXTRA_OECMAKE:append:gen5 = " -DENABLE_TARGET=sa8797"
+EXTRA_OECMAKE:append:gen5 = " -DENABLE_TARGET=sa8797 -DPLATFORM_LY=ON"
 
 RDEPENDS:${PN} += "libkiumd ssr-rm pil-rm glink-service-lrm fastrpc-rm diagservice"
 
