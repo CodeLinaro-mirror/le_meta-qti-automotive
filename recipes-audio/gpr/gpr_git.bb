@@ -15,7 +15,7 @@ inherit pkgconfig cmake
 
 EXTRA_OECONF += "--with-glib"
 
-EXTRA_OECMAKE:append:gen5 = " -DPLATFORM_LY=ON"
+EXTRA_OECMAKE:append:gen5 = " -DPLATFORM_LY=ON -DGPR_GEN5=ON"
 
 RDEPENDS:${PN} += "glink-service-lrm"
 
