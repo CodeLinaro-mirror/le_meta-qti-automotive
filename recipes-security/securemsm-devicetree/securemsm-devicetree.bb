@@ -22,4 +22,4 @@ do_configure[noexec] = "1"
 
 TECHPACK_MODULE_OUT = "${S}"
 
-TECHPACK_DTBS = "lemans/lemans-quin-vm-securemsm.dtbo monaco/monaco-quin-vm-securemsm.dtbo nord/nord-quin-vm-securemsm.dtbo"
+TECHPACK_DTBS = "lemans/lemans-quin-vm-securemsm.dtbo monaco/monaco-quin-vm-securemsm.dtbo nord/nord-quin-vm-securemsm.dtbo seca/seca-gunyah-vm-securemsm.dtbo seca/seca-sdp8-vm-securemsm.dtbo"
