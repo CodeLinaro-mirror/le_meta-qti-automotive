@@ -9,7 +9,7 @@ SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8255-ivi = " vhost-user-scmi-lv.service"
 SYSTEMD_SERVICE:${PN}-lvgvm:append:sa8775-flex = " vhost-user-scmi-lv.service"
 SYSTEMD_SERVICE:${PN}-lvgvm:append:gen5 = " vhost-user-scmi-lv.service vhost-user-scmi-qclinux-lv.service"
 
-DEPENDS += "safelinux-cfg-modules vhost-user-lib"
+DEPENDS += "safelinux-cfg-modules vhost-user-lib vmm-lib"
 
 SRC_URI = "${PATH_TO_REPO}/vendor/qcom/opensource/vhost-user-scmi/.git;protocol=${PROTO};destsuffix=vendor/qcom/opensource/vhost-user-scmi;usehead=1"
 SRCREV = "${AUTOREV}"

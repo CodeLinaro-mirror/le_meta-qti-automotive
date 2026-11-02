@@ -13,4 +13,6 @@ S = "${WORKDIR}/vendor/qcom/opensource/safelinux-services/scmi-test"
 
 EXTRA_OECMAKE:append:gen5 = " -DVENDOR_USCMI=1"
 
+EXTRA_OECMAKE:append:gen5 = " -DQCOM_VM_CPUFREQ=1"
+
 inherit pkgconfig cmake

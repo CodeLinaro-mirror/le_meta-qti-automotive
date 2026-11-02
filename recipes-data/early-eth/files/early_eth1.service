@@ -26,4 +26,5 @@ Restart=on-failure
 RestartSec=1ms
 
 [Install]
-WantedBy=sys-devices-platform-1a80000.ethernet-net-eth1.device
+WantedBy=adas.target
+

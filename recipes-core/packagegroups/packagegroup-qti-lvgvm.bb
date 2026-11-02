@@ -22,4 +22,6 @@ RDEPENDS:${PN} = "\
     dspfirmware-mount-lvgvm \
 "
 
+RDEPENDS:${PN}:append:sa8775-flex = " vhost-device-ssr-lvgvm"
+RDEPENDS:${PN}:append:gen5 = " vhost-device-ssr-lvgvm"
 RDEPENDS:${PN}:remove:sa7255 = "vhost-user-scmi-lvgvm"
