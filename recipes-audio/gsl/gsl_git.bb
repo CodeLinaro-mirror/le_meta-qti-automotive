@@ -14,6 +14,8 @@ inherit pkgconfig cmake
 
 EXTRA_OECONF += "--with-glib"
 
+EXTRA_OECMAKE:append:gen5 = " -DPLATFORM_LY=ON"
+
 RDEPENDS:${PN} += "ssr-rm fastrpc-rm ar-osal"
 
 SOLIBS = ".so"

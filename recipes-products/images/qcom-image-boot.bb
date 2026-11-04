@@ -42,6 +42,11 @@ make_vms_dtb_img() {
     done
     mv ${dtbs_dir}/*.dtb ${dtbs_dir}/pvm/
 
+    # pvm dtbs carry no VMS nodes: mark them PVM-only (OS Config 1)
+    for dtb in ${dtbs_dir}/pvm/*.dtb; do
+        set_sku_os_config $dtb 1
+    done
+
     # Merge pvm dtbs with vms DDR overlays into dtbs_dir; results named by gvm token
     merge_vms_dtbos \
         ${dtbs_dir}/pvm \
@@ -52,6 +57,20 @@ make_vms_dtb_img() {
     for gvm in ${VMS_GVM_TYPES}; do
         [ -n "$(ls ${dtbs_dir}/*${gvm}*.dtb 2>/dev/null)" ] && \
             mv ${dtbs_dir}/*${gvm}*.dtb ${dtbs_dir}/${gvm}/
+    done
+
+    # GVM dtbs: OS Config follows the GVM type
+    for gvm in ${VMS_GVM_TYPES}; do
+        case $gvm in
+            lagvm)  os=0 ;;
+            mgvm)   os=2 ;;
+            qclgvm) os=f ;;
+            *) echo "ERR: no OS Config for GVM type $gvm"; exit 1 ;;
+        esac
+        for dtb in ${dtbs_dir}/${gvm}/*.dtb; do
+            [ -f "$dtb" ] || continue
+            set_sku_os_config "$dtb" "$os"
+        done
     done
 
     # Assemble dtb.img with all per-gvm segments densely packed
