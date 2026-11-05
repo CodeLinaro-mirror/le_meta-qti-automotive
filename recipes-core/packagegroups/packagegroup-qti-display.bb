@@ -27,6 +27,8 @@ RDEPENDS:${PN} += "\
 
 RDEPENDS:${PN}:remove:gen5 = "display-commonsys-intf-linux"
 RDEPENDS:${PN}:append:gen5 = " gvm-touch-proxy"
+RDEPENDS:${PN}:append:sa8775 = " gvm-touch-proxy"
+RDEPENDS:${PN}:append:sa7255 = " gvm-touch-proxy"
 RDEPENDS:${PN}:remove:qti-dpk = "wayland-ivi-extension"
 RDEPENDS:${PN}:append:qti-dpk = " weston-udev"
 RDEPENDS:${PN}:remove:qti-dpk = "weston-sdm-extension"
