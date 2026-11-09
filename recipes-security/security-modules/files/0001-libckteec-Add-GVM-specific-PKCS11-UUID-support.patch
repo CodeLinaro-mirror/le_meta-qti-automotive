@@ -1,0 +1,66 @@
+Changes from Qualcomm Technologies, Inc. are provided under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From a77f3cbf5f86b9bf9efba779ff2b53dfd722a1af Mon Sep 17 00:00:00 2001
+From: Haoqing Xia <haoqxia@qti.qualcomm.com>
+Date: Wed, 30 Sep 2026 13:05:00 +0530
+Subject: [PATCH] libckteec-Add-GVM-specific-PKCS11-UUID-support
+
+Signed-off-by: Haoqing Xia <haoqxia@qti.qualcomm.com>
+---
+ libckteec/include/qc_pkcs11_ta_uuid.h | 24 ++++++++++++++++++++++++
+ libckteec/src/invoke_ta.c             |  4 ++++
+ 2 files changed, 28 insertions(+)
+ create mode 100644 libckteec/include/qc_pkcs11_ta_uuid.h
+
+diff --git a/libckteec/include/qc_pkcs11_ta_uuid.h b/libckteec/include/qc_pkcs11_ta_uuid.h
+new file mode 100644
+index 0000000..3bd902d
+--- /dev/null
++++ b/libckteec/include/qc_pkcs11_ta_uuid.h
+@@ -0,0 +1,24 @@
++/********************************************************************
++ Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
++ SPDX-License-Identifier: BSD-3-Clause-Clear
++ *********************************************************************/
++
++#ifndef PKCS11_ON_GVM_UUIDS_H
++#define PKCS11_ON_GVM_UUIDS_H
++
++#include <tee_client_api.h> // Required for TEEC_UUID structure
++#include <pkcs11_ta.h> // Required for PKCS11_TA_UUID macro
++
++#ifdef QC_ADD_ONS
++
++#ifdef PKCS11_TA_UUID_LSB
++
++#undef PKCS11_TA_UUID
++
++// Replace the last byte of TEEC_UUID with PKCS11_TA_UUID_LSB
++#define PKCS11_TA_UUID { 0xfd02c9da, 0x306c, 0x48c7, \
++                           { 0xa4, 0x9c, 0xbb, 0xd8, 0x27, 0xae, 0x86, PKCS11_TA_UUID_LSB } }
++#endif // PKCS11_TA_UUID_LSB
++
++#endif // QC_ADD_ONS
++#endif // PKCS11_ON_GVM_UUIDS_H
+\ No newline at end of file
+diff --git a/libckteec/src/invoke_ta.c b/libckteec/src/invoke_ta.c
+index 07b110e..b1efe10 100644
+--- a/libckteec/src/invoke_ta.c
++++ b/libckteec/src/invoke_ta.c
+@@ -24,6 +24,10 @@
+ #include "invoke_ta.h"
+ #include "local_utils.h"
+ 
++#ifdef QC_ADD_ONS
++#include "qc_pkcs11_ta_uuid.h"
++#endif
++
+ struct ta_context {
+ 	pthread_mutex_t init_mutex;
+ 	bool initiated;
+-- 
+2.34.1
+
