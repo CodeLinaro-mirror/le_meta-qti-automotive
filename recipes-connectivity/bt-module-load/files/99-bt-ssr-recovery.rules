@@ -5,4 +5,6 @@
 # which performs proper power cycling through rfkill/btpower.ko
 
 # Match bluetooth subsystem change events with SSR power cycle request
-SUBSYSTEM=="bluetooth", ACTION=="change", ENV{BT_EVENT}=="SSR_POWER_CYCLE_REQUEST", RUN+="/bin/systemctl restart bt_module_load.service"
+SUBSYSTEM=="bluetooth", ACTION=="change", ENV{BT_EVENT}=="SSR_POWER_CYCLE_REQUEST", \
+  RUN+="/bin/systemctl restart bt_module_load.service", \
+  RUN+="/bin/systemd-run /usr/bin/load_bt_modules.sh poweron"

@@ -51,8 +51,18 @@ case "$1" in
         echo "########## cleanup done ##########"
         ;;
 
+    poweron)
+        timeout 30 busctl monitor \
+            --match "interface='org.freedesktop.DBus.ObjectManager',member='InterfacesAdded'" \
+            2>/dev/null | while IFS= read -r line; do
+            case "$line" in
+                *org.bluez.Adapter*) bluetoothctl power on; break ;;
+            esac
+        done
+        ;;
+
     *)
-        echo "Usage: $0 [-l enable_log] [-p log_path] {start|stop}"
+        echo "Usage: $0 [-l enable_log] [-p log_path] {start|stop|poweron}"
         exit 1
         ;;
 esac
