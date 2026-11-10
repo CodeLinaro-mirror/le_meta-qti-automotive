@@ -68,8 +68,6 @@ fix_eth_ifnames()
   fi
 }
 
-soc_num=`gpioget 0 29`
-
 echo " setup-network-host start "
 
 # rename interfaces before anything configures them by name
@@ -80,14 +78,8 @@ modprobe 8021q
 
 # setup interface eth0 and vlan br0.4
 # setup interface eth1 and vlan br0.10
-if [ ${soc_num} -eq 0 ];
-then
-    setup_network $soc_num eth0 192.168.1.1 4  192.168.4.1/24
-    setup_network $soc_num eth1 192.168.6.1 10 192.168.10.1/24
-else
-    setup_network $soc_num eth0 192.168.1.2 4  192.168.4.2/24
-    setup_network $soc_num eth1 192.168.6.2 10 192.168.10.2/24
-fi
+setup_network 0 eth0 192.168.1.1 4  192.168.4.1/24
+setup_network 0 eth1 192.168.6.1 10 192.168.10.1/24
 
 
 echo " setup-network-host end "
