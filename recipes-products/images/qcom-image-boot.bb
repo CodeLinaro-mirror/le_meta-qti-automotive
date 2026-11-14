@@ -42,6 +42,14 @@ make_vms_dtb_img() {
     done
     mv ${dtbs_dir}/*.dtb ${dtbs_dir}/pvm/
 
+    # pvm dtbs carry no VMS nodes: mark them PVM-only (OS Config 1).
+    # Skip seca: it has not enabled the vms framework yet and uses its pvm/ dtbs
+    # as the LAGVM dtb. Drop the case line once seca is enabled.
+    for dtb in ${dtbs_dir}/pvm/*.dtb; do
+        case $(basename "$dtb") in seca-*) continue ;; esac
+        set_sku_os_config "$dtb" 1
+    done
+
     # Merge pvm dtbs with vms DDR overlays into dtbs_dir; results named by gvm token
     merge_vms_dtbos \
         ${dtbs_dir}/pvm \
