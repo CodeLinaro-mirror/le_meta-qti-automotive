@@ -29,6 +29,16 @@ EXTRA_OECONF += "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', '--with-systemd', '', d)} \
 "
 
+do_install:append() {
+    # Substitute product property placeholders in the adbd defaults file.
+    if [ -f ${D}${sysconfdir}/default/adbd ]; then
+        sed -i -e "s|@PRODUCT_NAME@|${MACHINE}|g" \
+               -e "s|@PRODUCT_MODEL@|${MACHINE}_for_${TARGET_ARCH}|g" \
+               -e "s|@PRODUCT_DEVICE@|${MACHINE}|g" \
+               ${D}${sysconfdir}/default/adbd
+    fi
+}
+
 FILES:${PN} += "\
     ${sbindir}/adbd \
     ${libdir}/libadbd.so.* \
@@ -37,4 +47,5 @@ FILES:${PN} += "\
     ${sysconfdir}/launch_adbd \
     ${sysconfdir}/initscripts/adbd \
     ${sysconfdir}/adb_devid \
+    ${sysconfdir}/default/adbd \
 "
